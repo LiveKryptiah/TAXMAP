@@ -1,0 +1,202 @@
+/* ==========================================================================
+   PROVINCIAL GOVERNMENT OF ISABELA - OFFICE OF THE PROVINCIAL ASSESSOR
+   TAX MAPPING SYSTEM (TM-RPAIS) - DESIGN TOKENS
+   Engineered restraint: Near-black canvas, white outline pills, weight 400
+   ========================================================================== */
+
+:root {
+  /* Surface & Canvas */
+  --colors-canvas: #0a0a0a;
+  --colors-canvas-soft: #1a1c20;
+  --colors-canvas-card: #191919;
+  --colors-canvas-mid: #363a3f;
+  --colors-hairline: #212327;
+  --colors-hairline-translucent: rgba(255, 255, 255, 0.12);
+  --colors-pill-border: rgba(255, 255, 255, 0.25);
+  --colors-pill-hover-border: rgba(255, 255, 255, 0.5);
+
+  /* Primary & Text */
+  --colors-primary: #ffffff;
+  --colors-on-primary: #0a0a0a;
+  --colors-ink: #ffffff;
+  --colors-ink-hover: #fafaf7;
+  --colors-body: #dadbdf;
+  --colors-body-mid: #7d8187;
+
+  /* Accent Palette (Illustrative / Indicators) */
+  --colors-accent-sunset: #ff7a17;
+  --colors-accent-sunset-soft: #ffc285;
+  --colors-accent-dusk: #7c3aed;
+  --colors-accent-twilight: #c4b5fd;
+  --colors-accent-breeze: #a0c3ec;
+  --colors-accent-midnight: #0d1726;
+
+  /* Semantic status (restrained) */
+  --colors-status-active: #34d399;
+  --colors-status-warning: #fbbf24;
+  --colors-status-error: #f87171;
+
+  /* Typography Fonts */
+  --font-display: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  --font-body: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  --font-mono: 'Geist Mono', 'JetBrains Mono', monospace;
+
+  /* Border Radii */
+  --rounded-none: 0px;
+  --rounded-sm: 8px;
+  --rounded-pill: 9999px;
+  --rounded-full: 9999px;
+
+  /* Spacing */
+  --spacing-xxs: 2px;
+  --spacing-xs: 4px;
+  --spacing-sm: 8px;
+  --spacing-md: 12px;
+  --spacing-lg: 16px;
+  --spacing-xl: 24px;
+  --spacing-2xl: 32px;
+  --spacing-3xl: 48px;
+  --spacing-4xl: 64px;
+
+  /* Transitions */
+  --transition-fast: 150ms cubic-bezier(0.16, 1, 0.3, 1);
+  --transition-normal: 240ms cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+/* Base Reset */
+*, *::before, *::after {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+/* ==========================================================================
+   GLOBAL MINIMAL DARK SCROLLBAR STYLING
+   ========================================================================== */
+* {
+  scrollbar-width: thin;
+  scrollbar-color: #2b2e36 #0a0a0a;
+}
+
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+
+::-webkit-scrollbar-track {
+  background: #0a0a0a;
+}
+
+::-webkit-scrollbar-thumb {
+  background: #2b2e36;
+  border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: #404450;
+}
+
+html, body {
+  background-color: var(--colors-canvas);
+  color: var(--colors-ink);
+  font-family: var(--font-body);
+  font-weight: 400; /* Weight 400 for everything */
+  font-size: 16px;
+  line-height: 24px;
+  min-height: 100vh;
+  overflow-x: hidden;
+}
+
+/* Strict Typography Scale - Weight 400 Only */
+.typography-display-xl {
+  font-size: clamp(48px, 8vw, 96px);
+  line-height: 0.96;
+  font-weight: 400;
+  letter-spacing: -2.4px;
+  color: var(--colors-ink);
+}
+
+.typography-display-lg {
+  font-size: clamp(36px, 6vw, 72px);
+  line-height: 1;
+  font-weight: 400;
+  letter-spacing: -1.8px;
+  color: var(--colors-ink);
+}
+
+.typography-display-md {
+  font-size: clamp(28px, 4vw, 48px);
+  line-height: 1.1;
+  font-weight: 400;
+  letter-spacing: -1.2px;
+  color: var(--colors-ink);
+}
+
+.typography-display-sm {
+  font-size: 32px;
+  line-height: 36px;
+  font-weight: 400;
+  letter-spacing: -0.6px;
+  color: var(--colors-ink);
+}
+
+.typography-display-xs {
+  font-size: 20px;
+  line-height: 28px;
+  font-weight: 400;
+  letter-spacing: 0;
+  color: var(--colors-ink);
+}
+
+.typography-body-lg {
+  font-size: 18px;
+  line-height: 28px;
+  font-weight: 400;
+  letter-spacing: 0;
+  color: var(--colors-body);
+}
+
+.typography-body-md {
+  font-size: 16px;
+  line-height: 24px;
+  font-weight: 400;
+  letter-spacing: 0;
+  color: var(--colors-body);
+}
+
+.typography-body-sm {
+  font-size: 14px;
+  line-height: 20px;
+  font-weight: 400;
+  letter-spacing: 0;
+  color: var(--colors-body);
+}
+
+.typography-caption-mono {
+  font-family: var(--font-mono);
+  font-size: 14px;
+  line-height: 20px;
+  font-weight: 400;
+  letter-spacing: 1.4px;
+  text-transform: uppercase;
+  color: var(--colors-ink);
+}
+
+.typography-caption-mono-sm {
+  font-family: var(--font-mono);
+  font-size: 12px;
+  line-height: 16px;
+  font-weight: 400;
+  letter-spacing: 1.2px;
+  text-transform: uppercase;
+  color: var(--colors-body-mid);
+}
+
+.typography-button-md {
+  font-size: 14px;
+  line-height: 20px;
+  font-weight: 400;
+  letter-spacing: 0;
+}

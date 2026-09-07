@@ -1,0 +1,273 @@
+/* ==========================================================================
+   MINIMAL AUTHENTICATION PORTAL STYLING
+   Split layout: Isabela Cadastral Map Image on Left + Login Form on Right
+   Engineered restraint, near-black canvas #0a0a0a, pure pill interactions
+   ========================================================================== */
+
+.login-page-wrapper {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  background-color: var(--colors-canvas);
+}
+
+/* Nav bar */
+.nav-bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 12px 32px;
+  background-color: var(--colors-canvas);
+  border-bottom: 1px solid var(--colors-hairline);
+}
+
+.nav-brand {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-sm);
+  color: var(--colors-ink);
+}
+
+.brand-logo-img {
+  width: 28px;
+  height: 28px;
+  object-fit: contain;
+  border-radius: 50%;
+  display: block;
+}
+
+/* Main Split Viewport */
+.login-main {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 12px 24px;
+  width: 100%;
+  box-sizing: border-box;
+}
+
+.login-split-container {
+  display: grid;
+  grid-template-columns: 1.75fr 1fr;
+  gap: 36px;
+  max-width: 1840px;
+  width: 96vw;
+  align-items: center;
+}
+
+@media (max-width: 1120px) {
+  .login-split-container {
+    grid-template-columns: 1fr;
+    gap: var(--spacing-xl);
+    padding: var(--spacing-sm) 0;
+    width: 100%;
+  }
+}
+
+/* --------------------------------------------------------------------------
+   LEFT SIDE: Province of Isabela Map Video
+   -------------------------------------------------------------------------- */
+.login-map-col {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: var(--spacing-sm);
+  user-select: none;
+  width: 100%;
+}
+
+.map-image-wrapper,
+.map-video-wrapper {
+  width: 100%;
+  max-width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  position: relative;
+  border-radius: var(--rounded-md);
+  overflow: hidden;
+}
+
+.isabela-map-img,
+.isabela-map-video {
+  width: 100%;
+  height: auto;
+  max-height: min(88vh, 860px);
+  object-fit: contain;
+  transition: opacity var(--transition-normal);
+  display: block;
+  border-radius: var(--rounded-md);
+  background-color: transparent;
+}
+
+@media (max-width: 1120px) {
+  .map-image-wrapper,
+  .map-video-wrapper {
+    max-width: 100%;
+  }
+  .isabela-map-img,
+  .isabela-map-video {
+    max-height: 540px;
+    max-width: 100%;
+  }
+}
+
+.map-caption-block {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+  text-align: center;
+}
+
+.map-subcaption {
+  color: var(--colors-body-mid);
+  letter-spacing: 1.2px;
+  font-size: 11px;
+}
+
+/* --------------------------------------------------------------------------
+   RIGHT SIDE: Authentication Form Column
+   -------------------------------------------------------------------------- */
+.login-form-col {
+  display: flex;
+  justify-content: center;
+  width: 100%;
+}
+
+.auth-center-column {
+  width: 100%;
+  max-width: 480px;
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-xl);
+}
+
+/* Masthead */
+.auth-masthead {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-xs);
+  text-align: left;
+}
+
+.auth-masthead .typography-display-md {
+  font-size: clamp(28px, 2.7vw, 42px);
+  line-height: 1.15;
+  white-space: nowrap;
+  letter-spacing: -1.1px;
+  margin-top: 4px;
+  margin-bottom: 2px;
+}
+
+/* The Auth Card */
+.ex-auth-form-card {
+  background-color: var(--colors-canvas-card);
+  border: 1px solid var(--colors-hairline);
+  border-radius: var(--rounded-sm);
+  padding: 28px;
+  box-shadow: none;
+}
+
+/* Role Selector Pills */
+.role-pill-group {
+  display: flex;
+  gap: 6px;
+  margin-top: 6px;
+  width: 100%;
+}
+
+.role-pill {
+  flex: 1;
+  font-family: var(--font-body);
+  font-size: 12px;
+  line-height: 16px;
+  font-weight: 400;
+  padding: 6px 0;
+  text-align: center;
+  border-radius: var(--rounded-pill);
+  border: 1px solid var(--colors-hairline);
+  background-color: transparent;
+  color: var(--colors-body-mid);
+  cursor: pointer;
+  transition: all var(--transition-fast);
+}
+
+.role-pill:hover {
+  border-color: var(--colors-pill-border);
+  color: var(--colors-ink);
+}
+
+.role-pill.active {
+  background-color: rgba(255, 255, 255, 0.08);
+  border-color: rgba(255, 255, 255, 0.5);
+  color: var(--colors-ink);
+}
+
+/* Form Actions */
+.form-actions {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-sm);
+  margin-top: var(--spacing-xl);
+}
+
+.form-actions .button-primary,
+.form-actions .button-outline-on-dark {
+  width: 100%;
+  text-align: center;
+}
+
+/* Minimal alert */
+.form-alert {
+  padding: 10px 14px;
+  border-radius: var(--rounded-sm);
+  font-size: 12px;
+  line-height: 16px;
+  margin-bottom: var(--spacing-md);
+  display: none;
+  font-family: var(--font-mono);
+  letter-spacing: 0.2px;
+}
+
+.form-alert.visible {
+  display: block;
+}
+
+.form-alert.error {
+  background-color: rgba(248, 113, 113, 0.08);
+  border: 1px solid rgba(248, 113, 113, 0.3);
+  color: #fca5a5;
+}
+
+.form-alert.success {
+  background-color: rgba(52, 211, 153, 0.08);
+  border: 1px solid rgba(52, 211, 153, 0.3);
+  color: #6ee7b7;
+}
+
+/* Meta Strip */
+.auth-meta-strip {
+  text-align: center;
+  color: var(--colors-body-mid);
+  padding-top: var(--spacing-xs);
+}
+
+/* Minimal Footer */
+.footer {
+  background-color: var(--colors-canvas);
+  border-top: 1px solid var(--colors-hairline);
+  padding: 24px 32px;
+}
+
+.login-footer-content {
+  max-width: 1280px;
+  margin: 0 auto;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: var(--spacing-md);
+}

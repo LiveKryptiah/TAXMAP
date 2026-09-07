@@ -1,0 +1,197 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Sign In — Tax Mapping System | Province of Isabela</title>
+  
+  <!-- Inter (Universal Sans alternate, weight 400 only) & Geist Mono -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Geist+Mono:wght@400&family=Inter:wght@400&display=swap" rel="stylesheet">
+
+  <!-- Favicon -->
+  <link rel="icon" type="image/png" href="/static/img/isabela_logo.png">
+
+  <!-- Design Tokens & Components -->
+  <link rel="stylesheet" href="/static/css/design-tokens.css">
+  <link rel="stylesheet" href="/static/css/components.css">
+  <link rel="stylesheet" href="/static/css/login.css">
+</head>
+<body>
+  <div class="login-page-wrapper">
+    
+    <!-- Minimalist Top Navigation -->
+    <header class="nav-bar">
+      <div class="nav-brand">
+        <img src="/static/img/isabela_logo.png" alt="Province of Isabela Logo" class="brand-logo-img" />
+        <span class="typography-caption-mono">PROVINCE OF ISABELA · ASSESSOR</span>
+      </div>
+
+      <div class="nav-links">
+        <span class="typography-caption-mono-sm" id="live-clock">PST 15:00:00</span>
+      </div>
+    </header>
+
+    <!-- Two-Column Split Auth Viewport -->
+    <main class="login-main">
+      <div class="login-split-container">
+        
+        <!-- LEFT SIDE: Province of Isabela Cadastral Map & Seal Video -->
+        <section class="login-map-col">
+          <div class="map-image-wrapper map-video-wrapper">
+            <video 
+              id="taxmap-video"
+              class="isabela-map-video"
+              autoplay 
+              loop 
+              muted 
+              playsinline
+              poster="/static/img/taxmap_video_poster.jpg"
+              preload="auto"
+            >
+              <source src="/taxmap.mp4" type="video/mp4" />
+              <source src="/static/taxmap.mp4" type="video/mp4" />
+              <img 
+                src="/static/img/taxmap_video_poster.jpg" 
+                alt="Province of Isabela Cadastral Map" 
+                class="isabela-map-img"
+              />
+            </video>
+          </div>
+          <div class="map-caption-block">
+            <div class="eyebrow-mono" style="justify-content: center;">
+              <span class="eyebrow-indicator"></span>
+              <span>PROVINCE OF ISABELA // CADASTRAL JURISDICTION</span>
+            </div>
+            <p class="typography-caption-mono-sm map-subcaption">
+              34 MUNICIPALITIES · 3 CITIES · PRS92 ZONE 3
+            </p>
+          </div>
+        </section>
+
+        <!-- RIGHT SIDE: Minimal Authentication Form Card -->
+        <section class="login-form-col">
+          <div class="auth-center-column">
+            
+            <!-- Header Eyebrow & Title -->
+            <div class="auth-masthead">
+              <div class="eyebrow-mono">
+                <span class="eyebrow-indicator"></span>
+                <span>TM-RPAIS // CADASTRE 211</span>
+              </div>
+              <h1 class="typography-display-md">Tax Mapping System</h1>
+              <p class="typography-body-md" style="color: var(--colors-body-mid);">
+                Provincial Government of Isabela · Office of the Provincial Assessor
+              </p>
+            </div>
+
+            <!-- Auth Card (ex-auth-form-card) -->
+            <div class="ex-auth-form-card">
+              
+              <!-- Designated Role Pills -->
+              <div class="form-group" style="margin-bottom: var(--spacing-md);">
+                <label class="form-label">
+                  <span>Authority Role</span>
+                </label>
+                <div class="role-pill-group" role="tablist">
+                  <button type="button" class="role-pill active" data-role="PROVINCIAL_ASSESSOR">Assessor</button>
+                  <button type="button" class="role-pill" data-role="GIS_TAX_MAPPER">GIS Lead</button>
+                  <button type="button" class="role-pill" data-role="MUNICIPAL_APPRAISER">Appraiser</button>
+                  <button type="button" class="role-pill" data-role="RECORDS_OFFICER">Records</button>
+                </div>
+              </div>
+
+              <!-- Alert / Error message container -->
+              <div id="form-alert" class="form-alert" role="alert"></div>
+
+              <!-- Form Fields -->
+              <form id="login-form" autocomplete="off">
+                <div class="form-group">
+                  <label for="username" class="form-label">
+                    <span>Officer ID</span>
+                  </label>
+                  <input 
+                    type="text" 
+                    id="username" 
+                    name="username" 
+                    class="text-input" 
+                    value="assessor.pgi"
+                    placeholder="Username or badge number" 
+                    required
+                    spellcheck="false"
+                  />
+                </div>
+
+                <div class="form-group">
+                  <label for="password" class="form-label">
+                    <span>Password</span>
+                  </label>
+                  <div class="input-container">
+                    <input 
+                      type="password" 
+                      id="password" 
+                      name="password" 
+                      class="text-input" 
+                      value="IsabelaAssessor2026!"
+                      placeholder="Password" 
+                      required 
+                    />
+                    <button 
+                      type="button" 
+                      id="toggle-password" 
+                      class="input-icon-btn" 
+                      aria-label="Toggle password visibility"
+                    >
+                      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+                        <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path>
+                        <circle cx="12" cy="12" r="3"></circle>
+                      </svg>
+                    </button>
+                  </div>
+                </div>
+
+                <div class="form-actions">
+                  <button type="submit" id="submit-btn" class="btn button-primary">
+                    Sign in
+                  </button>
+                  <a href="/dashboard" class="btn button-outline-on-dark">
+                    Preview cadastre
+                  </a>
+                </div>
+              </form>
+
+            </div>
+
+            <!-- Restrained Security & Jurisdiction Metadata -->
+            <div class="auth-meta-strip">
+              <span class="typography-caption-mono-sm">37 LGUs · 482,910 PARCELS · PRS92 ZONE 3</span>
+            </div>
+
+          </div>
+        </section>
+
+      </div>
+    </main>
+
+    <!-- Minimal Hairline Footer -->
+    <footer class="footer">
+      <div class="login-footer-content">
+        <span class="typography-caption-mono-sm">© 2026 PROVINCIAL GOVERNMENT OF ISABELA</span>
+        <span class="typography-caption-mono-sm">OFFICE OF THE PROVINCIAL ASSESSOR</span>
+      </div>
+    </footer>
+
+    <!-- Toast Component -->
+    <div class="toast-container">
+      <div id="ex-toast" class="ex-toast">
+        <span class="eyebrow-indicator"></span>
+        <span class="toast-text">System ready.</span>
+      </div>
+    </div>
+
+  </div>
+
+  <script src="/static/js/login.js"></script>
+</body>
+</html>

@@ -1,0 +1,355 @@
+/* ==========================================================================
+   COMPONENT STYLES: XAI DESIGN SYSTEM PRIMITIVES
+   Engineered restraint, pill-only interactions, zero shadows, hairline elevation
+   ========================================================================== */
+
+/* --------------------------------------------------------------------------
+   Buttons (Pill is the universal shape)
+   -------------------------------------------------------------------------- */
+.btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--spacing-sm);
+  font-family: var(--font-body);
+  font-size: 14px;
+  line-height: 20px;
+  font-weight: 400; /* Strict 400 */
+  letter-spacing: 0;
+  text-decoration: none;
+  cursor: pointer;
+  border-radius: var(--rounded-pill);
+  transition: all var(--transition-fast);
+  white-space: nowrap;
+  user-select: none;
+  background: transparent;
+}
+
+/* Canonical white-outline pill */
+.button-outline-on-dark {
+  background-color: transparent;
+  color: var(--colors-ink);
+  border: 1px solid var(--colors-pill-border);
+  padding: 8px 20px;
+}
+
+.button-outline-on-dark:hover {
+  border-color: var(--colors-pill-hover-border);
+  color: var(--colors-ink-hover);
+  background-color: rgba(255, 255, 255, 0.04);
+}
+
+.button-outline-on-dark:active {
+  background-color: rgba(255, 255, 255, 0.08);
+}
+
+.button-outline-on-dark:focus-visible {
+  outline: none;
+  border-color: rgba(255, 255, 255, 0.8);
+}
+
+/* Rare white-filled pill (primary CTA) */
+.button-primary {
+  background-color: var(--colors-primary);
+  color: var(--colors-on-primary);
+  border: 1px solid var(--colors-primary);
+  padding: 10px 24px;
+}
+
+.button-primary:hover {
+  background-color: #f0f0f0;
+  border-color: #f0f0f0;
+}
+
+.button-primary:active {
+  background-color: #e0e0e0;
+}
+
+.button-primary:focus-visible {
+  outline: none;
+  border-color: var(--colors-accent-twilight);
+}
+
+/* Smaller outline pill for card actions / chips */
+.button-outline-sm {
+  font-size: 12px;
+  line-height: 16px;
+  padding: 5px 14px;
+  border: 1px solid var(--colors-pill-border);
+  color: var(--colors-body);
+}
+
+.button-outline-sm:hover {
+  border-color: var(--colors-pill-hover-border);
+  color: var(--colors-ink);
+}
+
+.button-outline-sm.active {
+  border-color: var(--colors-primary);
+  color: var(--colors-ink);
+  background-color: rgba(255, 255, 255, 0.08);
+}
+
+/* --------------------------------------------------------------------------
+   Cards & Surfaces (Hairline borders, no shadows)
+   -------------------------------------------------------------------------- */
+.card-content {
+  background-color: var(--colors-canvas-card);
+  color: var(--colors-ink);
+  border: 1px solid var(--colors-hairline);
+  border-radius: var(--rounded-sm);
+  padding: var(--spacing-xl);
+  box-shadow: none; /* Never use shadows */
+  position: relative;
+}
+
+.card-feature-product {
+  background-color: var(--colors-canvas-card);
+  color: var(--colors-ink);
+  border: 1px solid var(--colors-hairline);
+  border-radius: var(--rounded-sm);
+  padding: var(--spacing-xl);
+  box-shadow: none;
+  transition: border-color var(--transition-fast);
+}
+
+.card-feature-product:hover {
+  border-color: var(--colors-hairline-translucent);
+}
+
+/* --------------------------------------------------------------------------
+   Form Controls
+   -------------------------------------------------------------------------- */
+.form-group {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-xs);
+  margin-bottom: var(--spacing-lg);
+}
+
+.form-label {
+  font-family: var(--font-mono);
+  font-size: 12px;
+  line-height: 16px;
+  font-weight: 400;
+  letter-spacing: 1.2px;
+  text-transform: uppercase;
+  color: var(--colors-body-mid);
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.form-label-desc {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  letter-spacing: 0.5px;
+  text-transform: none;
+  color: var(--colors-body-mid);
+}
+
+.input-container {
+  position: relative;
+  display: flex;
+  align-items: center;
+  width: 100%;
+}
+
+.text-input {
+  width: 100%;
+  background-color: var(--colors-canvas-soft);
+  color: var(--colors-ink);
+  border: 1px solid var(--colors-hairline);
+  border-radius: var(--rounded-sm);
+  font-family: var(--font-body);
+  font-size: 15px;
+  font-weight: 400;
+  line-height: 24px;
+  padding: 12px 16px;
+  outline: none;
+  transition: border-color var(--transition-fast), background-color var(--transition-fast);
+}
+
+.text-input::placeholder {
+  color: #4a4e57;
+  font-weight: 400;
+}
+
+.text-input:focus {
+  border-color: rgba(255, 255, 255, 0.35);
+  background-color: #1c1e23;
+}
+
+.text-input:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.input-icon-btn {
+  position: absolute;
+  right: 12px;
+  background: transparent;
+  border: none;
+  color: var(--colors-body-mid);
+  cursor: pointer;
+  padding: 4px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 4px;
+  transition: color var(--transition-fast);
+}
+
+.input-icon-btn:hover {
+  color: var(--colors-ink);
+}
+
+/* --------------------------------------------------------------------------
+   Eyebrows & Dividers
+   -------------------------------------------------------------------------- */
+.eyebrow-mono {
+  font-family: var(--font-mono);
+  font-size: 13px;
+  line-height: 18px;
+  font-weight: 400;
+  letter-spacing: 1.4px;
+  text-transform: uppercase;
+  color: var(--colors-ink);
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-sm);
+}
+
+.eyebrow-indicator {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background-color: var(--colors-status-active);
+  display: inline-block;
+}
+
+.divider-hairline {
+  height: 1px;
+  background-color: var(--colors-hairline);
+  border: none;
+  width: 100%;
+}
+
+/* --------------------------------------------------------------------------
+   Navigation Bar
+   -------------------------------------------------------------------------- */
+.nav-bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: var(--spacing-md) var(--spacing-xl);
+  background-color: var(--colors-canvas);
+  border-bottom: 1px solid var(--colors-hairline);
+  position: sticky;
+  top: 0;
+  z-index: 50;
+  backdrop-filter: blur(12px);
+}
+
+.nav-brand {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-md);
+  text-decoration: none;
+  color: var(--colors-ink);
+}
+
+.nav-brand-text {
+  display: flex;
+  flex-direction: column;
+}
+
+.nav-title {
+  font-size: 14px;
+  font-weight: 400;
+  letter-spacing: -0.2px;
+  color: var(--colors-ink);
+  line-height: 1.2;
+}
+
+.nav-subtitle {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  letter-spacing: 1px;
+  text-transform: uppercase;
+  color: var(--colors-body-mid);
+}
+
+.nav-links {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-lg);
+}
+
+.nav-link {
+  font-size: 14px;
+  font-weight: 400;
+  color: var(--colors-body);
+  text-decoration: none;
+  transition: color var(--transition-fast);
+}
+
+.nav-link:hover {
+  color: var(--colors-ink);
+}
+
+/* --------------------------------------------------------------------------
+   Toasts & Alerts
+   -------------------------------------------------------------------------- */
+.toast-container {
+  position: fixed;
+  bottom: 24px;
+  right: 24px;
+  z-index: 100;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  pointer-events: none;
+}
+
+.ex-toast {
+  background-color: var(--colors-canvas-card);
+  border: 1px solid var(--colors-hairline);
+  border-radius: var(--rounded-sm);
+  padding: 12px 18px;
+  color: var(--colors-ink);
+  font-size: 13px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  box-shadow: none;
+  pointer-events: auto;
+  opacity: 0;
+  transform: translateY(8px);
+  transition: all var(--transition-fast);
+}
+
+.ex-toast.visible {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+.ex-toast.error {
+  border-color: rgba(248, 113, 113, 0.4);
+}
+
+.ex-toast.success {
+  border-color: rgba(52, 211, 153, 0.4);
+}
+
+/* --------------------------------------------------------------------------
+   Footer
+   -------------------------------------------------------------------------- */
+.footer {
+  background-color: var(--colors-canvas);
+  border-top: 1px solid var(--colors-hairline);
+  padding: var(--spacing-3xl) var(--spacing-xl);
+  color: var(--colors-body-mid);
+  font-size: 13px;
+  line-height: 20px;
+}

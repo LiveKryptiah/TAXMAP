@@ -2533,7 +2533,8 @@
   .td-modal-overlay,
   .survey-modal-overlay,
   .delinquency-modal-overlay,
-  #modal-official-receipt {
+  #modal-official-receipt,
+  #modal-tax-clearance {
     position: static !important;
     display: block !important;
     width: 100% !important;
@@ -2548,7 +2549,8 @@
   .td-modal-card,
   .survey-modal-card,
   .delinquency-modal-card,
-  #modal-official-receipt .custom-modal-card {
+  #modal-official-receipt .custom-modal-card,
+  #modal-tax-clearance .custom-modal-card {
     position: static !important;
     width: 100% !important;
     max-width: 100% !important;
@@ -2565,7 +2567,8 @@
   .td-document-scroll-wrapper,
   .survey-document-scroll-wrapper,
   .delinquency-document-scroll-wrapper,
-  #modal-official-receipt .custom-modal-body-scroll {
+  #modal-official-receipt .custom-modal-body-scroll,
+  #modal-tax-clearance .custom-modal-body-scroll {
     overflow: visible !important;
     padding: 0 !important;
     margin: 0 !important;
@@ -2577,7 +2580,8 @@
   .tax-declaration-document,
   .survey-document,
   .delinquency-document,
-  .official-receipt-document {
+  .official-receipt-document,
+  .tax-clearance-document {
     width: 100% !important;
     max-width: 100% !important;
     box-shadow: none !important;
@@ -3115,4 +3119,33 @@
 .official-receipt-document .td-numbering-box {
   background-color: #f0fdf4;
   border: 1.5px solid #059669;
+}
+
+/* ==========================================================================
+   OFFICIAL REAL PROPERTY TAX CLEARANCE CERTIFICATE (R.A. 7160)
+   ========================================================================== */
+.tax-clearance-document {
+  width: 100%;
+  max-width: 820px;
+  background-color: #ffffff;
+  color: #111111;
+  padding: 34px 38px;
+  border-radius: 2px;
+  box-shadow: 0 4px 24px rgba(0, 0, 0, 0.5);
+  position: relative;
+  font-family: var(--font-body);
+  font-size: 11px;
+  line-height: 1.4;
+  border: 3px double #065f46;
+  box-sizing: border-box;
+}
+
+.tax-clearance-document .td-table th {
+  background-color: #f0fdf4;
+  border: 1px solid #059669;
+  color: #064e3b;
+}
+
+.tax-clearance-document .td-table td {
+  border: 1px solid #cbd5e1;
 }

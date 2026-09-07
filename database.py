@@ -1837,6 +1837,144 @@ def get_official_receipt(or_no):
     }
     return {"success": True, "receipt": receipt_doc}
 
+def issue_tax_clearance(pin, purpose=None, officer_username="system", officer_badge="PGI-TRS-008", ip=None):
+    # Issues an official Republic of the Philippines Certificate of Real Property Tax Clearance
+    # pursuant to Title II, Book II of Republic Act No. 7160.
+    # Strictly verifies that the property has NO DELINQUENT tax liabilities.
+    conn = get_db()
+    cursor = conn.cursor()
+
+    cursor.execute("SELECT * FROM parcels WHERE pin = ?", (pin,))
+    row = cursor.fetchone()
+    if not row:
+        conn.close()
+        return {"success": False, "message": f"Parcel with PIN '{pin}' not found."}
+
+    p = dict(row)
+    delinq = calculate_delinquency_breakdown(p)
+
+    if delinq["status"] == "DELINQUENT":
+        conn.close()
+        return {
+            "success": False,
+            "message": (
+                f"Cannot issue Tax Clearance: Parcel '{pin}' has an outstanding delinquent tax liability of "
+                f"PHP {delinq['total_delinquent_due']:,.2f} ({delinq['delinquent_years_str']}). "
+                f"Please settle all outstanding dues in the RPT Collection module first."
+            ),
+            "delinquency": delinq
+        }
+
+    cursor.execute("SELECT * FROM tax_payments WHERE pin = ? ORDER BY id DESC LIMIT 1", (pin,))
+    latest_pay_row = cursor.fetchone()
+    latest_payment = dict(latest_pay_row) if latest_pay_row else None
+
+    clean_pin = pin.replace("-", "")
+    seq_no = f"RPTC-2026-{p.get('lgu_code', '03215')}-{clean_pin[-6:]}"
+    valid_purpose = purpose.strip() if purpose and purpose.strip() else "Transfer of Ownership / BIR eCAR Application / LRA Title Registration"
+
+    if delinq["status"] == "EXEMPT":
+        tax_status_statement = "EXEMPT FROM REAL PROPERTY TAXATION PURSUANT TO SECTION 234 OF REPUBLIC ACT NO. 7160 (GOVERNMENT / PUBLIC USE)"
+        payment_info = {
+            "status": "EXEMPT",
+            "latest_or_no": "N/A (Exempt Government/Public Land)",
+            "date_paid": "N/A",
+            "amount_paid": 0.0,
+            "period_covered": "Current Year 2026 (Exempt)"
+        }
+    else:
+        tax_status_statement = "FULLY PAID AND SETTLED OF ALL REAL PROPERTY TAXES AND SPECIAL EDUCATION FUND UP TO AND INCLUDING CALENDAR YEAR 2026"
+        payment_info = {
+            "status": "PAID / CURRENT",
+            "latest_or_no": latest_payment["or_no"] if latest_payment else f"OR-2026-{p.get('lgu_code', '03215')}-00892",
+            "date_paid": latest_payment["payment_date"] if latest_payment else "March 2026",
+            "amount_paid": latest_payment["total_amount_paid"] if latest_payment else delinq["annual_tax"],
+            "period_covered": latest_payment["period_covered"] if latest_payment else "Annual 2026"
+        }
+
+    audit_details = (
+        f"Issued Real Property Tax Clearance Certificate #{seq_no} for PIN {pin} ({p.get('lot_no')}, {p.get('owner_name')}) - "
+        f"Purpose: {valid_purpose} by {officer_badge}."
+    )
+    cursor.execute("""
+    INSERT INTO audit_logs (username, action, details, ip_address)
+    VALUES (?, 'TAX_CLEARANCE_ISSUED', ?, ?)
+    """, (officer_username, audit_details, ip))
+    conn.commit()
+    conn.close()
+
+    clearance_doc = {
+        "clearance_no": seq_no,
+        "date_issued": "March 8, 2026",
+        "valid_until": "June 6, 2026 (Valid for 90 days from issuance)",
+        "purpose": valid_purpose,
+        "jurisdiction": {
+            "republic": "Republic of the Philippines",
+            "province": "Province of Isabela",
+            "office": "Office of the Provincial / City Treasurer",
+            "lgu_name": p.get("lgu_name", "City of Ilagan"),
+            "lgu_code": p.get("lgu_code", "03215")
+        },
+        "property": {
+            "pin": p.get("pin"),
+            "td_no": p.get("td_no"),
+            "lot_no": p.get("lot_no"),
+            "block_no": p.get("block_no", "Blk 01"),
+            "section_no": p.get("section_no", "014-A"),
+            "survey_no": p.get("survey_no", "Cad 211"),
+            "owner_name": p.get("owner_name"),
+            "owner_address": p.get("owner_address"),
+            "classification": p.get("classification"),
+            "actual_use": p.get("actual_use"),
+            "area_sqm": p.get("area_sqm", 0.0),
+            "area_ha": round(p.get("area_sqm", 0.0) / 10000.0, 4),
+            "market_value": p.get("market_value", 0.0),
+            "assessed_value": p.get("assessed_value", 0.0)
+        },
+        "tax_status": delinq["status"],
+        "tax_status_statement": tax_status_statement,
+        "payment_info": payment_info,
+        "certification_text": (
+            "THIS IS TO CERTIFY that according to the Official Real Property Tax Roll, Assessment Register, "
+            "and Treasury Collection Records of this Office, the real property described above is "
+            f"{tax_status_statement}.\n\n"
+            "THEREFORE, the said real property is hereby declared FREE FROM ANY TAX LIEN, ENCUMBRANCE, OR "
+            "DELINQUENT LIABILITY in favor of the Province of Isabela and the City/Municipality concerned as of this date.\n\n"
+            f"This Certification of Tax Clearance is issued upon the request of the declared property owner or authorized "
+            f"representative for the specific purpose of: {valid_purpose}."
+        ),
+        "fees": {
+            "clearance_fee": 150.00,
+            "doc_stamp_tax": 30.00,
+            "total_fees": 180.00,
+            "fee_or_no": f"OR-FEE-2026-{clean_pin[-5:]}",
+            "fee_date": "March 8, 2026"
+        },
+        "signatories": {
+            "provincial_treasurer": {
+                "name": "HON. MARIA CORAZON G. PUA",
+                "title": "Provincial Treasurer",
+                "office": "Office of the Provincial Treasurer, Isabela"
+            },
+            "city_treasurer": {
+                "name": "ENGR. MARITES D. PASCUAL",
+                "title": "City / Municipal Treasurer (OIC)",
+                "office": f"Office of the Treasurer · {p.get('lgu_name', 'City of Ilagan')}"
+            },
+            "issuing_officer": {
+                "username": officer_username,
+                "badge": officer_badge,
+                "date": "March 8, 2026"
+            }
+        }
+    }
+
+    return {
+        "success": True,
+        "message": f"Official Tax Clearance Certificate #{seq_no} issued successfully.",
+        "clearance": clearance_doc
+    }
+
 def export_cadastre_geojson(lgu_code="ALL"):
     # Generates a valid GeoJSON FeatureCollection of all active parcels for the given LGU
     parcels = get_parcels(lgu_code=lgu_code)

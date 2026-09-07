@@ -445,6 +445,14 @@
               <span class="icon-btn-label">Pay Tax</span>
             </button>
 
+            <button type="button" id="btn-issue-clearance" class="btn button-icon-action button-outline-on-dark" title="Issue Official Certificate of Real Property Tax Clearance (R.A. 7160)">
+              <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
+                <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path>
+                <polyline points="9 12 11 14 15 10"></polyline>
+              </svg>
+              <span class="icon-btn-label">Clearance</span>
+            </button>
+
             <button type="button" id="btn-delete-parcel" class="btn button-icon-action button-danger-outline" title="Delete Lot (Cancel Record)">
               <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
                 <polyline points="3 6 5 6 21 6"></polyline>
@@ -1911,6 +1919,232 @@
           <div class="td-doc-footer-meta" style="margin-top: 14px;">
             <span>PROVINCE OF ISABELA · TREASURY AND ASSESSMENT COLLECTION DIVISION</span>
             <span>SYSTEM-GENERATED OFFICIAL RECEIPT · FORM NO. 51-C</span>
+          </div>
+
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- ====================================================================
+       6. CERTIFICATE OF REAL PROPERTY TAX CLEARANCE (R.A. 7160)
+       ==================================================================== -->
+  <div class="custom-modal-overlay" id="modal-tax-clearance" style="display: none;">
+    <div class="custom-modal-card" style="max-width: 880px; max-height: 94vh;">
+      
+      <!-- Top Action Bar (Hidden in Print) -->
+      <div class="custom-modal-header no-print">
+        <div style="display: flex; align-items: center; gap: 8px;">
+          <div class="eyebrow-mono">
+            <span class="eyebrow-indicator" style="background-color: #059669;"></span>
+            <span>[ R.A. 7160 // REAL PROPERTY TAX CLEARANCE CERTIFICATION ]</span>
+          </div>
+        </div>
+        <div style="display: flex; align-items: center; gap: 10px;">
+          <div style="display: flex; align-items: center; gap: 6px;">
+            <label class="typography-caption-mono-sm" style="color: var(--colors-body-dim); font-size: 10px;">PURPOSE:</label>
+            <select id="clearance-purpose-select" class="sidebar-lgu-select" style="background-color: var(--colors-canvas-soft); padding: 5px 8px; font-size: 11px; max-width: 250px;">
+              <option value="Transfer of Ownership / BIR eCAR Application / LRA Title Registration">Transfer of Ownership / BIR eCAR / LRA</option>
+              <option value="Bank Mortgage / Loan Collateral Requirement">Bank Mortgage / Loan Collateral</option>
+              <option value="Building Permit / LGU Business Licensing">Building Permit / LGU Business License</option>
+              <option value="Estate Settlement / Extrajudicial Partition">Estate Settlement / Extrajudicial Partition</option>
+              <option value="General Reference & Official Verification">General Reference & Verification</option>
+            </select>
+          </div>
+          <button type="button" id="btn-print-clearance" class="btn button-primary" style="display: flex; align-items: center; gap: 6px; padding: 7px 16px;">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
+              <polyline points="6 9 6 2 18 2 18 9"></polyline>
+              <path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"></path>
+              <rect x="6" y="14" width="12" height="8"></rect>
+            </svg>
+            <span>Print Clearance</span>
+          </button>
+          <button type="button" class="workbench-close-btn" id="btn-close-clearance-modal">&times;</button>
+        </div>
+      </div>
+
+      <!-- Printable Certificate Sheet -->
+      <div class="custom-modal-body-scroll" style="background-color: #0b0c0e; display: flex; justify-content: center; padding: 24px 20px;">
+        <div class="tax-clearance-document" id="tax-clearance-document">
+          
+          <!-- Watermark Seal -->
+          <div class="td-watermark-seal">
+            <img src="/static/img/isabela_logo.png" alt="Provincial Seal" />
+          </div>
+
+          <!-- Document Header -->
+          <div class="td-doc-header" style="border-bottom: 2.5px double #065f46;">
+            <img src="/static/img/isabela_logo.png" class="td-doc-logo" alt="Province of Isabela Seal" />
+            <div class="td-doc-titles">
+              <div class="td-republic-text">REPUBLIC OF THE PHILIPPINES</div>
+              <div class="td-province-text">PROVINCE OF ISABELA</div>
+              <div class="td-lgu-text" id="tc-lgu-title">CITY OF ILAGAN</div>
+              <div class="td-office-text">OFFICE OF THE PROVINCIAL / CITY TREASURER</div>
+              <div class="td-main-title" style="font-size: 15px; color: #064e3b; letter-spacing: 1px; margin-top: 5px;">
+                CERTIFICATION OF REAL PROPERTY TAX CLEARANCE
+              </div>
+              <div style="font-size: 8.5px; font-family: var(--font-mono); color: #475569; margin-top: 2px;">
+                ISSUED PURSUANT TO TITLE II, BOOK II OF REPUBLIC ACT NO. 7160 (THE LOCAL GOVERNMENT CODE OF 1991)
+              </div>
+            </div>
+            <img src="/static/img/isabela_logo.png" class="td-doc-logo" alt="Office of the Treasurer Seal" />
+          </div>
+
+          <!-- Clearance Number & Validity Box -->
+          <div class="td-grid-box td-numbering-box" style="margin-top: 8px; border-color: #059669; background-color: #f0fdf4;">
+            <div class="td-box-col">
+              <span class="td-label" style="color: #065f46;">CLEARANCE CERTIFICATE NO.:</span>
+              <span class="td-val mono-num td-accent" id="tc-doc-no" style="font-size: 13.5px; font-weight: 700; color: #065f46;">RPTC-2026-03215-00104</span>
+            </div>
+            <div class="td-box-col">
+              <span class="td-label" style="color: #065f46;">DATE ISSUED & VALIDITY:</span>
+              <span class="td-val mono-num" id="tc-doc-date-validity" style="color: #0f172a;">March 8, 2026 · Valid until June 6, 2026 (90 Days)</span>
+            </div>
+          </div>
+
+          <!-- Property Identification Schedule -->
+          <div class="td-section-title" style="border-left-color: #059669; color: #064e3b; margin-top: 8px;">
+            I. REAL PROPERTY IDENTIFICATION & ASSESSMENT DATA
+          </div>
+          <div class="td-grid-box" style="padding: 6px 10px; margin-bottom: 6px;">
+            <div class="td-row-2">
+              <div>
+                <span class="td-label">DECLARED PROPERTY OWNER:</span>
+                <div class="td-val-bold" id="tc-doc-owner">North Luzon Agro-Commercial Corp.</div>
+              </div>
+              <div>
+                <span class="td-label">OWNER POSTAL ADDRESS:</span>
+                <div class="td-val" id="tc-doc-address">Barangay Alibagu, City of Ilagan, Isabela</div>
+              </div>
+            </div>
+            <div class="td-row-4" style="margin-top: 5px;">
+              <div>
+                <span class="td-label">PROPERTY INDEX NO. (PIN):</span>
+                <div class="td-val mono-num" id="tc-doc-pin">032-15-0001-043-01</div>
+              </div>
+              <div>
+                <span class="td-label">TAX DECLARATION NO. (TD):</span>
+                <div class="td-val mono-num" id="tc-doc-td">TD-2026-03215-01420</div>
+              </div>
+              <div>
+                <span class="td-label">CADASTRAL LOT & BLOCK:</span>
+                <div class="td-val mono-num" id="tc-doc-lot">Lot 43-01, Blk 05</div>
+              </div>
+              <div>
+                <span class="td-label">SURVEY NO. / SYSTEM:</span>
+                <div class="td-val mono-num" id="tc-doc-survey">Cad 211 (PRS92 / Zone 3)</div>
+              </div>
+            </div>
+            <div class="td-row-4" style="margin-top: 5px;">
+              <div>
+                <span class="td-label">CLASSIFICATION:</span>
+                <div class="td-val" id="tc-doc-class">Commercial</div>
+              </div>
+              <div>
+                <span class="td-label">LAND AREA:</span>
+                <div class="td-val mono-num" id="tc-doc-area">14,250.00 sq.m. (1.4250 ha)</div>
+              </div>
+              <div>
+                <span class="td-label">MARKET VALUE (MV):</span>
+                <div class="td-val mono-num" id="tc-doc-mv">PHP 89,100,000.00</div>
+              </div>
+              <div>
+                <span class="td-label">ASSESSED VALUE (AV):</span>
+                <div class="td-val mono-num" id="tc-doc-av" style="font-weight: 600;">PHP 44,550,000.00</div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Official Attestation Clause -->
+          <div class="td-section-title" style="border-left-color: #059669; color: #064e3b; margin-top: 8px;">
+            II. TREASURY CERTIFICATION OF TAX CLEARANCE
+          </div>
+          <div class="td-grid-box" style="padding: 10px 12px; background-color: #f8fafc; border: 1px solid #cbd5e1;">
+            <p style="font-size: 11px; line-height: 1.5; color: #1e293b; margin: 0 0 6px 0; text-align: justify;" id="tc-doc-cert-body">
+              <strong>THIS IS TO CERTIFY</strong> that according to the Official Real Property Tax Roll, Assessment Register, and Collection Records of this Office, the real property described above is <strong>FULLY PAID AND SETTLED OF ALL REAL PROPERTY TAXES AND SPECIAL EDUCATION FUND UP TO AND INCLUDING CALENDAR YEAR 2026</strong>.
+            </p>
+            <p style="font-size: 11px; line-height: 1.5; color: #1e293b; margin: 0 0 6px 0; text-align: justify;">
+              <strong>THEREFORE</strong>, pursuant to Title II, Book II of Republic Act No. 7160 (The Local Government Code of 1991), the subject real property is hereby declared <strong>FREE FROM ANY REAL PROPERTY TAX LIEN, ENCUMBRANCE, OR DELINQUENT LIABILITY</strong> in favor of the Province of Isabela and the City/Municipality concerned as of this date.
+            </p>
+            <p style="font-size: 10.5px; line-height: 1.4; color: #475569; margin: 0;" id="tc-doc-purpose-clause">
+              This Certification of Real Property Tax Clearance is issued upon the request of the declared property owner or authorized representative for the specific statutory purpose of: <strong id="tc-doc-purpose-text" style="color: #065f46;">Transfer of Ownership / BIR eCAR Application / LRA Title Registration</strong>.
+            </p>
+          </div>
+
+          <!-- Payment Reference & Fee Stamps Split Grid -->
+          <div class="form-grid-2" style="margin-top: 6px;">
+            
+            <!-- Latest Payment Reference Card -->
+            <div class="td-grid-box" style="padding: 8px 10px; margin-bottom: 0;">
+              <span class="td-label" style="color: #065f46;">SETTLEMENT PAYMENT REFERENCE:</span>
+              <div style="margin-top: 4px; display: flex; flex-direction: column; gap: 2px;">
+                <div style="display: flex; justify-content: space-between;">
+                  <span style="color: #64748b; font-size: 9.5px;">Official Receipt No.:</span>
+                  <span class="mono-num" id="tc-doc-or-no" style="font-weight: 600; color: #0f172a;">OR-2026-03215-01001</span>
+                </div>
+                <div style="display: flex; justify-content: space-between;">
+                  <span style="color: #64748b; font-size: 9.5px;">Date of Payment:</span>
+                  <span class="mono-num" id="tc-doc-or-date">March 8, 2026</span>
+                </div>
+                <div style="display: flex; justify-content: space-between;">
+                  <span style="color: #64748b; font-size: 9.5px;">Amount Paid:</span>
+                  <span class="mono-num" id="tc-doc-or-amount" style="font-weight: 600; color: #047857;">PHP 1,318,680.00</span>
+                </div>
+                <div style="display: flex; justify-content: space-between;">
+                  <span style="color: #64748b; font-size: 9.5px;">Period Covered:</span>
+                  <span class="mono-num" id="tc-doc-or-period">Annual 2026 & Arrears</span>
+                </div>
+              </div>
+            </div>
+
+            <!-- Statutory Clearance Fee & Documentary Stamp Card -->
+            <div class="td-grid-box" style="padding: 8px 10px; margin-bottom: 0;">
+              <span class="td-label" style="color: #065f46;">LEGAL FEES & DOCUMENTARY STAMP:</span>
+              <div style="margin-top: 4px; display: flex; flex-direction: column; gap: 2px;">
+                <div style="display: flex; justify-content: space-between;">
+                  <span style="color: #64748b; font-size: 9.5px;">Clearance Certification Fee:</span>
+                  <span class="mono-num" style="font-weight: 500;">PHP 150.00</span>
+                </div>
+                <div style="display: flex; justify-content: space-between;">
+                  <span style="color: #64748b; font-size: 9.5px;">Documentary Stamp (Sec. 188 NIRC):</span>
+                  <span class="mono-num" style="font-weight: 500;">PHP 30.00 (AFFIXED)</span>
+                </div>
+                <div style="display: flex; justify-content: space-between;">
+                  <span style="color: #64748b; font-size: 9.5px;">Certification Fee O.R. No.:</span>
+                  <span class="mono-num" id="tc-doc-fee-or" style="font-weight: 600; color: #0f172a;">OR-FEE-2026-04301</span>
+                </div>
+                <div style="display: flex; justify-content: space-between;">
+                  <span style="color: #64748b; font-size: 9.5px;">Total Fees Collected:</span>
+                  <span class="mono-num" style="font-weight: 600; color: #047857;">PHP 180.00</span>
+                </div>
+              </div>
+            </div>
+
+          </div>
+
+          <!-- Dual Signatures Block -->
+          <div class="td-signatures-row" style="margin-top: 14px;">
+            <div class="td-sign-col">
+              <div class="td-sign-role">Verified & Examined By:</div>
+              <div class="td-sign-space"></div>
+              <div class="td-sign-name" id="tc-doc-examiner">ENGR. MARITES D. PASCUAL</div>
+              <div class="td-sign-sub">Tax Mapping & Assessment Examiner</div>
+              <div class="td-sign-badge" id="tc-doc-badge">Badge No. PGI-TRS-008</div>
+            </div>
+            <div class="td-sign-col">
+              <div class="td-sign-role">Approved & Certified By:</div>
+              <div class="td-sign-space"></div>
+              <div class="td-sign-name">HON. MARIA CORAZON G. PUA</div>
+              <div class="td-sign-sub">Provincial Treasurer</div>
+              <div class="td-sign-badge">Office of the Provincial Treasurer · Isabela</div>
+            </div>
+          </div>
+
+          <!-- Document Footer -->
+          <div class="td-doc-footer-meta" style="margin-top: 12px;">
+            <span>PROVINCIAL GOVERNMENT OF ISABELA · OFFICE OF THE PROVINCIAL TREASURER</span>
+            <span>OFFICIAL TAX CLEARANCE CERTIFICATE · VALID FOR 90 DAYS</span>
           </div>
 
         </div>

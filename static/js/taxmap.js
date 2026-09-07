@@ -280,6 +280,8 @@ document.addEventListener('DOMContentLoaded', () => {
     const inspTotalDelinq = document.getElementById('insp-total-delinq');
     const btnIssueDelinquency = document.getElementById('btn-issue-delinquency');
     const btnOpenPayment = document.getElementById('btn-open-payment');
+    const btnIssueClearance = document.getElementById('btn-issue-clearance');
+    if (btnIssueClearance) btnIssueClearance.style.display = 'flex';
 
     if (delinq.status === 'DELINQUENT') {
       if (inspDelinqBox) {
@@ -3169,6 +3171,133 @@ document.addEventListener('DOMContentLoaded', () => {
     });
   }
 
+  // ==========================================================================
+  // 21. Real Property Tax Clearance Certificate Module (R.A. 7160)
+  // ==========================================================================
+  const modalTaxClearance = document.getElementById('modal-tax-clearance');
+  const btnCloseClearanceModal = document.getElementById('btn-close-clearance-modal');
+  const btnPrintClearance = document.getElementById('btn-print-clearance');
+  const btnIssueClearanceEl = document.getElementById('btn-issue-clearance');
+  const clearancePurposeSelect = document.getElementById('clearance-purpose-select');
+
+  function renderTaxClearance(c) {
+    if (!modalTaxClearance) return;
+
+    const setText = (id, val) => {
+      const el = document.getElementById(id);
+      if (el) el.textContent = val;
+    };
+
+    setText('tc-lgu-title', (c.jurisdiction.lgu_name || 'City of Ilagan').toUpperCase());
+    setText('tc-doc-no', c.clearance_no || 'RPTC-2026-00000');
+    setText('tc-doc-date-validity', `${c.date_issued || 'March 8, 2026'} · ${c.valid_until || 'Valid for 90 Days'}`);
+    setText('tc-doc-owner', c.property.owner_name || 'Declared Property Owner');
+    setText('tc-doc-address', c.property.owner_address || 'Province of Isabela');
+    setText('tc-doc-pin', c.property.pin || '—');
+    setText('tc-doc-td', c.property.td_no || '—');
+    setText('tc-doc-lot', `Lot ${c.property.lot_no || '—'}, ${c.property.block_no || 'Blk 01'}`);
+    setText('tc-doc-survey', `${c.property.survey_no || 'Cad 211'} (PRS92 / Zone 3)`);
+    setText('tc-doc-class', c.property.classification || 'Residential');
+    setText('tc-doc-area', `${parseFloat(c.property.area_sqm || 0).toLocaleString('en-US', { minimumFractionDigits: 2 })} sq.m. (${c.property.area_ha || '0.0000'} ha)`);
+    setText('tc-doc-mv', `PHP ${parseFloat(c.property.market_value || 0).toLocaleString('en-US', { minimumFractionDigits: 2 })}`);
+    setText('tc-doc-av', `PHP ${parseFloat(c.property.assessed_value || 0).toLocaleString('en-US', { minimumFractionDigits: 2 })}`);
+
+    const certBodyEl = document.getElementById('tc-doc-cert-body');
+    if (certBodyEl) {
+      certBodyEl.innerHTML = `<strong>THIS IS TO CERTIFY</strong> that according to the Official Real Property Tax Roll, Assessment Register, and Collection Records of this Office, the real property described above is <strong>${c.tax_status_statement}</strong>.`;
+    }
+
+    setText('tc-doc-purpose-text', c.purpose || 'Transfer of Ownership / BIR eCAR Application / LRA Title Registration');
+
+    const pay = c.payment_info || {};
+    setText('tc-doc-or-no', pay.latest_or_no || 'N/A');
+    setText('tc-doc-or-date', pay.date_paid || 'N/A');
+    if (pay.status === 'EXEMPT') {
+      setText('tc-doc-or-amount', 'PHP 0.00 (Exempt)');
+    } else {
+      setText('tc-doc-or-amount', `PHP ${parseFloat(pay.amount_paid || 0).toLocaleString('en-US', { minimumFractionDigits: 2 })}`);
+    }
+    setText('tc-doc-or-period', pay.period_covered || 'Annual 2026');
+
+    const fees = c.fees || {};
+    setText('tc-doc-fee-or', fees.fee_or_no || 'OR-FEE-2026-00000');
+
+    const sign = c.signatories || {};
+    if (sign.issuing_officer) {
+      setText('tc-doc-examiner', (sign.issuing_officer.username || 'ENGR. MARITES D. PASCUAL').toUpperCase());
+      setText('tc-doc-badge', `Badge No. ${sign.issuing_officer.badge || 'PGI-TRS-008'}`);
+    }
+
+    modalTaxClearance.style.display = 'flex';
+  }
+
+  function fetchAndShowTaxClearance() {
+    if (!activeSelectedParcelData) return;
+    const p = activeSelectedParcelData;
+    const delinq = p.delinquency || {};
+
+    // Gate: Block if delinquent
+    if (delinq.status === 'DELINQUENT' || p.delinquency_status === 'DELINQUENT') {
+      const totalDue = delinq.total_delinquent_due || p.total_delinquent_due || 0;
+      const confirmPay = confirm(
+        `Cannot issue Tax Clearance: Parcel ${p.pin} has an outstanding delinquent tax liability of PHP ${parseFloat(totalDue).toLocaleString('en-US', { minimumFractionDigits: 2 })}.\n\n` +
+        `Pursuant to R.A. 7160, all tax arrears and penalties must be settled prior to clearance issuance.\n\n` +
+        `Click OK to open the Pay Tax window now and settle this account.`
+      );
+      if (confirmPay) {
+        const btnPay = document.getElementById('btn-open-payment');
+        if (btnPay) btnPay.click();
+      }
+      return;
+    }
+
+    const purpose = clearancePurposeSelect ? clearancePurposeSelect.value : '';
+    fetch(`/api/parcels/${encodeURIComponent(p.pin)}/tax-clearance`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ purpose: purpose })
+    })
+    .then(res => res.json())
+    .then(res => {
+      if (!res.success) {
+        alert(res.message || 'Failed to issue Tax Clearance Certificate.');
+        return;
+      }
+      if (res.clearance) {
+        renderTaxClearance(res.clearance);
+      }
+    })
+    .catch(err => {
+      alert(`Network error issuing tax clearance: ${err.message}`);
+    });
+  }
+
+  if (btnIssueClearanceEl) {
+    btnIssueClearanceEl.addEventListener('click', () => {
+      fetchAndShowTaxClearance();
+    });
+  }
+
+  if (clearancePurposeSelect) {
+    clearancePurposeSelect.addEventListener('change', () => {
+      if (modalTaxClearance && modalTaxClearance.style.display === 'flex') {
+        fetchAndShowTaxClearance();
+      }
+    });
+  }
+
+  if (btnCloseClearanceModal && modalTaxClearance) {
+    btnCloseClearanceModal.addEventListener('click', () => {
+      modalTaxClearance.style.display = 'none';
+    });
+  }
+
+  if (btnPrintClearance) {
+    btnPrintClearance.addEventListener('click', () => {
+      window.print();
+    });
+  }
+
   // Global Escape key dismiss for all custom modals
   document.addEventListener('keydown', (e) => {
     if (e.key === 'Escape') {
@@ -3186,6 +3315,9 @@ document.addEventListener('DOMContentLoaded', () => {
       }
       if (modalOfficialReceipt && modalOfficialReceipt.style.display === 'flex') {
         modalOfficialReceipt.style.display = 'none';
+      }
+      if (modalTaxClearance && modalTaxClearance.style.display === 'flex') {
+        modalTaxClearance.style.display = 'none';
       }
       if (exportDropdownMenu && exportDropdownMenu.style.display === 'flex') {
         exportDropdownMenu.style.display = 'none';

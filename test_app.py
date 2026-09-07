@@ -621,4 +621,61 @@ assert "ASSESSED_VALUE_PHP" in header
 assert "DELINQUENCY_STATUS" in header
 print(f"[PASS] /api/cadastre/export/csv verified with header and {len(csv_lines)-1} parcel entries for Excel/Sanggunian")
 
-print("\nALL 26 VERIFICATION TESTS PASSED SUCCESSFULLY!")
+# 27. Test Real Property Tax Clearance Rejection on Delinquent Parcel
+delinq_tc_pin = "032-15-0001-045-02"
+resp_tc_bad = client.post(f'/api/parcels/{delinq_tc_pin}/tax-clearance', json={
+    "purpose": "Transfer of Ownership / BIR eCAR Application"
+})
+assert resp_tc_bad.status_code == 400, f"Expected 400, got {resp_tc_bad.status_code}: {resp_tc_bad.data}"
+tc_bad_res = resp_tc_bad.get_json()
+assert tc_bad_res['success'] is False
+assert "Cannot issue Tax Clearance" in tc_bad_res['message']
+assert "delinquent" in tc_bad_res['message'].lower()
+print(f"[PASS] /api/parcels/{delinq_tc_pin}/tax-clearance properly rejected for delinquent parcel")
+
+# 28. Test Real Property Tax Clearance Issuance for Settled/Paid Parcel
+paid_tc_pin = "032-15-0001-043-01"
+resp_tc_good = client.post(f'/api/parcels/{paid_tc_pin}/tax-clearance', json={
+    "purpose": "Transfer of Ownership / BIR eCAR Application / LRA Title Registration"
+})
+assert resp_tc_good.status_code == 200, f"Expected 200, got {resp_tc_good.status_code}: {resp_tc_good.data}"
+tc_good_res = resp_tc_good.get_json()
+assert tc_good_res['success'] is True
+clearance = tc_good_res['clearance']
+assert clearance['clearance_no'].startswith("RPTC-2026-03215-")
+assert clearance['property']['pin'] == paid_tc_pin
+assert clearance['tax_status'] == "CURRENT"
+assert "FULLY PAID AND SETTLED" in clearance['tax_status_statement']
+assert clearance['payment_info']['status'] == "PAID / CURRENT"
+assert clearance['payment_info']['latest_or_no'].startswith("OR-2026-")
+assert clearance['fees']['clearance_fee'] == 150.00
+assert clearance['fees']['doc_stamp_tax'] == 30.00
+assert "HON. MARIA CORAZON G. PUA" in clearance['signatories']['provincial_treasurer']['name']
+print(f"[PASS] /api/parcels/{paid_tc_pin}/tax-clearance issued Certificate #{clearance['clearance_no']} referencing O.R. #{clearance['payment_info']['latest_or_no']}")
+
+# 29. Verify Audit Trail for TAX_CLEARANCE_ISSUED
+conn = get_db()
+cur = conn.cursor()
+cur.execute("SELECT * FROM audit_logs WHERE action = 'TAX_CLEARANCE_ISSUED' ORDER BY id DESC LIMIT 1")
+log_tc = cur.fetchone()
+conn.close()
+assert log_tc is not None
+assert paid_tc_pin in log_tc['details']
+assert clearance['clearance_no'] in log_tc['details']
+print(f"[PASS] Audit trail verified for TAX_CLEARANCE_ISSUED: '{log_tc['details']}'")
+
+# 30. Test Real Property Tax Clearance Issuance for Exempt Government Parcel
+exempt_tc_pin = "032-15-0001-042-18"
+resp_tc_exempt = client.post(f'/api/parcels/{exempt_tc_pin}/tax-clearance', json={
+    "purpose": "Government Administrative Reference & Record Verification"
+})
+assert resp_tc_exempt.status_code == 200, f"Expected 200, got {resp_tc_exempt.status_code}: {resp_tc_exempt.data}"
+tc_exempt_res = resp_tc_exempt.get_json()
+assert tc_exempt_res['success'] is True
+exempt_doc = tc_exempt_res['clearance']
+assert exempt_doc['tax_status'] == "EXEMPT"
+assert "SECTION 234" in exempt_doc['tax_status_statement']
+assert exempt_doc['payment_info']['status'] == "EXEMPT"
+print(f"[PASS] /api/parcels/{exempt_tc_pin}/tax-clearance verified for exempt entity (Section 234 R.A. 7160)")
+
+print("\nALL 30 VERIFICATION TESTS PASSED SUCCESSFULLY!")

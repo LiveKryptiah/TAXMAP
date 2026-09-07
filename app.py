@@ -13,7 +13,8 @@ from database import (
     issue_notice_of_delinquency, get_audit_logs,
     get_tax_declarations_registry, get_assessment_roll_data,
     post_tax_payment, get_official_receipt,
-    export_cadastre_geojson, export_cadastre_csv
+    export_cadastre_geojson, export_cadastre_csv,
+    issue_tax_clearance
 )
 
 app = Flask(__name__)
@@ -401,6 +402,26 @@ def api_export_csv():
         mimetype="text/csv",
         headers={"Content-Disposition": f"attachment; filename={filename}"}
     )
+
+@app.route("/api/parcels/<path:pin>/tax-clearance", methods=["GET", "POST"])
+def api_issue_tax_clearance(pin):
+    data = request.get_json(force=True, silent=True) or {}
+    purpose = data.get("purpose") or request.args.get("purpose")
+    user = session.get("user", {
+        "username": "treasurer.pgi",
+        "badge_no": "PGI-TRS-008",
+        "role": "MUNICIPAL_APPRAISER"
+    })
+    result = issue_tax_clearance(
+        pin=pin,
+        purpose=purpose,
+        officer_username=user.get("username", "treasurer.pgi"),
+        officer_badge=user.get("badge_no", "PGI-TRS-008"),
+        ip=request.remote_addr
+    )
+    if result.get("success"):
+        return jsonify(result), 200
+    return jsonify(result), 400
 
 if __name__ == "__main__":
     port = int(os.environ.get("PORT", 5000))

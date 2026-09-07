@@ -10,6 +10,18 @@ from werkzeug.security import generate_password_hash, check_password_hash
 
 DB_PATH = os.path.join(os.path.dirname(os.path.abspath(__file__)), "taxmap.db")
 
+# In Vercel serverless environment, root directory is read-only; use /tmp
+if os.environ.get("VERCEL"):
+    import shutil
+    tmp_db = "/tmp/taxmap.db"
+    bundled_db = DB_PATH
+    if not os.path.exists(tmp_db) and os.path.exists(bundled_db):
+        try:
+            shutil.copy2(bundled_db, tmp_db)
+        except Exception:
+            pass
+    DB_PATH = tmp_db
+
 ISABELA_LGUS = [
     ("03201", "Alicia", 18450, 16.7831, 121.7003),
     ("03202", "Angadanan", 14200, 16.8167, 121.7667),

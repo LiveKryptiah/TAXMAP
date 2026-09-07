@@ -2091,6 +2091,210 @@ def export_cadastre_csv(lgu_code="ALL"):
 
     return output.getvalue()
 
+def polygon_area_sqm(coords):
+    """
+    Computes geodesic area in square meters using Shoelace formula scaled by meters-per-degree.
+    """
+    if not coords or len(coords) < 3:
+        return 0.0
+    pts = list(coords)
+    if pts[0] == pts[-1]:
+        pts = pts[:-1]
+    n = len(pts)
+    if n < 3:
+        return 0.0
+    area_deg = 0.0
+    mid_lat = sum(p[0] for p in pts) / n
+    for i in range(n):
+        j = (i + 1) % n
+        area_deg += pts[i][1] * pts[j][0] - pts[j][1] * pts[i][0]
+    area_deg = abs(area_deg) * 0.5
+    m_lat = 111320.0
+    m_lng = 111320.0 * math.cos(math.radians(mid_lat))
+    return round(area_deg * m_lat * m_lng, 2)
+
+def line_segment_intersection(p1, p2, cp1, cp2):
+    dc = [cp1[0] - cp2[0], cp1[1] - cp2[1]]
+    dp = [p1[0] - p2[0], p1[1] - p2[1]]
+    n1 = cp1[0] * cp2[1] - cp1[1] * cp2[0]
+    n2 = p1[0] * p2[1] - p1[1] * p2[0]
+    denom = dc[0] * dp[1] - dc[1] * dp[0]
+    if abs(denom) < 1e-12:
+        return [p1[0], p1[1]]
+    n3 = 1.0 / denom
+    return [(n1 * dp[0] - n2 * dc[0]) * n3, (n1 * dp[1] - n2 * dc[1]) * n3]
+
+def is_point_inside_halfplane(cp1, cp2, p):
+    return (cp2[0] - cp1[0]) * (p[1] - cp1[1]) - (cp2[1] - cp1[1]) * (p[0] - cp1[0]) >= -1e-12
+
+def compute_polygon_intersection(poly1, poly2):
+    """
+    Computes geometric intersection polygon of two 2D polygons [[lat, lng], ...]
+    using Sutherland-Hodgman clipping algorithm.
+    Returns (intersection_coords, overlap_sqm).
+    """
+    if not poly1 or not poly2 or len(poly1) < 3 or len(poly2) < 3:
+        return None, 0.0
+
+    p1 = list(poly1)[:-1] if poly1[0] == poly1[-1] else list(poly1)
+    p2 = list(poly2)[:-1] if poly2[0] == poly2[-1] else list(poly2)
+
+    # Bounding box quick rejection
+    min_lat_1 = min(p[0] for p in p1)
+    max_lat_1 = max(p[0] for p in p1)
+    min_lng_1 = min(p[1] for p in p1)
+    max_lng_1 = max(p[1] for p in p1)
+
+    min_lat_2 = min(p[0] for p in p2)
+    max_lat_2 = max(p[0] for p in p2)
+    min_lng_2 = min(p[1] for p in p2)
+    max_lng_2 = max(p[1] for p in p2)
+
+    if (max_lat_1 < min_lat_2 or min_lat_1 > max_lat_2 or
+        max_lng_1 < min_lng_2 or min_lng_1 > max_lng_2):
+        return None, 0.0
+
+    # Ensure clip polygon is counter-clockwise
+    area_c = 0.0
+    for i in range(len(p2)):
+        j = (i + 1) % len(p2)
+        area_c += p2[i][0] * p2[j][1] - p2[j][0] * p2[i][1]
+    clip_pts = list(reversed(p2)) if area_c < 0 else list(p2)
+
+    output_list = list(p1)
+    for i in range(len(clip_pts)):
+        cp1 = clip_pts[i]
+        cp2 = clip_pts[(i + 1) % len(clip_pts)]
+        input_list = list(output_list)
+        output_list = []
+        if not input_list:
+            break
+        s = input_list[-1]
+        for e in input_list:
+            if is_point_inside_halfplane(cp1, cp2, e):
+                if not is_point_inside_halfplane(cp1, cp2, s):
+                    output_list.append(line_segment_intersection(s, e, cp1, cp2))
+                output_list.append(e)
+            elif is_point_inside_halfplane(cp1, cp2, s):
+                output_list.append(line_segment_intersection(s, e, cp1, cp2))
+            s = e
+
+    if not output_list or len(output_list) < 3:
+        return None, 0.0
+
+    overlap_area = polygon_area_sqm(output_list)
+    # Threshold: filter float precision noise (< 1.0 sq.m.)
+    if overlap_area < 1.0:
+        return None, 0.0
+
+    clean_intersection = [[round(pt[0], 6), round(pt[1], 6)] for pt in output_list]
+    return clean_intersection, overlap_area
+
+def find_cadastral_overlaps(candidate_coords, lgu_code="03215", exclude_pin=None):
+    """
+    Scans existing active cadastre records in the specified LGU to find any overlapping
+    lot boundaries with candidate_coords.
+    Returns { has_conflict: bool, conflicts_count: int, candidate_area_sqm: float, conflicts: list }
+    """
+    if not candidate_coords or len(candidate_coords) < 3:
+        return {"has_conflict": False, "conflicts_count": 0, "candidate_area_sqm": 0.0, "conflicts": []}
+
+    candidate_area = polygon_area_sqm(candidate_coords)
+    parcels = get_parcels(lgu_code=lgu_code)
+    conflicts = []
+
+    for p in parcels:
+        pin = p.get("pin")
+        if exclude_pin and pin == exclude_pin:
+            continue
+        p_coords = p.get("coordinates") or []
+        if not p_coords or len(p_coords) < 3:
+            continue
+
+        intersection_poly, overlap_area = compute_polygon_intersection(candidate_coords, p_coords)
+        if overlap_area >= 1.0:
+            existing_area = float(p.get("area_sqm") or polygon_area_sqm(p_coords) or 1.0)
+            overlap_pct_candidate = min(round((overlap_area / candidate_area * 100.0), 2), 100.0) if candidate_area > 0 else 0.0
+            overlap_pct_existing = min(round((overlap_area / existing_area * 100.0), 2), 100.0)
+
+            conflicts.append({
+                "pin": pin,
+                "td_no": p.get("td_no"),
+                "lot_no": p.get("lot_no"),
+                "block_no": p.get("block_no", "Blk 01"),
+                "section_no": p.get("section_no", "014-A"),
+                "owner_name": p.get("owner_name"),
+                "classification": p.get("classification"),
+                "status": p.get("status"),
+                "existing_area_sqm": round(existing_area, 2),
+                "overlap_area_sqm": overlap_area,
+                "overlap_pct_candidate": overlap_pct_candidate,
+                "overlap_pct_existing": overlap_pct_existing,
+                "intersection_polygon": intersection_poly
+            })
+
+    conflicts.sort(key=lambda x: x["overlap_area_sqm"], reverse=True)
+    return {
+        "has_conflict": len(conflicts) > 0,
+        "conflicts_count": len(conflicts),
+        "candidate_area_sqm": candidate_area,
+        "conflicts": conflicts
+    }
+
+def audit_cadastre_topology(lgu_code="03215"):
+    """
+    Performs a comprehensive cadastre-wide topology audit across all active parcels
+    in an LGU to detect pairwise boundary overlaps, double-titling, and encroachment zones.
+    """
+    parcels = get_parcels(lgu_code=lgu_code)
+    n = len(parcels)
+    disputes = []
+    unique_conflicted = set()
+
+    for i in range(n):
+        p1 = parcels[i]
+        c1 = p1.get("coordinates") or []
+        if len(c1) < 3:
+            continue
+        for j in range(i + 1, n):
+            p2 = parcels[j]
+            c2 = p2.get("coordinates") or []
+            if len(c2) < 3:
+                continue
+
+            intersection_poly, overlap_area = compute_polygon_intersection(c1, c2)
+            if overlap_area >= 1.0:
+                unique_conflicted.add(p1["pin"])
+                unique_conflicted.add(p2["pin"])
+                disputes.append({
+                    "lot_a": {
+                        "pin": p1["pin"],
+                        "lot_no": p1["lot_no"],
+                        "owner_name": p1["owner_name"],
+                        "area_sqm": p1.get("area_sqm", 0.0)
+                    },
+                    "lot_b": {
+                        "pin": p2["pin"],
+                        "lot_no": p2["lot_no"],
+                        "owner_name": p2["owner_name"],
+                        "area_sqm": p2.get("area_sqm", 0.0)
+                    },
+                    "overlap_area_sqm": overlap_area,
+                    "intersection_polygon": intersection_poly
+                })
+
+    disputes.sort(key=lambda x: x["overlap_area_sqm"], reverse=True)
+    health_pct = round(((n - len(unique_conflicted)) / n * 100.0), 1) if n > 0 else 100.0
+
+    return {
+        "lgu_code": lgu_code,
+        "total_parcels": n,
+        "conflicts_found": len(disputes),
+        "conflicted_parcels_count": len(unique_conflicted),
+        "topology_health_pct": health_pct,
+        "disputes": disputes
+    }
+
 if __name__ == "__main__":
     init_db()
     print("Database initialized successfully at:", DB_PATH)

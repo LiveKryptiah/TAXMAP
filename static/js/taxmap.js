@@ -69,6 +69,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
   // Layer groups
   const parcelsLayerGroup = L.layerGroup().addTo(map);
+  const encroachmentLayerGroup = L.layerGroup().addTo(map);
   let parcelPolygonMap = new Map(); // pin -> { polygon, data }
   let activeSelectedPolygon = null;
   let activeSelectedParcelData = null;
@@ -1653,6 +1654,76 @@ document.addEventListener('DOMContentLoaded', () => {
     });
   }
 
+  let activeRegistrationConflicts = [];
+
+  function checkPolygonOverlaps(candidateCoords, excludePin = null) {
+    if (!candidateCoords || candidateCoords.length < 3 || typeof turf === 'undefined') {
+      return [];
+    }
+
+    let candRing = candidateCoords.map(pt => [pt[1], pt[0]]);
+    if (candRing[0][0] !== candRing[candRing.length - 1][0] || candRing[0][1] !== candRing[candRing.length - 1][1]) {
+      candRing.push([candRing[0][0], candRing[0][1]]);
+    }
+
+    let candidatePoly = null;
+    try {
+      candidatePoly = turf.polygon([candRing]);
+    } catch (e) {
+      console.warn('Turf candidate polygon parse error:', e);
+      return [];
+    }
+
+    const conflicts = [];
+    let candidateArea = 0;
+    try {
+      candidateArea = turf.area(candidatePoly);
+    } catch(e) {
+      candidateArea = 0;
+    }
+
+    parcelPolygonMap.forEach((entry, pin) => {
+      if (excludePin && pin === excludePin) return;
+      const p = entry.data;
+      if (!p || !p.coordinates || p.coordinates.length < 3) return;
+
+      let pRing = p.coordinates.map(pt => [pt[1], pt[0]]);
+      if (pRing[0][0] !== pRing[pRing.length - 1][0] || pRing[0][1] !== pRing[pRing.length - 1][1]) {
+        pRing.push([pRing[0][0], pRing[0][1]]);
+      }
+
+      try {
+        const pPoly = turf.polygon([pRing]);
+        const intersection = turf.intersect(candidatePoly, pPoly);
+        if (intersection) {
+          const overlapArea = turf.area(intersection);
+          // Ignore tiny floating point slivers < 1.0 sq.m.
+          if (overlapArea >= 1.0) {
+            const existingArea = turf.area(pPoly);
+            const pctCand = candidateArea > 0 ? Math.min(100, Math.round((overlapArea / candidateArea) * 1000) / 10) : 0;
+            const pctExist = existingArea > 0 ? Math.min(100, Math.round((overlapArea / existingArea) * 1000) / 10) : 0;
+            conflicts.push({
+              pin: pin,
+              lot_no: p.lot_no || 'Lot',
+              owner_name: p.owner_name || 'Declared Owner',
+              classification: p.classification || 'Residential',
+              overlap_area_sqm: Math.round(overlapArea * 100) / 100,
+              pct_candidate: pctCand,
+              pct_existing: pctExist,
+              geojson: intersection,
+              parcelData: p
+            });
+          }
+        }
+      } catch (err) {
+        // Skip invalid geometry
+      }
+    });
+
+    conflicts.sort((a, b) => b.overlap_area_sqm - a.overlap_area_sqm);
+    return conflicts;
+  }
+
   function openRegistrationModal(coords, area, pinCount) {
     pendingDrawnCoords = coords;
     pendingDrawnArea = area;
@@ -1663,7 +1734,7 @@ document.addEventListener('DOMContentLoaded', () => {
     let perimeterM = 0;
 
     try {
-      const geoCoords = coordsToGeoJSON(coords);
+      const geoCoords = coords.map(pt => [pt[1], pt[0]]);
       if (geoCoords[0][0] !== geoCoords[geoCoords.length - 1][0] ||
           geoCoords[0][1] !== geoCoords[geoCoords.length - 1][1]) {
         geoCoords.push([...geoCoords[0]]);
@@ -1716,6 +1787,70 @@ document.addEventListener('DOMContentLoaded', () => {
     }
     if (regPinCountLabel) {
       regPinCountLabel.textContent = coords.length;
+    }
+
+    // Real-time Cadastral Topology Overlap & Encroachment Detection
+    activeRegistrationConflicts = checkPolygonOverlaps(coords);
+    const alertBox = document.getElementById('reg-encroachment-alert');
+    const badge = document.getElementById('reg-encroachment-badge');
+    const summary = document.getElementById('reg-encroachment-summary');
+    const dot = document.getElementById('reg-encroachment-dot');
+    const details = document.getElementById('reg-encroachment-details');
+    const waiverContainer = document.getElementById('reg-dispute-waiver-container');
+    const waiverCheckbox = document.getElementById('reg-dispute-waiver');
+
+    if (alertBox) {
+      if (activeRegistrationConflicts.length === 0) {
+        alertBox.className = 'encroachment-alert-box clean';
+        if (badge) {
+          badge.className = 'encroachment-status-badge clean';
+          badge.textContent = 'TOPOLOGY VERIFIED';
+        }
+        if (summary) summary.textContent = '0 boundary conflicts detected';
+        if (dot) dot.className = 'encroachment-pulse-dot clean';
+        if (details) {
+          details.style.display = 'none';
+          details.innerHTML = '';
+        }
+        if (waiverContainer) waiverContainer.style.display = 'none';
+        if (waiverCheckbox) waiverCheckbox.checked = false;
+        if (btnSaveLot) {
+          btnSaveLot.disabled = false;
+          btnSaveLot.textContent = 'Save Lot to Cadastre';
+        }
+      } else {
+        alertBox.className = 'encroachment-alert-box hazard';
+        if (badge) {
+          badge.className = 'encroachment-status-badge hazard';
+          badge.textContent = 'BOUNDARY ENCROACHMENT DETECTED';
+        }
+        if (summary) summary.textContent = `${activeRegistrationConflicts.length} conflicting lot(s) detected`;
+        if (dot) dot.className = 'encroachment-pulse-dot hazard';
+        if (details) {
+          details.style.display = 'block';
+          details.innerHTML = activeRegistrationConflicts.map(c => `
+            <div class="encroachment-conflict-item">
+              <span>Encroachment on <strong>${c.lot_no} (${c.pin})</strong>:</span>
+              <span class="mono-num" style="color: #f87171; font-weight: 600;">${c.overlap_area_sqm.toLocaleString()} sq.m. (${c.pct_candidate}%)</span>
+            </div>
+            <div style="font-size: 10px; color: #94a3b8; margin-bottom: 4px;">Owner: ${c.owner_name}</div>
+          `).join('');
+        }
+        if (waiverContainer) waiverContainer.style.display = 'flex';
+        if (waiverCheckbox) {
+          waiverCheckbox.checked = false;
+          waiverCheckbox.onchange = () => {
+            if (btnSaveLot) {
+              btnSaveLot.disabled = !waiverCheckbox.checked;
+              btnSaveLot.textContent = waiverCheckbox.checked ? 'Save Lot to Cadastre (With Dispute)' : 'Topology Overlap Locked';
+            }
+          };
+        }
+        if (btnSaveLot) {
+          btnSaveLot.disabled = true;
+          btnSaveLot.textContent = 'Topology Overlap Locked';
+        }
+      }
     }
 
     // 4. Populate Metes & Bounds Pin Table
@@ -1777,6 +1912,23 @@ document.addEventListener('DOMContentLoaded', () => {
           fillOpacity: 0.20
         }).addTo(previewLayerGroup);
 
+        // Render any detected encroachment hazard polygons in pulsing red
+        if (activeRegistrationConflicts && activeRegistrationConflicts.length > 0) {
+          activeRegistrationConflicts.forEach(c => {
+            if (c.geojson) {
+              L.geoJSON(c.geojson, {
+                style: {
+                  color: '#ef4444',
+                  weight: 2,
+                  fillColor: '#dc2626',
+                  fillOpacity: 0.60,
+                  dashArray: '4, 3'
+                }
+              }).addTo(previewLayerGroup);
+            }
+          });
+        }
+
         // Boundary pins
         coords.forEach((pt, i) => {
           const pinIcon = L.divIcon({
@@ -1821,6 +1973,18 @@ document.addEventListener('DOMContentLoaded', () => {
       if (!pendingDrawnCoords || !pendingDrawnCoords.length) {
         alert('Please draw a valid lot on the map first.');
         return;
+      }
+
+      if (activeRegistrationConflicts && activeRegistrationConflicts.length > 0) {
+        const waiver = document.getElementById('reg-dispute-waiver');
+        if (!waiver || !waiver.checked) {
+          alert('Spatial Cadastral Boundary Overlap Detected!\n\nThis parcel overlaps an adjoining lot in the cadastre. To proceed, please resolve the boundary or acknowledge the Boundary Dispute Exception waiver.');
+          if (btnSaveLot) {
+            btnSaveLot.disabled = false;
+            btnSaveLot.textContent = 'Topology Overlap Locked';
+          }
+          return;
+        }
       }
 
       if (btnSaveLot) {
@@ -3298,9 +3462,246 @@ document.addEventListener('DOMContentLoaded', () => {
     });
   }
 
+  // ==========================================================================
+  // CADASTRAL TOPOLOGY & BOUNDARY ENCROACHMENT CONFLICTS ENGINE
+  // ==========================================================================
+  const modalCadastralConflicts = document.getElementById('modal-cadastral-conflicts');
+  const btnScanConflicts = document.getElementById('btn-scan-conflicts');
+  const btnCloseConflictsModal = document.getElementById('btn-close-conflicts-modal');
+  const btnRefreshConflictsScan = document.getElementById('btn-refresh-conflicts-scan');
+  const conflictsLguSelect = document.getElementById('conflicts-lgu-select');
+  const conflictsKpiHealth = document.getElementById('conflicts-kpi-health');
+  const conflictsKpiTotal = document.getElementById('conflicts-kpi-total');
+  const conflictsKpiCount = document.getElementById('conflicts-kpi-count');
+  const conflictsKpiArea = document.getElementById('conflicts-kpi-area');
+  const conflictsEmptyState = document.getElementById('conflicts-empty-state');
+  const conflictsTableWrapper = document.getElementById('conflicts-table-wrapper');
+  const conflictsTbody = document.getElementById('conflicts-tbody');
+  const conflictsTimestamp = document.getElementById('conflicts-timestamp');
+
+  let activeTopologyDisputes = [];
+
+  function fetchAndRenderCadastreConflicts(lguCode = '03215') {
+    if (btnRefreshConflictsScan) {
+      btnRefreshConflictsScan.disabled = true;
+      btnRefreshConflictsScan.textContent = 'Auditing...';
+    }
+
+    fetch(`/api/cadastre/conflicts?lgu=${encodeURIComponent(lguCode)}`)
+      .then(res => res.json())
+      .then(data => {
+        if (!data.success || !data.report) throw new Error(data.message || 'Audit failed');
+
+        const report = data.report;
+        activeTopologyDisputes = report.disputes || [];
+
+        // Update KPIs
+        if (conflictsKpiHealth) {
+          conflictsKpiHealth.textContent = `${report.topology_health_pct}%`;
+          conflictsKpiHealth.style.color = report.topology_health_pct === 100 ? '#34d399' : '#f87171';
+        }
+        if (conflictsKpiTotal) {
+          conflictsKpiTotal.textContent = `${report.total_parcels} Lots`;
+        }
+        if (conflictsKpiCount) {
+          conflictsKpiCount.textContent = `${report.conflicts_found} Conflict${report.conflicts_found === 1 ? '' : 's'}`;
+          conflictsKpiCount.style.color = report.conflicts_found === 0 ? '#34d399' : '#ef4444';
+        }
+
+        let totalDisputedArea = 0;
+        if (activeTopologyDisputes.length > 0) {
+          totalDisputedArea = activeTopologyDisputes.reduce((sum, d) => sum + (d.overlap_area_sqm || 0), 0);
+        }
+        if (conflictsKpiArea) {
+          conflictsKpiArea.textContent = `${(Math.round(totalDisputedArea * 100) / 100).toLocaleString()} sq.m.`;
+          conflictsKpiArea.style.color = totalDisputedArea > 0 ? '#f87171' : '#ffffff';
+        }
+
+        if (conflictsTimestamp) {
+          const now = new Date();
+          conflictsTimestamp.textContent = `Scanned at ${now.toLocaleTimeString()} (${report.total_parcels} lots scanned)`;
+        }
+
+        // Render Disputes or Clean Empty State
+        if (activeTopologyDisputes.length === 0) {
+          if (conflictsEmptyState) conflictsEmptyState.style.display = 'flex';
+          if (conflictsTableWrapper) conflictsTableWrapper.style.display = 'none';
+          if (conflictsTbody) conflictsTbody.innerHTML = '';
+        } else {
+          if (conflictsEmptyState) conflictsEmptyState.style.display = 'none';
+          if (conflictsTableWrapper) conflictsTableWrapper.style.display = 'block';
+          if (conflictsTbody) {
+            conflictsTbody.innerHTML = '';
+            activeTopologyDisputes.forEach((d, idx) => {
+              const tr = document.createElement('tr');
+              const overlapArea = Math.round((d.overlap_area_sqm || 0) * 100) / 100;
+              const areaA = d.lot_a.area_sqm || 1;
+              const pctA = Math.min(100, Math.round((overlapArea / areaA) * 1000) / 10);
+
+              let severityClass = 'severity-minor';
+              let severityText = 'MINOR';
+              if (overlapArea > 50) {
+                severityClass = 'severity-critical';
+                severityText = 'CRITICAL';
+              } else if (overlapArea > 10) {
+                severityClass = 'severity-moderate';
+                severityText = 'MODERATE';
+              }
+
+              tr.innerHTML = `
+                <td>
+                  <div style="font-family: var(--fonts-mono); font-weight: 600; color: #ffffff;">${d.lot_a.lot_no} ⟷ ${d.lot_b.lot_no}</div>
+                  <div class="mono-num" style="font-size: 10px; color: #94a3b8;">${d.lot_a.pin} / ${d.lot_b.pin}</div>
+                </td>
+                <td>
+                  <div style="font-size: 11px; color: #e2e8f0;">${d.lot_a.owner_name}</div>
+                  <div style="font-size: 10px; color: #64748b;">vs. ${d.lot_b.owner_name}</div>
+                </td>
+                <td>
+                  <span class="mono-num" style="font-weight: 600; color: #f87171;">${overlapArea.toLocaleString()} sq.m.</span>
+                </td>
+                <td>
+                  <span class="mono-num" style="color: #cbd5e1;">${pctA}% of ${d.lot_a.lot_no}</span>
+                </td>
+                <td>
+                  <span class="severity-pill ${severityClass}">${severityText}</span>
+                </td>
+                <td style="text-align: right;">
+                  <button type="button" class="btn-locate-conflict" data-index="${idx}">
+                    <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                      <circle cx="12" cy="12" r="10"></circle>
+                      <line x1="22" y1="12" x2="18" y2="12"></line>
+                      <line x1="6" y1="12" x2="2" y2="12"></line>
+                      <line x1="12" y1="6" x2="12" y2="2"></line>
+                      <line x1="12" y1="22" x2="12" y2="18"></line>
+                    </svg>
+                    Locate
+                  </button>
+                </td>
+              `;
+
+              const btnLocate = tr.querySelector('.btn-locate-conflict');
+              if (btnLocate) {
+                btnLocate.addEventListener('click', () => {
+                  locateAndFlashConflict(d);
+                });
+              }
+
+              conflictsTbody.appendChild(tr);
+            });
+          }
+        }
+      })
+      .catch(err => {
+        console.error('Topology audit error:', err);
+        alert('Unable to load topology conflict audit. Please check system telemetry.');
+      })
+      .finally(() => {
+        if (btnRefreshConflictsScan) {
+          btnRefreshConflictsScan.disabled = false;
+          btnRefreshConflictsScan.innerHTML = `
+            <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="margin-right: 3px; vertical-align: -1px;">
+              <path d="M23 4v6h-6"></path>
+              <path d="M1 20v-6h6"></path>
+              <path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"></path>
+            </svg>
+            Re-Audit
+          `;
+        }
+      });
+  }
+
+  function locateAndFlashConflict(dispute) {
+    if (!dispute || !dispute.intersection_polygon) return;
+
+    // Close modal
+    if (modalCadastralConflicts) modalCadastralConflicts.style.display = 'none';
+
+    // Clear previous hazard overlays
+    encroachmentLayerGroup.clearLayers();
+
+    const polyCoords = dispute.intersection_polygon; // array of [lat, lng]
+    if (polyCoords.length < 3) return;
+
+    // Draw red pulsing hazard polygon on main Leaflet map
+    const hazardPolygon = L.polygon(polyCoords, {
+      className: 'leaflet-encroachment-hazard',
+      color: '#ef4444',
+      weight: 3,
+      fillColor: '#dc2626',
+      fillOpacity: 0.6
+    }).addTo(encroachmentLayerGroup);
+
+    // Add informative hazard marker popup
+    const center = hazardPolygon.getBounds().getCenter();
+    const hazardPopupContent = `
+      <div style="font-family: var(--fonts-mono); font-size: 11px; padding: 4px; min-width: 200px;">
+        <div style="color: #ef4444; font-weight: 700; margin-bottom: 4px; display: flex; align-items: center; gap: 4px;">
+          <span>⚠ BOUNDARY OVERLAP CONFLICT</span>
+        </div>
+        <div style="color: #ffffff; font-size: 11px; margin-bottom: 2px;">
+          <strong>${dispute.lot_a.lot_no}</strong> vs. <strong>${dispute.lot_b.lot_no}</strong>
+        </div>
+        <div style="color: #94a3b8; font-size: 10px; margin-bottom: 4px;">
+          Overlap: <span style="color: #f87171; font-weight: 600;">${Math.round(dispute.overlap_area_sqm * 100) / 100} sq.m.</span>
+        </div>
+        <div style="color: #64748b; font-size: 9.5px; border-top: 1px dashed #334155; padding-top: 3px;">
+          ${dispute.lot_a.owner_name} / ${dispute.lot_b.owner_name}
+        </div>
+      </div>
+    `;
+
+    hazardPolygon.bindPopup(hazardPopupContent).openPopup(center);
+
+    // Pan & Zoom
+    map.flyToBounds(hazardPolygon.getBounds(), {
+      padding: [80, 80],
+      maxZoom: 18,
+      duration: 1.2
+    });
+
+    // Also select lot_a in inspector if present in map
+    if (parcelPolygonMap.has(dispute.lot_a.pin)) {
+      const entry = parcelPolygonMap.get(dispute.lot_a.pin);
+      selectParcel(entry.data, entry.polygon);
+    }
+  }
+
+  // Open conflicts modal
+  if (btnScanConflicts) {
+    btnScanConflicts.addEventListener('click', () => {
+      const activeLgu = lguSelect ? lguSelect.value : '03215';
+      if (conflictsLguSelect) conflictsLguSelect.value = activeLgu;
+      if (modalCadastralConflicts) modalCadastralConflicts.style.display = 'flex';
+      fetchAndRenderCadastreConflicts(activeLgu);
+    });
+  }
+
+  if (btnCloseConflictsModal) {
+    btnCloseConflictsModal.addEventListener('click', () => {
+      if (modalCadastralConflicts) modalCadastralConflicts.style.display = 'none';
+    });
+  }
+
+  if (btnRefreshConflictsScan) {
+    btnRefreshConflictsScan.addEventListener('click', () => {
+      const lgu = conflictsLguSelect ? conflictsLguSelect.value : '03215';
+      fetchAndRenderCadastreConflicts(lgu);
+    });
+  }
+
+  if (conflictsLguSelect) {
+    conflictsLguSelect.addEventListener('change', () => {
+      fetchAndRenderCadastreConflicts(conflictsLguSelect.value);
+    });
+  }
+
   // Global Escape key dismiss for all custom modals
   document.addEventListener('keydown', (e) => {
     if (e.key === 'Escape') {
+      if (modalCadastralConflicts && modalCadastralConflicts.style.display === 'flex') {
+        modalCadastralConflicts.style.display = 'none';
+      }
       if (modalTaxDeclarationsRegistry && modalTaxDeclarationsRegistry.style.display === 'flex') {
         modalTaxDeclarationsRegistry.style.display = 'none';
       }

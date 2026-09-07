@@ -184,6 +184,12 @@
           <button class="btn button-outline-sm" id="btn-recenter" title="Re-center on Isabela Capitol">
             Center
           </button>
+          <button class="btn button-outline-sm" id="btn-scan-conflicts" title="Scan Cadastre for Boundary Overlaps & Encroachments">
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="margin-right: 4px; vertical-align: -1px;">
+              <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path>
+            </svg>
+            <span>Topology</span>
+          </button>
           <div class="dropdown-container" style="position: relative;">
             <button class="btn button-outline-sm" id="btn-export-cadastre" title="Export Cadastral Section Data">
               <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
@@ -639,6 +645,18 @@
           <!-- ================= LEFT COLUMN: AREA CREATED & SPATIAL TELEMETRY ================= -->
           <div class="new-lot-modal-left">
             
+            <!-- Real-time Topology & Boundary Encroachment Detector Banner -->
+            <div id="reg-encroachment-alert" class="encroachment-alert-box clean">
+              <div class="encroachment-alert-header">
+                <div class="encroachment-badge-wrap">
+                  <span class="encroachment-pulse-dot clean" id="reg-encroachment-dot"></span>
+                  <span class="encroachment-status-badge clean" id="reg-encroachment-badge">TOPOLOGY VERIFIED</span>
+                </div>
+                <span class="encroachment-status-sub" id="reg-encroachment-summary">0 boundary conflicts detected</span>
+              </div>
+              <div class="encroachment-alert-body" id="reg-encroachment-details" style="display: none;"></div>
+            </div>
+
             <!-- Live Mini Map Preview of Created Lot -->
             <div class="reg-preview-map-box">
               <div class="reg-preview-map-header">
@@ -790,6 +808,12 @@
 
         <!-- Dedicated Bottom Footer Actions (Full Height, Never Cut in Half) -->
         <div class="new-lot-modal-footer">
+          <div id="reg-dispute-waiver-container" style="display: none; align-items: center; gap: 8px; margin-right: auto;">
+            <input type="checkbox" id="reg-dispute-waiver" style="accent-color: #ef4444; width: 14px; height: 14px; cursor: pointer;">
+            <label for="reg-dispute-waiver" style="font-size: 11px; color: #f87171; cursor: pointer; font-family: var(--fonts-mono);">
+              Override Topology Lock: Acknowledge Boundary Dispute Exception
+            </label>
+          </div>
           <button type="button" id="btn-cancel-lot-reg" class="btn button-outline-sm" style="min-width: 100px; padding: 8px 16px;">
             Cancel
           </button>
@@ -2148,6 +2172,124 @@
           </div>
 
         </div>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- ====================================================================
+       CADASTRAL TOPOLOGY & ENCROACHMENT CONFLICTS AUDIT MODAL
+       ==================================================================== -->
+  <div class="td-modal-overlay" id="modal-cadastral-conflicts" style="display: none;">
+    <div class="conflicts-modal-card">
+      
+      <!-- Top Header Bar -->
+      <div class="conflicts-modal-header">
+        <div class="eyebrow-mono">
+          <span class="eyebrow-indicator"></span>
+          <span>[ GIS TOPOLOGY ENGINE // CADASTRAL BOUNDARY OVERLAP AUDIT ]</span>
+        </div>
+        <div style="display: flex; align-items: center; gap: 8px;">
+          <button type="button" id="btn-refresh-conflicts-scan" class="btn button-outline-sm" style="padding: 4px 10px; font-size: 11px;">
+            <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="margin-right: 3px; vertical-align: -1px;">
+              <path d="M23 4v6h-6"></path>
+              <path d="M1 20v-6h6"></path>
+              <path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"></path>
+            </svg>
+            Re-Audit
+          </button>
+          <button type="button" id="btn-close-conflicts-modal" class="btn button-outline-sm" style="padding: 4px 10px; font-size: 11px;">
+            Close
+          </button>
+        </div>
+      </div>
+
+      <!-- Title & Subtitle -->
+      <div class="conflicts-title-section">
+        <h2 class="conflicts-modal-title">Provincial Cadastre Topology & Double-Titling Audit</h2>
+        <p class="conflicts-modal-sub">
+          Automated real-time pairwise Sutherland-Hodgman polygon clipping across active parcels in Isabela. Detects spatial boundary overlaps, encroachments, and unrecorded lot splits under Philippine Cadastral Standard (PRS92 / Zone 3).
+        </p>
+      </div>
+
+      <!-- Topology Telemetry KPI Ribbon -->
+      <div class="conflicts-kpi-grid">
+        <div class="conflicts-kpi-card">
+          <span class="conflicts-kpi-label">CADASTRE TOPOLOGY HEALTH</span>
+          <div class="conflicts-kpi-val" id="conflicts-kpi-health" style="color: #34d399;">100.0%</div>
+          <span class="conflicts-kpi-sub">Clean lot boundaries</span>
+        </div>
+        <div class="conflicts-kpi-card">
+          <span class="conflicts-kpi-label">PARCELS AUDITED</span>
+          <div class="conflicts-kpi-val mono-num" id="conflicts-kpi-total">0</div>
+          <span class="conflicts-kpi-sub" id="conflicts-kpi-lgu-label">Jurisdiction Total</span>
+        </div>
+        <div class="conflicts-kpi-card">
+          <span class="conflicts-kpi-label">OVERLAP DISPUTES</span>
+          <div class="conflicts-kpi-val mono-num" id="conflicts-kpi-count" style="color: #34d399;">0</div>
+          <span class="conflicts-kpi-sub">Double-titling conflicts</span>
+        </div>
+        <div class="conflicts-kpi-card">
+          <span class="conflicts-kpi-label">DISPUTED ENCROACHMENT AREA</span>
+          <div class="conflicts-kpi-val mono-num" id="conflicts-kpi-area">0.00 sq.m.</div>
+          <span class="conflicts-kpi-sub">Total disputed land</span>
+        </div>
+      </div>
+
+      <!-- Jurisdiction Selector Filter Row -->
+      <div class="conflicts-filter-bar">
+        <div style="display: flex; align-items: center; gap: 8px;">
+          <span class="prop-data-label" style="font-size: 11px;">Audit Scope:</span>
+          <select id="conflicts-lgu-select" class="sidebar-lgu-select" style="width: auto; padding: 4px 8px; font-size: 11px;">
+            <option value="ALL">All Isabela Municipalities & Cities (Province-wide)</option>
+            {% for lgu in lgus %}
+            <option value="{{ lgu.code }}" {% if lgu.code == '03215' %}selected{% endif %}>
+              {{ lgu.name }} ({{ lgu.code }})
+            </option>
+            {% endfor %}
+          </select>
+        </div>
+        <div id="conflicts-timestamp" class="mono-num" style="font-size: 10px; color: var(--colors-body-dim);">
+          Scan Status: REAL-TIME ONLINE
+        </div>
+      </div>
+
+      <!-- Main Audit Content Container -->
+      <div class="conflicts-content-box">
+        
+        <!-- Clean State (Default) -->
+        <div id="conflicts-empty-state" class="conflicts-clean-state">
+          <div class="conflicts-clean-icon">
+            <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="#34d399" stroke-width="2">
+              <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path>
+              <polyline points="22 4 12 14.01 9 11.01"></polyline>
+            </svg>
+          </div>
+          <h4 class="conflicts-clean-title">CADASTRE TOPOLOGY 100% CLEAN</h4>
+          <p class="conflicts-clean-desc">
+            Zero boundary overlaps, planar slivers, or double-titling detected across all cadastral lots in this jurisdiction. All polygon boundaries are strictly disjoint.
+          </p>
+        </div>
+
+        <!-- Disputes Table (When conflicts found) -->
+        <div id="conflicts-table-wrapper" class="conflicts-table-wrapper" style="display: none;">
+          <table class="conflicts-table">
+            <thead>
+              <tr>
+                <th>Disputed Lot Pair</th>
+                <th>Registered Owners</th>
+                <th>Overlap Area</th>
+                <th>Encroachment %</th>
+                <th>Severity</th>
+                <th style="text-align: right;">Spatial Action</th>
+              </tr>
+            </thead>
+            <tbody id="conflicts-tbody">
+              <!-- Dynamically populated rows -->
+            </tbody>
+          </table>
+        </div>
+
       </div>
 
     </div>

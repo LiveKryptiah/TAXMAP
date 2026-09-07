@@ -678,4 +678,71 @@ assert "SECTION 234" in exempt_doc['tax_status_statement']
 assert exempt_doc['payment_info']['status'] == "EXEMPT"
 print(f"[PASS] /api/parcels/{exempt_tc_pin}/tax-clearance verified for exempt entity (Section 234 R.A. 7160)")
 
-print("\nALL 30 VERIFICATION TESTS PASSED SUCCESSFULLY!")
+# 31. Test Geometry Validation with Clean Disjoint Polygon
+clean_coords = [
+    [16.9950, 121.8350],
+    [16.9960, 121.8350],
+    [16.9960, 121.8360],
+    [16.9950, 121.8360]
+]
+resp_geom_clean = client.post('/api/parcels/validate-geometry', json={
+    "coordinates": clean_coords,
+    "lgu": "03215"
+})
+assert resp_geom_clean.status_code == 200, f"Expected 200, got {resp_geom_clean.status_code}"
+geom_clean_data = resp_geom_clean.get_json()
+assert geom_clean_data['success'] is True
+assert geom_clean_data['has_conflict'] is False
+assert geom_clean_data['conflicts_count'] == 0
+assert len(geom_clean_data['conflicts']) == 0
+assert geom_clean_data['candidate_area_sqm'] > 0
+print(f"[PASS] /api/parcels/validate-geometry passed with clean non-overlapping polygon ({geom_clean_data['candidate_area_sqm']:.2f} sq.m.)")
+
+# 32. Test Geometry Validation with Overlapping Polygon (Encroachment Detection)
+# Coordinates overlapping Isabela Provincial Capitol parcel (032-15-0001-042-18)
+overlap_coords = [
+    [16.9740, 121.8140],
+    [16.9760, 121.8140],
+    [16.9760, 121.8160],
+    [16.9740, 121.8160]
+]
+resp_geom_overlap = client.post('/api/parcels/validate-geometry', json={
+    "coordinates": overlap_coords,
+    "lgu": "03215"
+})
+assert resp_geom_overlap.status_code == 200, f"Expected 200, got {resp_geom_overlap.status_code}"
+geom_overlap_data = resp_geom_overlap.get_json()
+assert geom_overlap_data['success'] is True
+assert geom_overlap_data['has_conflict'] is True
+assert geom_overlap_data['conflicts_count'] >= 1
+conflicted_pins = [c['pin'] for c in geom_overlap_data['conflicts']]
+assert "032-15-0001-042-18" in conflicted_pins, f"Expected Capitol PIN in conflicts, got {conflicted_pins}"
+primary_conflict = next(c for c in geom_overlap_data['conflicts'] if c['pin'] == "032-15-0001-042-18")
+assert primary_conflict['overlap_area_sqm'] > 1.0
+assert primary_conflict['owner_name'] == "Provincial Government of Isabela"
+assert len(primary_conflict['intersection_polygon']) >= 3
+print(f"[PASS] /api/parcels/validate-geometry accurately detected {primary_conflict['overlap_area_sqm']:.2f} sq.m. encroachment on {primary_conflict['pin']} ({primary_conflict['owner_name']})")
+
+# 33. Test Cadastre Topology Audit API
+resp_conflicts = client.get('/api/cadastre/conflicts?lgu=03215')
+assert resp_conflicts.status_code == 200, f"Expected 200, got {resp_conflicts.status_code}"
+conflicts_data = resp_conflicts.get_json()
+assert conflicts_data['success'] is True
+report = conflicts_data['report']
+assert report['lgu_code'] == "03215"
+assert report['total_parcels'] > 0
+assert 'topology_health_pct' in report
+assert 'conflicts_found' in report
+assert 'disputes' in report
+print(f"[PASS] /api/cadastre/conflicts verified: {report['total_parcels']} parcels audited, {report['topology_health_pct']}% topology health, {report['conflicts_found']} conflicts")
+
+# 34. Test Dashboard UI Integration for Topology Engine Elements
+resp_dash_topo = client.get('/dashboard')
+assert resp_dash_topo.status_code == 200
+assert b"btn-scan-conflicts" in resp_dash_topo.data
+assert b"modal-cadastral-conflicts" in resp_dash_topo.data
+assert b"reg-encroachment-alert" in resp_dash_topo.data
+assert b"reg-dispute-waiver" in resp_dash_topo.data
+print("[PASS] Dashboard UI verified with #btn-scan-conflicts, #modal-cadastral-conflicts, and #reg-encroachment-alert")
+
+print("\nALL 34 VERIFICATION TESTS PASSED SUCCESSFULLY!")

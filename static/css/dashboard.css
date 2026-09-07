@@ -3149,3 +3149,354 @@
 .tax-clearance-document .td-table td {
   border: 1px solid #cbd5e1;
 }
+
+/* ==========================================================================
+   CADASTRAL BOUNDARY OVERLAP & ENCROACHMENT DETECTOR (GIS TOPOLOGY)
+   ========================================================================== */
+
+/* Encroachment Alert Box in New Lot & Subdivision Modals */
+.encroachment-alert-box {
+  border-radius: 4px;
+  padding: 8px 12px;
+  transition: all 0.25s ease;
+}
+
+.encroachment-alert-box.clean {
+  background: rgba(52, 211, 153, 0.05);
+  border: 1px solid rgba(52, 211, 153, 0.25);
+}
+
+.encroachment-alert-box.hazard {
+  background: rgba(239, 68, 68, 0.09);
+  border: 1px solid rgba(239, 68, 68, 0.45);
+}
+
+.encroachment-alert-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.encroachment-badge-wrap {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.encroachment-pulse-dot {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  display: inline-block;
+}
+
+.encroachment-pulse-dot.clean {
+  background-color: #34d399;
+  box-shadow: 0 0 6px rgba(52, 211, 153, 0.6);
+}
+
+.encroachment-pulse-dot.hazard {
+  background-color: #ef4444;
+  box-shadow: 0 0 8px rgba(239, 68, 68, 0.9);
+  animation: pulse-hazard-dot 1.2s infinite alternate ease-in-out;
+}
+
+@keyframes pulse-hazard-dot {
+  0% { transform: scale(0.9); opacity: 0.7; }
+  100% { transform: scale(1.3); opacity: 1; }
+}
+
+.encroachment-status-badge {
+  font-family: var(--fonts-mono);
+  font-size: 10px;
+  font-weight: 600;
+  letter-spacing: 0.8px;
+}
+
+.encroachment-status-badge.clean {
+  color: #34d399;
+}
+
+.encroachment-status-badge.hazard {
+  color: #f87171;
+}
+
+.encroachment-status-sub {
+  font-family: var(--fonts-mono);
+  font-size: 10.5px;
+  color: var(--colors-body-mid);
+}
+
+.encroachment-alert-body {
+  margin-top: 6px;
+  padding-top: 6px;
+  border-top: 1px dashed rgba(239, 68, 68, 0.3);
+  font-size: 11px;
+  color: #fca5a5;
+  line-height: 1.4;
+}
+
+.encroachment-conflict-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 3px 0;
+  font-size: 10.5px;
+}
+
+.encroachment-conflict-item strong {
+  color: #ffffff;
+  font-family: var(--fonts-mono);
+}
+
+/* Pulsing SVG Hazard Polygon on Leaflet */
+.leaflet-encroachment-hazard {
+  stroke: #ef4444 !important;
+  stroke-width: 2.5 !important;
+  stroke-dasharray: 6, 4 !important;
+  fill: #dc2626 !important;
+  fill-opacity: 0.45 !important;
+  animation: pulseEncroachmentPolygon 2s infinite ease-in-out !important;
+}
+
+@keyframes pulseEncroachmentPolygon {
+  0% {
+    fill-opacity: 0.30;
+    stroke-opacity: 0.70;
+  }
+  50% {
+    fill-opacity: 0.65;
+    stroke-opacity: 1.0;
+  }
+  100% {
+    fill-opacity: 0.30;
+    stroke-opacity: 0.70;
+  }
+}
+
+/* Cadastre Conflicts Audit Slide-over Modal Card */
+.conflicts-modal-card {
+  width: 100%;
+  max-width: 980px;
+  background-color: #0d0f12;
+  border: 1px solid #212327;
+  border-radius: 6px;
+  padding: 24px 28px;
+  box-shadow: 0 16px 48px rgba(0, 0, 0, 0.75);
+  box-sizing: border-box;
+  animation: conflictsModalFadeIn 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+@keyframes conflictsModalFadeIn {
+  from { opacity: 0; transform: translateY(12px) scale(0.99); }
+  to { opacity: 1; transform: translateY(0) scale(1); }
+}
+
+.conflicts-modal-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  border-bottom: 1px solid #212327;
+  padding-bottom: 12px;
+  margin-bottom: 14px;
+}
+
+.conflicts-title-section {
+  margin-bottom: 14px;
+}
+
+.conflicts-modal-title {
+  font-size: 16px;
+  font-weight: 500;
+  color: #ffffff;
+  margin: 0 0 4px 0;
+  letter-spacing: -0.2px;
+}
+
+.conflicts-modal-sub {
+  font-size: 11.5px;
+  color: #8b909a;
+  margin: 0;
+  line-height: 1.45;
+}
+
+/* KPI Ribbon */
+.conflicts-kpi-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 10px;
+  margin-bottom: 14px;
+}
+
+.conflicts-kpi-card {
+  background: #14161a;
+  border: 1px solid #212327;
+  border-radius: 4px;
+  padding: 10px 12px;
+  display: flex;
+  flex-direction: column;
+}
+
+.conflicts-kpi-label {
+  font-family: var(--fonts-mono);
+  font-size: 9.5px;
+  color: #64748b;
+  letter-spacing: 0.8px;
+  text-transform: uppercase;
+}
+
+.conflicts-kpi-val {
+  font-size: 18px;
+  font-weight: 600;
+  color: #ffffff;
+  margin: 4px 0 2px 0;
+}
+
+.conflicts-kpi-sub {
+  font-size: 10px;
+  color: #64748b;
+}
+
+/* Filter Bar */
+.conflicts-filter-bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  background: #14161a;
+  border: 1px solid #212327;
+  border-radius: 4px;
+  padding: 6px 12px;
+  margin-bottom: 14px;
+}
+
+/* Main Box */
+.conflicts-content-box {
+  background: #101216;
+  border: 1px solid #212327;
+  border-radius: 4px;
+  min-height: 200px;
+  max-height: 380px;
+  overflow-y: auto;
+}
+
+/* Clean State */
+.conflicts-clean-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  padding: 44px 20px;
+}
+
+.conflicts-clean-icon {
+  width: 48px;
+  height: 48px;
+  border-radius: 50%;
+  background: rgba(52, 211, 153, 0.1);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: 12px;
+}
+
+.conflicts-clean-title {
+  font-size: 13px;
+  font-weight: 600;
+  color: #34d399;
+  letter-spacing: 0.5px;
+  margin: 0 0 6px 0;
+  font-family: var(--fonts-mono);
+}
+
+.conflicts-clean-desc {
+  font-size: 11.5px;
+  color: #94a3b8;
+  max-width: 480px;
+  line-height: 1.5;
+  margin: 0;
+}
+
+/* Conflicts Table */
+.conflicts-table-wrapper {
+  width: 100%;
+}
+
+.conflicts-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 11px;
+}
+
+.conflicts-table th {
+  background: #14161a;
+  border-bottom: 1px solid #212327;
+  padding: 8px 10px;
+  color: #94a3b8;
+  font-family: var(--fonts-mono);
+  font-weight: 500;
+  font-size: 10px;
+  letter-spacing: 0.5px;
+  text-transform: uppercase;
+}
+
+.conflicts-table td {
+  border-bottom: 1px solid #1a1c20;
+  padding: 8px 10px;
+  color: #cbd5e1;
+  vertical-align: middle;
+}
+
+.conflicts-table tbody tr:hover {
+  background: rgba(255, 255, 255, 0.025);
+}
+
+.severity-pill {
+  display: inline-block;
+  font-family: var(--fonts-mono);
+  font-size: 9.5px;
+  font-weight: 600;
+  padding: 2px 6px;
+  border-radius: 3px;
+  letter-spacing: 0.5px;
+}
+
+.severity-critical {
+  background: rgba(239, 68, 68, 0.15);
+  color: #f87171;
+  border: 1px solid rgba(239, 68, 68, 0.35);
+}
+
+.severity-moderate {
+  background: rgba(245, 158, 11, 0.15);
+  color: #fbbf24;
+  border: 1px solid rgba(245, 158, 11, 0.35);
+}
+
+.severity-minor {
+  background: rgba(96, 165, 250, 0.15);
+  color: #93c5fd;
+  border: 1px solid rgba(96, 165, 250, 0.35);
+}
+
+.btn-locate-conflict {
+  background: transparent;
+  border: 1px solid #334155;
+  color: #f8fafc;
+  padding: 3px 8px;
+  border-radius: 3px;
+  font-size: 10.5px;
+  font-family: var(--fonts-mono);
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  transition: all 0.15s ease;
+}
+
+.btn-locate-conflict:hover {
+  background: #1e293b;
+  border-color: #ef4444;
+  color: #ef4444;
+}
+

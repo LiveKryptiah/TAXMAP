@@ -14,7 +14,8 @@ from database import (
     get_tax_declarations_registry, get_assessment_roll_data,
     post_tax_payment, get_official_receipt,
     export_cadastre_geojson, export_cadastre_csv,
-    issue_tax_clearance
+    issue_tax_clearance, find_cadastral_overlaps,
+    audit_cadastre_topology
 )
 
 app = Flask(__name__)
@@ -422,6 +423,37 @@ def api_issue_tax_clearance(pin):
     if result.get("success"):
         return jsonify(result), 200
     return jsonify(result), 400
+
+@app.route("/api/parcels/validate-geometry", methods=["POST"])
+def api_validate_geometry():
+    data = request.get_json(force=True, silent=True) or {}
+    coords = data.get("coordinates") or []
+    lgu = data.get("lgu") or "03215"
+    exclude_pin = data.get("exclude_pin")
+
+    if not coords or len(coords) < 3:
+        return jsonify({
+            "success": False,
+            "message": "At least 3 polygon boundary coordinates are required for topology analysis."
+        }), 400
+
+    result = find_cadastral_overlaps(candidate_coords=coords, lgu_code=lgu, exclude_pin=exclude_pin)
+    return jsonify({
+        "success": True,
+        "has_conflict": result["has_conflict"],
+        "conflicts_count": result["conflicts_count"],
+        "candidate_area_sqm": result["candidate_area_sqm"],
+        "conflicts": result["conflicts"]
+    }), 200
+
+@app.route("/api/cadastre/conflicts", methods=["GET"])
+def api_cadastre_conflicts():
+    lgu = request.args.get("lgu", "03215")
+    report = audit_cadastre_topology(lgu_code=lgu)
+    return jsonify({
+        "success": True,
+        "report": report
+    }), 200
 
 if __name__ == "__main__":
     port = int(os.environ.get("PORT", 5000))

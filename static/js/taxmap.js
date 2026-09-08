@@ -19,6 +19,10 @@ document.addEventListener('DOMContentLoaded', () => {
   const liveClock = document.getElementById('sidebar-live-clock');
   const btnIssueTd = document.getElementById('btn-issue-td');
 
+  // Top-level LGU Jurisdiction Scope
+  let activeLguCode = '03215';
+  let activeLguName = 'Ilagan City';
+
   // Inspector DOM
   const inspPin = document.getElementById('insp-pin');
   const inspTd = document.getElementById('insp-td');
@@ -70,6 +74,7 @@ document.addEventListener('DOMContentLoaded', () => {
   // Layer groups
   const parcelsLayerGroup = L.layerGroup().addTo(map);
   const encroachmentLayerGroup = L.layerGroup().addTo(map);
+  const spatialBufferLayerGroup = L.layerGroup().addTo(map);
   let parcelPolygonMap = new Map(); // pin -> { polygon, data }
   let activeSelectedPolygon = null;
   let activeSelectedParcelData = null;
@@ -108,22 +113,24 @@ document.addEventListener('DOMContentLoaded', () => {
 
   const thematicStyles = {
     CURRENT: {
-      color: '#10b981',
-      weight: 1.8,
-      fillColor: '#10b981',
-      fillOpacity: 0.32
+      color: '#ffffff',
+      weight: 1.5,
+      fillColor: '#ffffff',
+      fillOpacity: 0.10
     },
     DELINQUENT: {
-      color: '#ef4444',
+      color: '#ffffff',
       weight: 2.2,
-      fillColor: '#ef4444',
-      fillOpacity: 0.42
+      dashArray: '4, 4',
+      fillColor: '#ffffff',
+      fillOpacity: 0.28
     },
     EXEMPT: {
-      color: '#94a3b8',
-      weight: 1.4,
-      fillColor: '#94a3b8',
-      fillOpacity: 0.20
+      color: '#71717a',
+      weight: 1.2,
+      dashArray: '2, 2',
+      fillColor: '#27272a',
+      fillOpacity: 0.12
     }
   };
 
@@ -260,7 +267,7 @@ document.addEventListener('DOMContentLoaded', () => {
       inspTax.textContent = taxVal > 0 
         ? `PHP ${taxVal.toLocaleString('en-US', { minimumFractionDigits: 2 })}` 
         : 'PHP 0.00 (Exempt)';
-      inspTax.style.color = taxVal > 0 ? '#34d399' : 'var(--colors-body-mid)';
+      inspTax.style.color = taxVal > 0 ? '#ffffff' : 'var(--colors-body-mid)';
     }
     if (inspStatus) inspStatus.textContent = data.status || 'Active - Synced';
 
@@ -287,53 +294,53 @@ document.addEventListener('DOMContentLoaded', () => {
     if (delinq.status === 'DELINQUENT') {
       if (inspDelinqBox) {
         inspDelinqBox.style.display = 'block';
-        inspDelinqBox.style.background = 'rgba(239, 68, 68, 0.08)';
-        inspDelinqBox.style.border = '1px solid rgba(239, 68, 68, 0.25)';
+        inspDelinqBox.style.background = 'rgba(255, 255, 255, 0.05)';
+        inspDelinqBox.style.border = '1px solid rgba(255, 255, 255, 0.2)';
       }
       if (btnIssueDelinquency) btnIssueDelinquency.style.display = 'flex';
       if (btnOpenPayment) btnOpenPayment.style.display = 'flex';
       if (inspDelinqBadge) {
         inspDelinqBadge.textContent = 'DELINQUENT';
-        inspDelinqBadge.style.color = '#ef4444';
-        inspDelinqBadge.style.backgroundColor = 'rgba(239, 68, 68, 0.2)';
-        inspDelinqBadge.style.borderColor = 'rgba(239, 68, 68, 0.4)';
+        inspDelinqBadge.style.color = '#0a0a0a';
+        inspDelinqBadge.style.backgroundColor = '#ffffff';
+        inspDelinqBadge.style.borderColor = '#ffffff';
       }
       if (inspOverdueStr) {
         inspOverdueStr.textContent = delinq.delinquent_years_str || `${delinq.overdue_months} Mos Overdue`;
-        inspOverdueStr.style.color = '#ef4444';
+        inspOverdueStr.style.color = '#ffffff';
       }
       if (inspPenaltyVal) inspPenaltyVal.textContent = `+ PHP ${parseFloat(delinq.penalty_amount || 0).toLocaleString('en-US', { minimumFractionDigits: 2 })} (${delinq.penalty_rate_pct || 0}%)`;
       if (inspTotalDelinq) {
         inspTotalDelinq.textContent = `PHP ${parseFloat(delinq.total_delinquent_due || 0).toLocaleString('en-US', { minimumFractionDigits: 2 })}`;
-        inspTotalDelinq.style.color = '#ef4444';
+        inspTotalDelinq.style.color = '#ffffff';
       }
     } else if (delinq.status === 'EXEMPT') {
       if (inspDelinqBox) inspDelinqBox.style.display = 'none';
       if (btnIssueDelinquency) btnIssueDelinquency.style.display = 'none';
-      if (btnOpenPayment) btnOpenPayment.style.display = 'none';
+      if (btnOpenPayment) btnOpenPayment.style.display = 'flex';
     } else {
       // CURRENT / PAID
       if (inspDelinqBox) {
         inspDelinqBox.style.display = 'block';
-        inspDelinqBox.style.background = 'rgba(16, 185, 129, 0.08)';
-        inspDelinqBox.style.border = '1px solid rgba(16, 185, 129, 0.25)';
+        inspDelinqBox.style.background = 'rgba(255, 255, 255, 0.03)';
+        inspDelinqBox.style.border = '1px solid rgba(255, 255, 255, 0.12)';
       }
       if (btnIssueDelinquency) btnIssueDelinquency.style.display = 'none';
       if (btnOpenPayment) btnOpenPayment.style.display = 'flex';
       if (inspDelinqBadge) {
         inspDelinqBadge.textContent = 'CURRENT / PAID';
-        inspDelinqBadge.style.color = '#10b981';
-        inspDelinqBadge.style.backgroundColor = 'rgba(16, 185, 129, 0.2)';
-        inspDelinqBadge.style.borderColor = 'rgba(16, 185, 129, 0.4)';
+        inspDelinqBadge.style.color = '#ffffff';
+        inspDelinqBadge.style.backgroundColor = 'rgba(255, 255, 255, 0.1)';
+        inspDelinqBadge.style.borderColor = 'rgba(255, 255, 255, 0.25)';
       }
       if (inspOverdueStr) {
         inspOverdueStr.textContent = 'Tax Paid (Year 2026)';
-        inspOverdueStr.style.color = '#10b981';
+        inspOverdueStr.style.color = '#a1a1aa';
       }
       if (inspPenaltyVal) inspPenaltyVal.textContent = 'PHP 0.00 (0.0%)';
       if (inspTotalDelinq) {
         inspTotalDelinq.textContent = `PHP ${parseFloat(delinq.annual_tax || data.tax_due || 0).toLocaleString('en-US', { minimumFractionDigits: 2 })}`;
-        inspTotalDelinq.style.color = '#10b981';
+        inspTotalDelinq.style.color = '#ffffff';
       }
     }
   }
@@ -394,9 +401,11 @@ document.addEventListener('DOMContentLoaded', () => {
   if (lguSelect) {
     lguSelect.addEventListener('change', (e) => {
       const selectedOption = e.target.options[e.target.selectedIndex];
+      activeLguCode = selectedOption.value;
+      activeLguName = selectedOption.text.split('(')[0].trim();
       const lat = parseFloat(selectedOption.getAttribute('data-lat') || 16.9749);
       const lng = parseFloat(selectedOption.getAttribute('data-lng') || 121.8153);
-      const lguName = selectedOption.text.split('(')[0].trim();
+      const lguName = activeLguName;
 
       if (hudLguTitle) {
         hudLguTitle.textContent = `ISABELA CADASTRE 211 · ${lguName.toUpperCase()} (${lat.toFixed(4)}° N, ${lng.toFixed(4)}° E)`;
@@ -537,7 +546,7 @@ document.addEventListener('DOMContentLoaded', () => {
           <td class="mono-num">PHP ${row.sef_tax.toLocaleString('en-US', { minimumFractionDigits: 2 })}</td>
           <td class="mono-num" style="font-weight: 600;">PHP ${row.subtotal_tax.toLocaleString('en-US', { minimumFractionDigits: 2 })}</td>
           <td class="mono-num">${row.penalty_rate_pct}%</td>
-          <td class="mono-num" style="color: #b91c1c;">PHP ${row.penalty_amount.toLocaleString('en-US', { minimumFractionDigits: 2 })}</td>
+          <td class="mono-num" style="color: #000000; font-weight: 600;">PHP ${row.penalty_amount.toLocaleString('en-US', { minimumFractionDigits: 2 })}</td>
           <td class="mono-num" style="text-align: right; font-weight: 700;">PHP ${row.total_due.toLocaleString('en-US', { minimumFractionDigits: 2 })}</td>
         `;
         tbody.appendChild(tr);
@@ -614,8 +623,17 @@ document.addEventListener('DOMContentLoaded', () => {
     });
 
     document.addEventListener('keydown', (e) => {
-      if (e.key === 'Escape' && modalTaxDelinquency.style.display === 'flex') {
-        modalTaxDelinquency.style.display = 'none';
+      if (e.key === 'Escape') {
+        if (modalTaxDelinquency && modalTaxDelinquency.style.display === 'flex') modalTaxDelinquency.style.display = 'none';
+        
+        const mTransfer = document.getElementById('modal-transfer-ownership');
+        if (mTransfer && mTransfer.style.display === 'flex') mTransfer.style.display = 'none';
+        
+        const mTransferCert = document.getElementById('modal-transfer-certificate');
+        if (mTransferCert && mTransferCert.style.display === 'flex') mTransferCert.style.display = 'none';
+        
+        const mHistory = document.getElementById('modal-ownership-history');
+        if (mHistory && mHistory.style.display === 'flex') mHistory.style.display = 'none';
       }
     });
   }
@@ -651,13 +669,589 @@ document.addEventListener('DOMContentLoaded', () => {
     });
   }
 
-  // 10. Issue Tax Dec Action
-  if (btnIssueTd) {
-    btnIssueTd.addEventListener('click', () => {
-      const pin = inspPin ? inspPin.textContent : '';
-      const owner = inspOwner ? inspOwner.textContent : '';
-      const av = inspAv ? inspAv.textContent : '';
-      alert(`[OFFICIAL GOVERNMENT NOTICE]\nTax Declaration (TD) preparation initiated:\nPIN: ${pin}\nOwner: ${owner}\nAssessed Value: ${av}\n\nProvincial Government of Isabela · Office of the Provincial Assessor`);
+  // =========================================================================
+  // TRANSFER OF OWNERSHIP & CHAIN OF TITLE HANDLERS
+  // =========================================================================
+  const btnTransferOwnership = document.getElementById('btn-transfer-ownership');
+  const modalTransfer = document.getElementById('modal-transfer-ownership');
+  const modalTransferCert = document.getElementById('modal-transfer-certificate');
+  const modalHistory = document.getElementById('modal-ownership-history');
+  const formTransfer = document.getElementById('form-transfer-ownership');
+
+  // Open transfer form modal
+  if (btnTransferOwnership) {
+    btnTransferOwnership.addEventListener('click', () => {
+      if (!activeSelectedParcelData) {
+        if (parcelPolygonMap.size > 0) {
+          const first = parcelPolygonMap.values().next().value;
+          selectParcel(first.data, first.polygon);
+        } else {
+          alert('Please select a cadastral parcel on the map to initiate transfer.');
+          return;
+        }
+      }
+      const d = activeSelectedParcelData;
+      const setText = (id, val) => { const el = document.getElementById(id); if (el) el.textContent = val || '—'; };
+      setText('xfer-cur-pin', d.pin);
+      setText('xfer-cur-td', d.td_no);
+      setText('xfer-cur-owner', d.owner_name);
+      setText('xfer-cur-status', d.status);
+
+      // Clear form fields and set default dates
+      if (formTransfer) formTransfer.reset();
+      const todayIso = new Date().toISOString().split('T')[0];
+      const setVal = (id, val) => { const el = document.getElementById(id); if (el) el.value = val; };
+      setVal('xfer-deed-date', todayIso);
+      setVal('xfer-inscription-date', todayIso);
+      setVal('xfer-car-date', todayIso);
+      setVal('xfer-tax-date', todayIso);
+
+      if (modalTransfer) modalTransfer.style.display = 'flex';
+    });
+  }
+
+  // Close transfer form
+  const btnCloseTransfer = document.getElementById('btn-close-transfer-modal');
+  const btnCancelTransfer = document.getElementById('btn-cancel-transfer');
+  if (btnCloseTransfer) btnCloseTransfer.addEventListener('click', () => { if (modalTransfer) modalTransfer.style.display = 'none'; });
+  if (btnCancelTransfer) btnCancelTransfer.addEventListener('click', () => { if (modalTransfer) modalTransfer.style.display = 'none'; });
+  if (modalTransfer) modalTransfer.addEventListener('click', (e) => { if (e.target === modalTransfer) modalTransfer.style.display = 'none'; });
+
+  // Submit transfer
+  if (formTransfer) {
+    formTransfer.addEventListener('submit', (e) => {
+      e.preventDefault();
+      if (!activeSelectedParcelData) return;
+
+      const pin = activeSelectedParcelData.pin;
+      const payload = {
+        new_owner_name: document.getElementById('xfer-new-owner')?.value?.trim() || '',
+        new_owner_address: document.getElementById('xfer-new-address')?.value?.trim() || '',
+        new_owner_tin: document.getElementById('xfer-new-tin')?.value?.trim() || '',
+        deed_type: document.getElementById('xfer-deed-type')?.value || 'Deed of Absolute Sale',
+        deed_no: document.getElementById('xfer-deed-no')?.value?.trim() || '',
+        deed_date: document.getElementById('xfer-deed-date')?.value || '',
+        registry_of_deeds: document.getElementById('xfer-registry')?.value?.trim() || '',
+        tct_oct_no: document.getElementById('xfer-tct-oct')?.value?.trim() || '',
+        inscription_date: document.getElementById('xfer-inscription-date')?.value || '',
+        bir_car_no: document.getElementById('xfer-car-no')?.value?.trim() || '',
+        bir_car_date: document.getElementById('xfer-car-date')?.value || '',
+        transfer_tax_or_no: document.getElementById('xfer-tax-or')?.value?.trim() || '',
+        transfer_tax_amount: parseFloat(document.getElementById('xfer-tax-amount')?.value) || 0,
+        transfer_tax_date: document.getElementById('xfer-tax-date')?.value || ''
+      };
+
+      if (!payload.new_owner_name) {
+        alert('New owner name is required.');
+        return;
+      }
+
+      const btn = document.getElementById('btn-execute-transfer');
+      if (btn) { btn.disabled = true; btn.innerHTML = '<span>Processing...</span>'; }
+
+      fetch(`/api/parcels/${encodeURIComponent(pin)}/transfer-ownership`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload)
+      })
+      .then(res => res.json())
+      .then(data => {
+        if (btn) { btn.disabled = false; btn.innerHTML = '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M16 3h5v5"></path><path d="M8 21H3v-5"></path><line x1="21" y1="3" x2="14" y2="10"></line><line x1="3" y1="21" x2="10" y2="14"></line></svg><span>Execute Transfer</span>'; }
+
+        if (data.success && data.transfer) {
+          if (modalTransfer) modalTransfer.style.display = 'none';
+          populateTransferCertificate(data.transfer);
+          if (modalTransferCert) modalTransferCert.style.display = 'flex';
+
+          // Refresh inspector
+          activeSelectedParcelData.owner_name = data.transfer.new_owner_name;
+          activeSelectedParcelData.owner_address = data.transfer.new_owner_address;
+          activeSelectedParcelData.td_no = data.transfer.new_td_no;
+          if (inspOwner) inspOwner.textContent = data.transfer.new_owner_name;
+          if (inspAddress) inspAddress.textContent = data.transfer.new_owner_address;
+          if (inspTd) inspTd.textContent = data.transfer.new_td_no;
+        } else {
+          alert(data.message || 'Transfer failed.');
+        }
+      })
+      .catch(err => {
+        if (btn) { btn.disabled = false; btn.innerHTML = '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M16 3h5v5"></path><path d="M8 21H3v-5"></path><line x1="21" y1="3" x2="14" y2="10"></line><line x1="3" y1="21" x2="10" y2="14"></line></svg><span>Execute Transfer</span>'; }
+        alert(`Network error: ${err.message}`);
+      });
+    });
+  }
+
+  // Populate transfer certificate
+  function populateTransferCertificate(t) {
+    const setText = (id, val) => { const el = document.getElementById(id); if (el) el.textContent = (val !== undefined && val !== null && val !== '') ? val : '—'; };
+    const fmtPHP = (v) => `PHP ${parseFloat(v || 0).toLocaleString('en-US', { minimumFractionDigits: 2 })}`;
+    const lguUpper = (t.lgu_name || 'ILAGAN CITY').toUpperCase();
+    setText('xfer-cert-lgu', lguUpper.startsWith('CITY') || lguUpper.includes('MUNICIPALITY') ? lguUpper : `MUNICIPALITY OF ${lguUpper}`);
+    setText('xfer-cert-ref', t.transfer_ref);
+    setText('xfer-cert-date', t.date_issued);
+    setText('xfer-cert-pin', t.pin);
+    setText('xfer-cert-old-td', t.old_td_no);
+    setText('xfer-cert-old-owner', t.old_owner_name);
+    setText('xfer-cert-old-address', t.old_owner_address);
+    setText('xfer-cert-new-td', t.new_td_no);
+    setText('xfer-cert-new-owner', t.new_owner_name);
+    setText('xfer-cert-new-address', t.new_owner_address);
+    setText('xfer-cert-new-tin', t.new_owner_tin ? `TIN: ${t.new_owner_tin}` : '');
+    setText('xfer-cert-lot', t.lot_no);
+    setText('xfer-cert-block', t.block_no);
+    setText('xfer-cert-section', t.section_no);
+    setText('xfer-cert-survey', t.survey_no);
+    setText('xfer-cert-class', t.classification);
+    setText('xfer-cert-use', t.actual_use);
+    setText('xfer-cert-area', `${parseFloat(t.area_sqm || 0).toLocaleString('en-US', {minimumFractionDigits: 2})} sq.m.`);
+    setText('xfer-cert-av', fmtPHP(t.assessed_value));
+    setText('xfer-cert-deed-type', t.deed_type);
+    setText('xfer-cert-deed-no', t.deed_no);
+    setText('xfer-cert-deed-date', t.deed_date);
+    setText('xfer-cert-registry', t.registry_of_deeds);
+    setText('xfer-cert-tct', t.tct_oct_no);
+    setText('xfer-cert-inscr-date', t.inscription_date);
+    setText('xfer-cert-car', t.bir_car_no);
+    setText('xfer-cert-car-date', t.bir_car_date);
+    setText('xfer-cert-tax-or', t.transfer_tax_or_no);
+    setText('xfer-cert-tax-amt', fmtPHP(t.transfer_tax_amount));
+    setText('xfer-cert-officer', (t.officer_username || 'ELENA M. CASTILLO').toUpperCase());
+    setText('xfer-cert-officer-badge', `Badge No. ${t.officer_badge || 'PGI-REC-005'}`);
+    setText('xfer-cert-assessor', t.assessor_name || 'ATTY. RODOLFO V. RAMOS, REA, REB');
+  }
+
+  // Print transfer certificate
+  const btnPrintTransfer = document.getElementById('btn-print-transfer');
+  if (btnPrintTransfer) btnPrintTransfer.addEventListener('click', () => window.print());
+
+  // Close transfer certificate
+  const btnCloseTransferCert = document.getElementById('btn-close-transfer-cert');
+  if (btnCloseTransferCert) btnCloseTransferCert.addEventListener('click', () => { if (modalTransferCert) modalTransferCert.style.display = 'none'; });
+  if (modalTransferCert) modalTransferCert.addEventListener('click', (e) => { if (e.target === modalTransferCert) modalTransferCert.style.display = 'none'; });
+
+  // Ownership History
+  function loadOwnershipHistory(pin) {
+    fetch(`/api/parcels/${encodeURIComponent(pin)}/ownership-history`)
+    .then(res => res.json())
+    .then(data => {
+      if (data.success) {
+        const container = document.getElementById('ownership-timeline-container');
+        const titleEl = document.getElementById('history-parcel-title');
+        const lotEl = document.getElementById('history-parcel-lot');
+        const countEl = document.getElementById('history-count');
+
+        if (titleEl) titleEl.textContent = `PIN: ${pin}`;
+        if (lotEl && activeSelectedParcelData) lotEl.textContent = `${activeSelectedParcelData.lot_no || 'Lot'} · Cad 211`;
+        if (countEl) countEl.textContent = `${data.count} Record${data.count !== 1 ? 's' : ''}`;
+
+        if (container) {
+          if (data.chain.length === 0) {
+            container.innerHTML = '<div style="text-align: center; padding: 24px; color: #94a3b8; font-size: 13px;">No ownership history recorded for this parcel.</div>';
+          } else {
+            container.innerHTML = data.chain.map((h, i) => {
+              const isLast = i === data.chain.length - 1;
+              const badgeText = h.deed_type === 'Original Title' ? 'ORIGINAL' : 'TRANSFER';
+              return `
+                <div class="history-item ${isLast ? 'history-current' : ''}">
+                  <div class="history-dot" style="background: #ffffff;"></div>
+                  <div class="history-content">
+                    <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 4px;">
+                      <span class="history-seq">#${h.sequence_no}</span>
+                      <span class="history-badge" style="background: rgba(255, 255, 255, 0.08); color: #ffffff; border: 1px solid rgba(255, 255, 255, 0.2);">${badgeText}</span>
+                      ${isLast ? '<span class="history-badge" style="background: #ffffff; color: #0a0a0a; border: 1px solid #ffffff; font-weight: 600;">CURRENT OWNER</span>' : ''}
+                    </div>
+                    <div class="history-owner">${h.owner_name}</div>
+                    <div class="history-address">${h.owner_address || '—'}</div>
+                    <div class="history-meta">
+                      <span>TD: ${h.td_no}</span>
+                      ${h.deed_type && h.deed_type !== 'Original Title' ? `<span>Deed: ${h.deed_type}</span>` : ''}
+                      ${h.deed_no ? `<span>Doc: ${h.deed_no}</span>` : ''}
+                      ${h.tct_oct_no ? `<span>TCT/OCT: ${h.tct_oct_no}</span>` : ''}
+                      ${h.transfer_timestamp ? `<span>${new Date(h.transfer_timestamp).toLocaleDateString('en-US', {year: 'numeric', month: 'short', day: 'numeric'})}</span>` : ''}
+                    </div>
+                  </div>
+                </div>
+              `;
+            }).join('');
+          }
+        }
+        if (modalHistory) modalHistory.style.display = 'flex';
+      }
+    })
+    .catch(err => alert(`Error loading history: ${err.message}`));
+  }
+
+  const btnViewHistory = document.getElementById('btn-view-history');
+  if (btnViewHistory) {
+    btnViewHistory.addEventListener('click', () => {
+      if (activeSelectedParcelData) {
+        loadOwnershipHistory(activeSelectedParcelData.pin);
+      }
+    });
+  }
+
+  // Close history modal
+  const btnCloseHistory = document.getElementById('btn-close-history-modal');
+  if (btnCloseHistory) btnCloseHistory.addEventListener('click', () => { if (modalHistory) modalHistory.style.display = 'none'; });
+  if (modalHistory) modalHistory.addEventListener('click', (e) => { if (e.target === modalHistory) modalHistory.style.display = 'none'; });
+
+  // =========================================================================
+  // LAND RECLASSIFICATION & GENERAL REVISION (GR) ENGINE
+  // =========================================================================
+  const btnReclassifyParcel = document.getElementById('btn-reclassify-parcel');
+  const modalReclassify = document.getElementById('modal-reclassify-parcel');
+  const modalNoticeAssessment = document.getElementById('modal-notice-of-assessment');
+  const formReclassify = document.getElementById('form-reclassify-parcel');
+  const reclassNewClass = document.getElementById('reclass-new-class');
+  const reclassNewUse = document.getElementById('reclass-new-use');
+  const reclassUnitValue = document.getElementById('reclass-unit-value');
+  const reclassAssessmentLevel = document.getElementById('reclass-assessment-level');
+  const reclassSmvPresets = document.getElementById('reclass-smv-presets');
+  const btnCloseReclass = document.getElementById('btn-close-reclass-modal');
+  const btnCancelReclass = document.getElementById('btn-cancel-reclass');
+  const btnPrintNoticeAssessment = document.getElementById('btn-print-notice-assessment');
+  const btnCloseNoticeModal = document.getElementById('btn-close-notice-modal');
+
+  let smvRatesCache = null;
+
+  // Fetch SMV benchmark rates
+  function fetchSmvRates() {
+    if (smvRatesCache) return Promise.resolve(smvRatesCache);
+    return fetch('/api/smv/rates')
+      .then(res => res.json())
+      .then(data => {
+        if (data.success) {
+          smvRatesCache = data.rates;
+          return smvRatesCache;
+        }
+        return null;
+      })
+      .catch(() => null);
+  }
+
+  // Populate SMV preset chips for the selected classification
+  function renderSmvPresets(classification) {
+    if (!reclassSmvPresets) return;
+    reclassSmvPresets.innerHTML = '<span style="color:#64748b; font-size:10px;">Loading benchmarks...</span>';
+    
+    fetchSmvRates().then(rates => {
+      if (!rates || !rates[classification]) {
+        reclassSmvPresets.innerHTML = '<span style="color:#64748b; font-size:10px;">No benchmark presets available.</span>';
+        return;
+      }
+      const cat = rates[classification];
+      const chips = cat.benchmark_unit_values || [];
+      if (chips.length === 0) {
+        reclassSmvPresets.innerHTML = '<span style="color:#64748b; font-size:10px;">No presets defined.</span>';
+        return;
+      }
+      reclassSmvPresets.innerHTML = chips.map(c => `
+        <button type="button" class="smv-chip" data-val="${c.unit_value}" data-desc="${c.sub_class}">
+          <span>${c.sub_class.split(' - ')[1] || c.sub_class}</span>
+          <strong style="color:#ffffff;">PHP ${c.unit_value.toLocaleString()}</strong>
+        </button>
+      `).join('');
+
+      // Wire up chip click
+      reclassSmvPresets.querySelectorAll('.smv-chip').forEach(btn => {
+        btn.addEventListener('click', () => {
+          reclassSmvPresets.querySelectorAll('.smv-chip').forEach(b => b.classList.remove('active'));
+          btn.classList.add('active');
+          const val = parseFloat(btn.getAttribute('data-val'));
+          const desc = btn.getAttribute('data-desc');
+          if (reclassUnitValue) reclassUnitValue.value = val;
+          if (reclassNewUse) reclassNewUse.value = desc;
+          updateReclassPreview();
+        });
+      });
+    });
+  }
+
+  // Live Reactive Real-Time Telemetry Preview Calculation
+  function updateReclassPreview() {
+    if (!activeSelectedParcelData) return;
+    const p = activeSelectedParcelData;
+    const area = parseFloat(p.area_sqm || 0);
+    const oldMv = parseFloat(p.market_value || 0);
+    const oldLvl = parseFloat(p.assessment_level || 0);
+    const oldAv = parseFloat(p.assessed_value || 0);
+    const oldTax = parseFloat(p.tax_due || 0);
+
+    const unitVal = parseFloat(reclassUnitValue ? reclassUnitValue.value : 0) || 0;
+    const lvl = parseFloat(reclassAssessmentLevel ? reclassAssessmentLevel.value : 0) || 0;
+    const targetClass = reclassNewClass ? reclassNewClass.value : p.classification;
+
+    const newMv = roundNum(area * unitVal, 2);
+    const newAv = roundNum(newMv * (lvl / 100.0), 2);
+
+    const isExempt = (p.status && p.status.includes('Exempt')) || ['institutional', 'special'].includes(targetClass.toLowerCase());
+    const newTax = isExempt ? 0.0 : roundNum(newAv * 0.03, 2);
+
+    const diffMv = roundNum(newMv - oldMv, 2);
+    const diffLvl = roundNum(lvl - oldLvl, 1);
+    const diffAv = roundNum(newAv - oldAv, 2);
+    const diffTax = roundNum(newTax - oldTax, 2);
+    const diffTaxPct = oldTax > 0 ? roundNum((diffTax / oldTax) * 100.0, 1) : 0.0;
+
+    const fmtPHP = v => `PHP ${parseFloat(v || 0).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+    const fmtDiff = (d, isCurr = true) => {
+      const prefix = d > 0 ? '+' : '';
+      const colorCls = d > 0 ? 'variance-positive' : (d < 0 ? 'variance-negative' : 'variance-neutral');
+      return `<span class="${colorCls}">${prefix}${isCurr ? fmtPHP(d) : d}</span>`;
+    };
+
+    const setTxt = (id, html) => {
+      const el = document.getElementById(id);
+      if (el) el.innerHTML = html;
+    };
+
+    setTxt('prev-mv-old', fmtPHP(oldMv));
+    setTxt('prev-mv-new', fmtPHP(newMv));
+    setTxt('prev-mv-diff', fmtDiff(diffMv));
+
+    setTxt('prev-lvl-old', `${oldLvl}%`);
+    setTxt('prev-lvl-new', `${lvl}%`);
+    setTxt('prev-lvl-diff', `<span class="${diffLvl >= 0 ? 'variance-positive' : 'variance-negative'}">${diffLvl >= 0 ? '+' : ''}${diffLvl}%</span>`);
+
+    setTxt('prev-av-old', fmtPHP(oldAv));
+    setTxt('prev-av-new', fmtPHP(newAv));
+    setTxt('prev-av-diff', fmtDiff(diffAv));
+
+    setTxt('prev-tax-old', fmtPHP(oldTax));
+    setTxt('prev-tax-new', fmtPHP(newTax));
+    const taxDiffHtml = `${diffTax >= 0 ? '+' : ''}${fmtPHP(diffTax)} (${diffTaxPct >= 0 ? '+' : ''}${diffTaxPct}%)`;
+    setTxt('prev-tax-diff', `<span class="${diffTax >= 0 ? 'variance-positive' : 'variance-negative'}">${taxDiffHtml}</span>`);
+
+    const badge = document.getElementById('reclass-variance-badge');
+    if (badge) {
+      if (diffTax > 0) {
+        badge.textContent = `TAX REVENUE INCREASE: +${fmtPHP(diffTax)}/YR`;
+        badge.style.background = '#ffffff';
+        badge.style.color = '#0a0a0a';
+        badge.style.border = '1px solid #ffffff';
+        badge.style.fontWeight = '600';
+      } else if (diffTax < 0) {
+        badge.textContent = `TAX REVENUE DECREASE: ${fmtPHP(diffTax)}/YR`;
+        badge.style.background = 'rgba(255, 255, 255, 0.08)';
+        badge.style.color = '#a1a1aa';
+        badge.style.border = '1px solid rgba(255, 255, 255, 0.25)';
+      } else {
+        badge.textContent = 'NO TAX VARIANCE (NEUTRAL)';
+        badge.style.background = 'rgba(148, 163, 184, 0.2)';
+        badge.style.color = '#94a3b8';
+        badge.style.border = '1px solid rgba(148, 163, 184, 0.4)';
+      }
+    }
+  }
+
+  function roundNum(num, dec) {
+    return +(Math.round(num + "e+" + dec) + "e-" + dec);
+  }
+
+  // Open Reclassification modal
+  if (btnReclassifyParcel) {
+    btnReclassifyParcel.addEventListener('click', () => {
+      if (!activeSelectedParcelData) {
+        if (parcelPolygonMap.size > 0) {
+          const first = parcelPolygonMap.values().next().value;
+          selectParcel(first.data, first.polygon);
+        } else {
+          alert('Please select a cadastral parcel on the map to reclassify.');
+          return;
+        }
+      }
+      const d = activeSelectedParcelData;
+      const setEl = (id, txt) => { const el = document.getElementById(id); if (el) el.textContent = txt || '—'; };
+      setEl('reclass-cur-pin', d.pin);
+      setEl('reclass-cur-lot', d.lot_no);
+      setEl('reclass-cur-area', `${parseFloat(d.area_sqm || 0).toLocaleString()} sq.m.`);
+      setEl('reclass-cur-class', d.classification);
+      setEl('reclass-cur-owner', d.owner_name);
+      setEl('reclass-cur-tax', `PHP ${parseFloat(d.tax_due || 0).toLocaleString('en-US', { minimumFractionDigits: 2 })}`);
+
+      // Initialize inputs with current or intelligent defaults
+      if (reclassNewClass) {
+        reclassNewClass.value = d.classification || 'Residential';
+      }
+      if (reclassNewUse) {
+        reclassNewUse.value = d.actual_use || '';
+      }
+      if (reclassUnitValue) {
+        reclassUnitValue.value = d.unit_value || 2500;
+      }
+      if (reclassAssessmentLevel) {
+        const defaultLevels = { 'residential': 20, 'commercial': 50, 'industrial': 50, 'agricultural': 40, 'institutional': 50, 'special': 10 };
+        reclassAssessmentLevel.value = defaultLevels[(d.classification || 'residential').toLowerCase()] || 20;
+      }
+
+      renderSmvPresets(reclassNewClass ? reclassNewClass.value : 'Residential');
+      updateReclassPreview();
+
+      if (modalReclassify) modalReclassify.style.display = 'flex';
+    });
+  }
+
+  // Reclassification form input change listeners
+  if (reclassNewClass) {
+    reclassNewClass.addEventListener('change', () => {
+      const selected = reclassNewClass.value;
+      const defaultLevels = { 'residential': 20, 'commercial': 50, 'industrial': 50, 'agricultural': 40, 'institutional': 50, 'special': 10 };
+      if (reclassAssessmentLevel) {
+        reclassAssessmentLevel.value = defaultLevels[selected.toLowerCase()] || 20;
+      }
+      renderSmvPresets(selected);
+      updateReclassPreview();
+    });
+  }
+
+  if (reclassUnitValue) {
+    reclassUnitValue.addEventListener('input', updateReclassPreview);
+  }
+  if (reclassAssessmentLevel) {
+    reclassAssessmentLevel.addEventListener('input', updateReclassPreview);
+  }
+
+  // Close Reclassification modal
+  if (btnCloseReclass) btnCloseReclass.addEventListener('click', () => { if (modalReclassify) modalReclassify.style.display = 'none'; });
+  if (btnCancelReclass) btnCancelReclass.addEventListener('click', () => { if (modalReclassify) modalReclassify.style.display = 'none'; });
+  if (modalReclassify) modalReclassify.addEventListener('click', (e) => { if (e.target === modalReclassify) modalReclassify.style.display = 'none'; });
+
+  // Submit Reclassification
+  if (formReclassify) {
+    formReclassify.addEventListener('submit', (e) => {
+      e.preventDefault();
+      if (!activeSelectedParcelData) return;
+
+      const pin = activeSelectedParcelData.pin;
+      const payload = {
+        new_classification: reclassNewClass ? reclassNewClass.value : 'Residential',
+        new_actual_use: reclassNewUse ? reclassNewUse.value.trim() : '',
+        new_unit_value: parseFloat(reclassUnitValue ? reclassUnitValue.value : 0),
+        new_assessment_level: parseFloat(reclassAssessmentLevel ? reclassAssessmentLevel.value : 0),
+        reason: document.getElementById('reclass-reason')?.value || 'Land Use Reclassification / General Revision',
+        ordinance_no: document.getElementById('reclass-ordinance')?.value || 'Sangguniang Panlalawigan Ordinance No. 2026-04'
+      };
+
+      const btn = document.getElementById('btn-execute-reclass');
+      if (btn) { btn.disabled = true; btn.innerHTML = '<span>Processing Reassessment...</span>'; }
+
+      fetch(`/api/parcels/${encodeURIComponent(pin)}/reclassify`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload)
+      })
+      .then(res => res.json())
+      .then(data => {
+        if (btn) {
+          btn.disabled = false;
+          btn.innerHTML = '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="16" y1="13" x2="8" y2="13"></line><line x1="16" y1="17" x2="8" y2="17"></line></svg><span>Apply Reclassification & Issue Notice</span>';
+        }
+
+        if (data.success && data.notice) {
+          if (modalReclassify) modalReclassify.style.display = 'none';
+          populateNoticeOfAssessment(data.notice);
+          if (modalNoticeAssessment) modalNoticeAssessment.style.display = 'flex';
+
+          // Update active selected parcel state & inspector
+          const rev = data.revision;
+          activeSelectedParcelData.classification = rev.new_classification;
+          activeSelectedParcelData.actual_use = payload.new_actual_use;
+          activeSelectedParcelData.unit_value = payload.new_unit_value;
+          activeSelectedParcelData.market_value = rev.new_market_value;
+          activeSelectedParcelData.assessment_level = payload.new_assessment_level;
+          activeSelectedParcelData.assessed_value = rev.new_assessed_value;
+          activeSelectedParcelData.tax_due = rev.new_tax_due;
+          activeSelectedParcelData.td_no = rev.td_no;
+
+          if (inspClass) inspClass.textContent = rev.new_classification;
+          if (inspUse) inspUse.textContent = payload.new_actual_use;
+          if (inspUnit) inspUnit.textContent = `PHP ${parseFloat(payload.new_unit_value).toLocaleString('en-US', { minimumFractionDigits: 2 })} / sq.m.`;
+          if (inspMv) inspMv.textContent = `PHP ${parseFloat(rev.new_market_value).toLocaleString('en-US', { minimumFractionDigits: 2 })}`;
+          if (inspLevel) inspLevel.textContent = `${payload.new_assessment_level}%`;
+          if (inspAv) inspAv.textContent = `PHP ${parseFloat(rev.new_assessed_value).toLocaleString('en-US', { minimumFractionDigits: 2 })}`;
+          if (inspTax) inspTax.textContent = `PHP ${parseFloat(rev.new_tax_due).toLocaleString('en-US', { minimumFractionDigits: 2 })}`;
+          if (inspTd) inspTd.textContent = rev.td_no;
+        } else {
+          alert(data.message || 'Reclassification failed.');
+        }
+      })
+      .catch(err => {
+        if (btn) {
+          btn.disabled = false;
+          btn.innerHTML = '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="16" y1="13" x2="8" y2="13"></line><line x1="16" y1="17" x2="8" y2="17"></line></svg><span>Apply Reclassification & Issue Notice</span>';
+        }
+        alert(`Network error: ${err.message}`);
+      });
+    });
+  }
+
+  // Populate Printable Official Notice of Assessment Document
+  function populateNoticeOfAssessment(n) {
+    const setText = (id, val) => { const el = document.getElementById(id); if (el) el.textContent = (val !== undefined && val !== null && val !== '') ? val : '—'; };
+    const fmtPHP = v => `PHP ${parseFloat(v || 0).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+    const fmtDiff = (d, isCurr = true) => `${d >= 0 ? '+' : ''}${isCurr ? fmtPHP(d) : d}`;
+
+    const lguUpper = (n.lgu_name || 'ILAGAN CITY').toUpperCase();
+    setText('nar-doc-lgu', lguUpper.startsWith('CITY') || lguUpper.includes('MUNICIPALITY') ? lguUpper : `MUNICIPALITY OF ${lguUpper}`);
+    setText('nar-doc-no', n.revision_no);
+    setText('nar-doc-date', n.date_issued);
+    setText('nar-doc-effectivity', n.effectivity);
+    setText('nar-doc-owner', n.owner_name);
+    setText('nar-doc-address', n.owner_address);
+    setText('nar-doc-cadastral', `${n.lot_no || 'Lot'}, ${n.block_no || 'Blk'}, ${n.survey_no || 'Cad 211'}`);
+    setText('nar-doc-pin', n.pin);
+    setText('nar-doc-td', n.td_no);
+
+    const c = n.comparison;
+    if (c) {
+      setText('nar-comp-class-old', c.classification.old);
+      setText('nar-comp-class-new', c.classification.new);
+      setText('nar-comp-class-diff', c.classification.old === c.classification.new ? 'Unchanged' : 'Reclassified');
+
+      setText('nar-comp-use-old', c.actual_use.old);
+      setText('nar-comp-use-new', c.actual_use.new);
+
+      setText('nar-comp-unit-old', parseFloat(c.unit_value.old).toLocaleString('en-US', { minimumFractionDigits: 2 }));
+      setText('nar-comp-unit-new', parseFloat(c.unit_value.new).toLocaleString('en-US', { minimumFractionDigits: 2 }));
+      setText('nar-comp-unit-diff', fmtDiff(c.unit_value.diff));
+
+      setText('nar-comp-mv-old', parseFloat(c.market_value.old).toLocaleString('en-US', { minimumFractionDigits: 2 }));
+      setText('nar-comp-mv-new', parseFloat(c.market_value.new).toLocaleString('en-US', { minimumFractionDigits: 2 }));
+      setText('nar-comp-mv-diff', fmtDiff(c.market_value.diff));
+
+      setText('nar-comp-lvl-old', `${c.assessment_level.old}%`);
+      setText('nar-comp-lvl-new', `${c.assessment_level.new}%`);
+      setText('nar-comp-lvl-diff', `${c.assessment_level.diff >= 0 ? '+' : ''}${c.assessment_level.diff}%`);
+
+      setText('nar-comp-av-old', parseFloat(c.assessed_value.old).toLocaleString('en-US', { minimumFractionDigits: 2 }));
+      setText('nar-comp-av-new', parseFloat(c.assessed_value.new).toLocaleString('en-US', { minimumFractionDigits: 2 }));
+      setText('nar-comp-av-diff', fmtDiff(c.assessed_value.diff));
+
+      setText('nar-comp-tax-old', fmtPHP(c.tax_due.old));
+      setText('nar-comp-tax-new', fmtPHP(c.tax_due.new));
+      const pctStr = c.tax_due.diff_pct >= 0 ? `+${c.tax_due.diff_pct}%` : `${c.tax_due.diff_pct}%`;
+      setText('nar-comp-tax-diff', `${fmtDiff(c.tax_due.diff)} (${pctStr})`);
+    }
+
+    setText('nar-doc-appraiser', (n.appraiser_name || 'ENGR. MARITES D. PASCUAL').toUpperCase());
+    setText('nar-doc-appraiser-badge', `Badge No. ${n.appraiser_badge || 'PGI-GIS-014'}`);
+    setText('nar-doc-assessor', n.assessor_name || 'ATTY. RODOLFO V. RAMOS, REA, REB');
+  }
+
+  // Print Notice of Assessment
+  if (btnPrintNoticeAssessment) {
+    btnPrintNoticeAssessment.addEventListener('click', () => window.print());
+  }
+
+  // Close Notice modal
+  if (btnCloseNoticeModal) {
+    btnCloseNoticeModal.addEventListener('click', () => {
+      if (modalNoticeAssessment) modalNoticeAssessment.style.display = 'none';
+    });
+  }
+  if (modalNoticeAssessment) {
+    modalNoticeAssessment.addEventListener('click', (e) => {
+      if (e.target === modalNoticeAssessment) modalNoticeAssessment.style.display = 'none';
     });
   }
 
@@ -1760,8 +2354,6 @@ document.addEventListener('DOMContentLoaded', () => {
     pendingDrawnPerimeter = perimeterM;
 
     // 2. Identify active LGU from sidebar or dropdown
-    let activeLguCode = '03215';
-    let activeLguName = 'Ilagan City';
     if (lguSelect && lguSelect.selectedIndex >= 0) {
       const opt = lguSelect.options[lguSelect.selectedIndex];
       activeLguCode = opt.value;
@@ -1831,7 +2423,7 @@ document.addEventListener('DOMContentLoaded', () => {
           details.innerHTML = activeRegistrationConflicts.map(c => `
             <div class="encroachment-conflict-item">
               <span>Encroachment on <strong>${c.lot_no} (${c.pin})</strong>:</span>
-              <span class="mono-num" style="color: #f87171; font-weight: 600;">${c.overlap_area_sqm.toLocaleString()} sq.m. (${c.pct_candidate}%)</span>
+              <span class="mono-num" style="color: #ffffff; font-weight: 600;">${c.overlap_area_sqm.toLocaleString()} sq.m. (${c.pct_candidate}%)</span>
             </div>
             <div style="font-size: 10px; color: #94a3b8; margin-bottom: 4px;">Owner: ${c.owner_name}</div>
           `).join('');
@@ -1918,11 +2510,11 @@ document.addEventListener('DOMContentLoaded', () => {
             if (c.geojson) {
               L.geoJSON(c.geojson, {
                 style: {
-                  color: '#ef4444',
+                  color: '#ffffff',
                   weight: 2,
-                  fillColor: '#dc2626',
-                  fillOpacity: 0.60,
-                  dashArray: '4, 3'
+                  fillColor: '#ffffff',
+                  fillOpacity: 0.45,
+                  dashArray: '4, 4'
                 }
               }).addTo(previewLayerGroup);
             }
@@ -2211,8 +2803,13 @@ document.addEventListener('DOMContentLoaded', () => {
   if (btnIssueTd) {
     btnIssueTd.addEventListener('click', () => {
       if (!activeSelectedParcelData) {
-        alert('Please select a cadastral parcel on the map to issue its Tax Declaration.');
-        return;
+        if (parcelPolygonMap.size > 0) {
+          const first = parcelPolygonMap.values().next().value;
+          selectParcel(first.data, first.polygon);
+        } else {
+          alert('Please select a cadastral parcel on the map to issue its Tax Declaration.');
+          return;
+        }
       }
 
       const originalBtnText = btnIssueTd.innerHTML;
@@ -2348,7 +2945,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     ctx.save();
     ctx.setLineDash([4, 4]);
-    ctx.strokeStyle = '#0284c7';
+    ctx.strokeStyle = '#ffffff';
     ctx.lineWidth = 1.5;
     ctx.beginPath();
     ctx.moveTo(bllmPt[0], bllmPt[1]);
@@ -2357,7 +2954,7 @@ document.addEventListener('DOMContentLoaded', () => {
     ctx.restore();
 
     // Draw BLLM monument marker at top-left
-    ctx.fillStyle = '#0284c7';
+    ctx.fillStyle = '#ffffff';
     ctx.beginPath();
     ctx.arc(bllmPt[0], bllmPt[1], 4.5, 0, Math.PI * 2);
     ctx.fill();
@@ -2366,7 +2963,7 @@ document.addEventListener('DOMContentLoaded', () => {
     ctx.stroke();
 
     ctx.font = '9px "Geist Mono", monospace';
-    ctx.fillStyle = '#38bdf8';
+    ctx.fillStyle = '#ffffff';
     ctx.fillText('BLLM #1', bllmPt[0] + 7, bllmPt[1] + 3);
 
     // Draw Polygon fill
@@ -2651,7 +3248,7 @@ document.addEventListener('DOMContentLoaded', () => {
       .then(res => res.json())
       .then(data => {
         if (!data.success) {
-          tdRegistryTbody.innerHTML = `<tr><td colspan="9" style="text-align:center; padding: 24px; color: #ef4444;">Failed to load: ${data.message || 'Error'}</td></tr>`;
+          tdRegistryTbody.innerHTML = `<tr><td colspan="9" style="text-align:center; padding: 24px; color: #a1a1aa;">Failed to load: ${data.message || 'Error'}</td></tr>`;
           return;
         }
 
@@ -2677,7 +3274,7 @@ document.addEventListener('DOMContentLoaded', () => {
           if (dStatus === 'DELINQUENT') {
             statusBadge = `<span class="badge-status badge-delinquent" style="font-size: 10px; padding: 2px 6px;">DELINQUENT</span>`;
           } else if (dStatus === 'EXEMPT') {
-            statusBadge = `<span class="badge-status" style="font-size: 10px; padding: 2px 6px; background: rgba(56,189,248,0.15); color: #38bdf8; border: 1px solid rgba(56,189,248,0.3);">EXEMPT</span>`;
+            statusBadge = `<span class="badge-status" style="font-size: 10px; padding: 2px 6px; background: rgba(255,255,255,0.08); color: #ffffff; border: 1px solid rgba(255,255,255,0.2);">EXEMPT</span>`;
           } else {
             statusBadge = `<span class="badge-status badge-current" style="font-size: 10px; padding: 2px 6px;">CURRENT</span>`;
           }
@@ -2736,9 +3333,9 @@ document.addEventListener('DOMContentLoaded', () => {
               if (modalTaxDeclarationsRegistry) modalTaxDeclarationsRegistry.style.display = 'none';
 
               // If LGU doesn't match active, switch LGU
-              if (item.lgu_code && item.lgu_code !== activeLguCode && sidebarLguSelect) {
-                sidebarLguSelect.value = item.lgu_code;
-                sidebarLguSelect.dispatchEvent(new Event('change'));
+              if (item.lgu_code && item.lgu_code !== activeLguCode && lguSelect) {
+                lguSelect.value = item.lgu_code;
+                lguSelect.dispatchEvent(new Event('change'));
               }
 
               setTimeout(() => {
@@ -2759,7 +3356,7 @@ document.addEventListener('DOMContentLoaded', () => {
         });
       })
       .catch(err => {
-        tdRegistryTbody.innerHTML = `<tr><td colspan="9" style="text-align:center; padding: 24px; color: #ef4444;">Network error: ${err.message}</td></tr>`;
+        tdRegistryTbody.innerHTML = `<tr><td colspan="9" style="text-align:center; padding: 24px; color: #a1a1aa;">Network error: ${err.message}</td></tr>`;
       });
   }
 
@@ -2832,7 +3429,7 @@ document.addEventListener('DOMContentLoaded', () => {
       .then(data => {
         if (!data.success) {
           if (assessmentRollTbody) {
-            assessmentRollTbody.innerHTML = `<tr><td colspan="10" style="text-align:center; padding: 20px; color: #ef4444;">Failed to load: ${data.message || 'Error'}</td></tr>`;
+            assessmentRollTbody.innerHTML = `<tr><td colspan="10" style="text-align:center; padding: 20px; color: #a1a1aa;">Failed to load: ${data.message || 'Error'}</td></tr>`;
           }
           return;
         }
@@ -2862,7 +3459,7 @@ document.addEventListener('DOMContentLoaded', () => {
             card.innerHTML = `
               <div class="roll-breakdown-class">
                 <span>${cls.classification}</span>
-                <span class="mono-num" style="font-size: 11px; color: #34d399;">${cls.share_pct}%</span>
+                <span class="mono-num" style="font-size: 11px; color: #ffffff;">${cls.share_pct}%</span>
               </div>
               <div class="roll-breakdown-val mono-num">PHP ${cls.assessed_value.toLocaleString('en-US', { minimumFractionDigits: 2 })}</div>
               <div class="roll-breakdown-meta mono-num">${cls.count} lots · ${cls.area_ha} ha</div>
@@ -2891,7 +3488,7 @@ document.addEventListener('DOMContentLoaded', () => {
             if (item.delinquency_status === 'DELINQUENT') {
               statusBadge = `<span class="badge-status badge-delinquent" style="font-size: 10px;">DELINQUENT</span>`;
             } else if (item.delinquency_status === 'EXEMPT') {
-              statusBadge = `<span class="badge-status" style="font-size: 10px; background: rgba(56,189,248,0.15); color: #38bdf8; border: 1px solid rgba(56,189,248,0.3);">EXEMPT</span>`;
+              statusBadge = `<span class="badge-status" style="font-size: 10px; background: rgba(255,255,255,0.08); color: #ffffff; border: 1px solid rgba(255,255,255,0.2);">EXEMPT</span>`;
             } else {
               statusBadge = `<span class="badge-status badge-current" style="font-size: 10px;">CURRENT</span>`;
             }
@@ -2905,7 +3502,7 @@ document.addEventListener('DOMContentLoaded', () => {
               <td class="mono-num">${areaFmt}</td>
               <td class="mono-num">${mvFmt}</td>
               <td class="mono-num" style="color: #ffffff; font-weight: 500;">${avFmt}</td>
-              <td class="mono-num" style="color: #34d399;">PHP ${taxFmt}</td>
+              <td class="mono-num" style="color: #ffffff;">PHP ${taxFmt}</td>
               <td>${statusBadge}</td>
             `;
             assessmentRollTbody.appendChild(tr);
@@ -2914,7 +3511,7 @@ document.addEventListener('DOMContentLoaded', () => {
       })
       .catch(err => {
         if (assessmentRollTbody) {
-          assessmentRollTbody.innerHTML = `<tr><td colspan="10" style="text-align:center; padding: 20px; color: #ef4444;">Network error: ${err.message}</td></tr>`;
+          assessmentRollTbody.innerHTML = `<tr><td colspan="10" style="text-align:center; padding: 20px; color: #a1a1aa;">Network error: ${err.message}</td></tr>`;
         }
       });
   }
@@ -2977,7 +3574,7 @@ document.addEventListener('DOMContentLoaded', () => {
       .then(res => res.json())
       .then(data => {
         if (!data.success) {
-          auditTbody.innerHTML = `<tr><td colspan="5" style="text-align:center; padding: 24px; color: #ef4444;">Failed to load logs: ${data.message || 'Error'}</td></tr>`;
+          auditTbody.innerHTML = `<tr><td colspan="5" style="text-align:center; padding: 24px; color: #a1a1aa;">Failed to load logs: ${data.message || 'Error'}</td></tr>`;
           return;
         }
 
@@ -3030,7 +3627,7 @@ document.addEventListener('DOMContentLoaded', () => {
         });
       })
       .catch(err => {
-        auditTbody.innerHTML = `<tr><td colspan="5" style="text-align:center; padding: 24px; color: #ef4444;">Network error: ${err.message}</td></tr>`;
+        auditTbody.innerHTML = `<tr><td colspan="5" style="text-align:center; padding: 24px; color: #a1a1aa;">Network error: ${err.message}</td></tr>`;
       });
   }
 
@@ -3141,8 +3738,21 @@ document.addEventListener('DOMContentLoaded', () => {
   const btnOpenPaymentEl = document.getElementById('btn-open-payment');
   if (btnOpenPaymentEl) {
     btnOpenPaymentEl.addEventListener('click', () => {
-      if (!activeSelectedParcelData) return;
+      if (!activeSelectedParcelData) {
+        if (parcelPolygonMap.size > 0) {
+          const first = parcelPolygonMap.values().next().value;
+          selectParcel(first.data, first.polygon);
+        } else {
+          alert('Please select a parcel on the map to post tax payment.');
+          return;
+        }
+      }
       const p = activeSelectedParcelData;
+      const isExempt = (p.status && p.status.includes('Exempt')) || (p.delinquency && p.delinquency.status === 'EXEMPT');
+      if (isExempt) {
+        alert(`[REAL PROPERTY TAX STATUS]\nParcel: ${p.pin} (${p.lot_no || 'Lot'})\nDeclared Owner: ${p.owner_name || '—'}\nClassification: ${p.classification || 'Institutional'}\n\nThis parcel is officially EXEMPT from Real Property Taxation under Section 234 of Republic Act No. 7160 (Government / Public Use).\nNo tax payment is required.`);
+        return;
+      }
       const delinq = p.delinquency || {};
       const av = parseFloat(p.assessed_value || 0);
       const annualBase = parseFloat(delinq.annual_tax || (av * 0.03) || 0);
@@ -3179,7 +3789,7 @@ document.addEventListener('DOMContentLoaded', () => {
       if (payTendered) payTendered.value = totalDue.toFixed(2);
       if (payChange) {
         payChange.value = 'PHP 0.00';
-        payChange.style.color = '#34d399';
+        payChange.style.color = '#ffffff';
       }
 
       if (modalPostPayment) modalPostPayment.style.display = 'flex';
@@ -3193,10 +3803,10 @@ document.addEventListener('DOMContentLoaded', () => {
       if (payChange) {
         if (change >= 0) {
           payChange.value = `PHP ${change.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
-          payChange.style.color = '#34d399';
+          payChange.style.color = '#ffffff';
         } else {
           payChange.value = `Short by PHP ${Math.abs(change).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
-          payChange.style.color = '#ef4444';
+          payChange.style.color = '#a1a1aa';
         }
       }
     });
@@ -3396,7 +4006,15 @@ document.addEventListener('DOMContentLoaded', () => {
   }
 
   function fetchAndShowTaxClearance() {
-    if (!activeSelectedParcelData) return;
+    if (!activeSelectedParcelData) {
+      if (parcelPolygonMap.size > 0) {
+        const first = parcelPolygonMap.values().next().value;
+        selectParcel(first.data, first.polygon);
+      } else {
+        alert('Please select a cadastral parcel on the map to issue its Tax Clearance.');
+        return;
+      }
+    }
     const p = activeSelectedParcelData;
     const delinq = p.delinquency || {};
 
@@ -3498,14 +4116,14 @@ document.addEventListener('DOMContentLoaded', () => {
         // Update KPIs
         if (conflictsKpiHealth) {
           conflictsKpiHealth.textContent = `${report.topology_health_pct}%`;
-          conflictsKpiHealth.style.color = report.topology_health_pct === 100 ? '#34d399' : '#f87171';
+          conflictsKpiHealth.style.color = '#ffffff';
         }
         if (conflictsKpiTotal) {
           conflictsKpiTotal.textContent = `${report.total_parcels} Lots`;
         }
         if (conflictsKpiCount) {
           conflictsKpiCount.textContent = `${report.conflicts_found} Conflict${report.conflicts_found === 1 ? '' : 's'}`;
-          conflictsKpiCount.style.color = report.conflicts_found === 0 ? '#34d399' : '#ef4444';
+          conflictsKpiCount.style.color = '#ffffff';
         }
 
         let totalDisputedArea = 0;
@@ -3514,7 +4132,7 @@ document.addEventListener('DOMContentLoaded', () => {
         }
         if (conflictsKpiArea) {
           conflictsKpiArea.textContent = `${(Math.round(totalDisputedArea * 100) / 100).toLocaleString()} sq.m.`;
-          conflictsKpiArea.style.color = totalDisputedArea > 0 ? '#f87171' : '#ffffff';
+          conflictsKpiArea.style.color = '#ffffff';
         }
 
         if (conflictsTimestamp) {
@@ -3558,7 +4176,7 @@ document.addEventListener('DOMContentLoaded', () => {
                   <div style="font-size: 10px; color: #64748b;">vs. ${d.lot_b.owner_name}</div>
                 </td>
                 <td>
-                  <span class="mono-num" style="font-weight: 600; color: #f87171;">${overlapArea.toLocaleString()} sq.m.</span>
+                  <span class="mono-num" style="font-weight: 600; color: #ffffff;">${overlapArea.toLocaleString()} sq.m.</span>
                 </td>
                 <td>
                   <span class="mono-num" style="color: #cbd5e1;">${pctA}% of ${d.lot_a.lot_no}</span>
@@ -3626,24 +4244,25 @@ document.addEventListener('DOMContentLoaded', () => {
     // Draw red pulsing hazard polygon on main Leaflet map
     const hazardPolygon = L.polygon(polyCoords, {
       className: 'leaflet-encroachment-hazard',
-      color: '#ef4444',
-      weight: 3,
-      fillColor: '#dc2626',
-      fillOpacity: 0.6
+      color: '#ffffff',
+      weight: 2.5,
+      dashArray: '4, 4',
+      fillColor: '#ffffff',
+      fillOpacity: 0.45
     }).addTo(encroachmentLayerGroup);
 
     // Add informative hazard marker popup
     const center = hazardPolygon.getBounds().getCenter();
     const hazardPopupContent = `
       <div style="font-family: var(--fonts-mono); font-size: 11px; padding: 4px; min-width: 200px;">
-        <div style="color: #ef4444; font-weight: 700; margin-bottom: 4px; display: flex; align-items: center; gap: 4px;">
+        <div style="color: #ffffff; font-weight: 700; margin-bottom: 4px; display: flex; align-items: center; gap: 4px;">
           <span>⚠ BOUNDARY OVERLAP CONFLICT</span>
         </div>
         <div style="color: #ffffff; font-size: 11px; margin-bottom: 2px;">
           <strong>${dispute.lot_a.lot_no}</strong> vs. <strong>${dispute.lot_b.lot_no}</strong>
         </div>
         <div style="color: #94a3b8; font-size: 10px; margin-bottom: 4px;">
-          Overlap: <span style="color: #f87171; font-weight: 600;">${Math.round(dispute.overlap_area_sqm * 100) / 100} sq.m.</span>
+          Overlap: <span style="color: #ffffff; font-weight: 600;">${Math.round(dispute.overlap_area_sqm * 100) / 100} sq.m.</span>
         </div>
         <div style="color: #64748b; font-size: 9.5px; border-top: 1px dashed #334155; padding-top: 3px;">
           ${dispute.lot_a.owner_name} / ${dispute.lot_b.owner_name}
@@ -3696,34 +4315,402 @@ document.addEventListener('DOMContentLoaded', () => {
     });
   }
 
+  // ====================================================================
+  // GIS SPATIAL PROXIMITY BUFFER & HAZARD IMPACT ZONE TOOL
+  // R.A. 10752 (RIGHT-OF-WAY ACT) / P.D. 1067 (WATER CODE)
+  // ====================================================================
+  const btnBufferTool = document.getElementById('btn-buffer-tool');
+  const bufferHud = document.getElementById('buffer-hud');
+  const bufferPresetSelect = document.getElementById('buffer-preset-select');
+  const bufferRadiusBtns = document.querySelectorAll('.buffer-radius-btn');
+  const btnRunBufferAnalysis = document.getElementById('btn-run-buffer-analysis');
+  const btnOpenBufferReport = document.getElementById('btn-open-buffer-report');
+  const bufferBadgeCount = document.getElementById('buffer-badge-count');
+  const btnClearBuffer = document.getElementById('btn-clear-buffer');
+  const btnExitBufferHud = document.getElementById('btn-exit-buffer-hud');
+  const btnInspectBuffer = document.getElementById('btn-inspect-buffer');
+  const modalBufferReport = document.getElementById('modal-buffer-report');
+  const btnCloseBufferReportModal = document.getElementById('btn-close-buffer-report-modal');
+  const btnPrintBufferReport = document.getElementById('btn-print-buffer-report');
+  const btnDownloadBufferCsv = document.getElementById('btn-download-buffer-csv');
+
+  let activeBufferRadiusM = 500;
+  let activeBufferData = null;
+  let customBufferPoint = null;
+  let highlightedBufferPins = new Set();
+
+  function clearBufferOverlay() {
+    if (spatialBufferLayerGroup) {
+      spatialBufferLayerGroup.clearLayers();
+    }
+    highlightedBufferPins.forEach(pin => {
+      if (parcelPolygonMap.has(pin)) {
+        const item = parcelPolygonMap.get(pin);
+        item.polygon.setStyle(item.polygon === activeSelectedPolygon ? activeStyle : defaultStyle);
+      }
+    });
+    highlightedBufferPins.clear();
+    activeBufferData = null;
+    customBufferPoint = null;
+    if (btnOpenBufferReport) btnOpenBufferReport.style.display = 'none';
+    if (bufferBadgeCount) bufferBadgeCount.textContent = '0';
+  }
+
+  function executeSpatialBufferQuery() {
+    const selectedMode = bufferPresetSelect ? bufferPresetSelect.value : 'maharlika_highway';
+    const activeLgu = lguSelect ? lguSelect.value : '03215';
+
+    let payload = {
+      buffer_distance_m: activeBufferRadiusM,
+      lgu_code: activeLgu
+    };
+
+    if (selectedMode === 'custom-point') {
+      if (!customBufferPoint) {
+        alert('Please click on the map to place the radial center point for the buffer.');
+        return;
+      }
+      payload.center_lat = customBufferPoint[0];
+      payload.center_lng = customBufferPoint[1];
+    } else if (selectedMode === 'selected-parcel') {
+      if (!activeSelectedParcelData) {
+        alert('Please select a parcel on the map to generate its radial proximity buffer.');
+        return;
+      }
+      payload.target_pin = activeSelectedParcelData.pin;
+    } else {
+      payload.preset_id = selectedMode;
+    }
+
+    if (btnRunBufferAnalysis) {
+      btnRunBufferAnalysis.disabled = true;
+      btnRunBufferAnalysis.textContent = 'Analyzing...';
+    }
+
+    fetch('/api/spatial/buffer-query', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(payload)
+    })
+    .then(res => res.json())
+    .then(data => {
+      if (btnRunBufferAnalysis) {
+        btnRunBufferAnalysis.disabled = false;
+        btnRunBufferAnalysis.textContent = 'Analyze Impact';
+      }
+
+      if (!data.success) {
+        alert('Failed to execute spatial buffer: ' + (data.message || 'Unknown error'));
+        return;
+      }
+
+      // Reset previous overlay
+      if (spatialBufferLayerGroup) spatialBufferLayerGroup.clearLayers();
+      highlightedBufferPins.forEach(pin => {
+        if (parcelPolygonMap.has(pin)) {
+          const item = parcelPolygonMap.get(pin);
+          item.polygon.setStyle(item.polygon === activeSelectedPolygon ? activeStyle : defaultStyle);
+        }
+      });
+      highlightedBufferPins.clear();
+
+      activeBufferData = data;
+
+      // Render buffer polygon overlay
+      if (data.buffer_geojson) {
+        const bufferPoly = L.geoJSON(data.buffer_geojson, {
+          style: {
+            color: '#ffffff',
+            weight: 1.8,
+            dashArray: '6, 6',
+            fillColor: '#ffffff',
+            fillOpacity: 0.12
+          }
+        }).addTo(spatialBufferLayerGroup);
+
+        try {
+          const bounds = bufferPoly.getBounds();
+          if (bounds.isValid()) {
+            map.flyToBounds(bounds, { padding: [40, 40], maxZoom: 17, duration: 1.0 });
+          }
+        } catch (e) {
+          console.warn('Could not zoom to buffer polygon:', e);
+        }
+      }
+
+      // Highlight intersected parcels
+      const intersected = data.intersected_parcels || [];
+      intersected.forEach(p => {
+        highlightedBufferPins.add(p.pin);
+        if (parcelPolygonMap.has(p.pin)) {
+          const item = parcelPolygonMap.get(p.pin);
+          item.polygon.setStyle({
+            color: '#ffffff',
+            weight: 2.5,
+            fillColor: '#ffffff',
+            fillOpacity: 0.45
+          });
+        }
+      });
+
+      // Update HUD UI
+      if (bufferBadgeCount) bufferBadgeCount.textContent = intersected.length;
+      if (btnOpenBufferReport) btnOpenBufferReport.style.display = 'inline-block';
+
+      // Populate report modal
+      populateBufferReport(data);
+    })
+    .catch(err => {
+      if (btnRunBufferAnalysis) {
+        btnRunBufferAnalysis.disabled = false;
+        btnRunBufferAnalysis.textContent = 'Analyze Impact';
+      }
+      alert('Error running buffer analysis: ' + err.message);
+    });
+  }
+
+  function populateBufferReport(data) {
+    if (!data) return;
+    const summary = data.summary || {};
+    const parcels = data.intersected_parcels || [];
+
+    const setText = (id, val) => {
+      const el = document.getElementById(id);
+      if (el) el.textContent = val;
+    };
+
+    setText('buffer-rep-no', data.report_no || 'SP-IMPACT-001');
+    setText('buffer-rep-source', data.source_name || 'Spatial Corridor');
+    setText('buffer-rep-category', data.source_category || 'Infrastructure Alignment');
+    setText('buffer-rep-statutory', data.statutory_basis ? `ISSUED PURSUANT TO ${data.statutory_basis.toUpperCase()}` : 'R.A. 10752 / P.D. 1067');
+    setText('buffer-rep-radius', `${data.buffer_distance_m || 500} Meters (Offset Corridor)`);
+    setText('buffer-rep-date', data.date_generated || new Date().toLocaleDateString('en-US', { month: 'long', day: '2-digit', year: 'numeric' }));
+    
+    // KPI Cards
+    setText('buffer-rep-lots', `${summary.total_intersected_parcels || parcels.length} Lots`);
+    setText('buffer-rep-area', `${summary.total_affected_area_ha || 0} ha`);
+    setText('buffer-rep-sqm', `${(summary.total_affected_area_sqm || 0).toLocaleString()} sq.m.`);
+    setText('buffer-rep-mv', `PHP ${(summary.total_market_value || 0).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`);
+    setText('buffer-rep-av', `PHP ${(summary.total_assessed_value || 0).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`);
+
+    // Classification Breakdown Chips
+    const breakdownContainer = document.getElementById('buffer-rep-class-breakdown');
+    if (breakdownContainer) {
+      breakdownContainer.innerHTML = '';
+      const breakdown = summary.breakdown_by_classification || {};
+      const entries = Object.entries(breakdown);
+      if (entries.length > 0) {
+        entries.forEach(([cls, count]) => {
+          const chip = document.createElement('div');
+          chip.className = 'buffer-breakdown-chip';
+          chip.innerHTML = `<span>${cls}:</span> <strong>${count} lots</strong>`;
+          breakdownContainer.appendChild(chip);
+        });
+      } else {
+        breakdownContainer.innerHTML = '<span style="font-size: 10.5px; color: #94a3b8;">No intersected parcels in buffer.</span>';
+      }
+    }
+
+    // Table rows
+    const tbody = document.getElementById('buffer-rep-table-body');
+    if (tbody) {
+      tbody.innerHTML = '';
+      if (parcels.length === 0) {
+        tbody.innerHTML = `<tr><td colspan="8" style="text-align: center; color: #64748b; padding: 14px;">No cadastral parcels intersected within the ${data.buffer_distance_m}m proximity corridor.</td></tr>`;
+      } else {
+        parcels.forEach(p => {
+          const tr = document.createElement('tr');
+          const dist = Math.round(p.distance_m || 0);
+          let badgeClass = 'impact-fringe';
+          let badgeText = 'Fringe Zone';
+          if (dist <= 50) {
+            badgeClass = 'impact-direct';
+            badgeText = 'Direct Impact';
+          } else if (dist <= 200) {
+            badgeClass = 'impact-proximity';
+            badgeText = 'Proximity ROW';
+          }
+
+          tr.innerHTML = `
+            <td class="mono-num td-bold">${p.pin || ''}</td>
+            <td class="mono-num">${p.lot_no || ''}<br><span style="font-size: 9.5px; color: #64748b;">${p.survey_no || ''}</span></td>
+            <td><strong>${p.owner_name || ''}</strong></td>
+            <td>${p.barangay || 'Ilagan City'}</td>
+            <td>${p.classification || 'Residential'}</td>
+            <td class="mono-num">${(p.area_sqm || 0).toLocaleString()}</td>
+            <td class="mono-num td-bold">PHP ${(p.assessed_value || 0).toLocaleString('en-US', { minimumFractionDigits: 2 })}</td>
+            <td>
+              <span class="impact-badge ${badgeClass}">${badgeText}</span>
+              <div class="mono-num" style="font-size: 9.5px; color: #64748b; margin-top: 2px;">${dist}m</div>
+            </td>
+          `;
+          tbody.appendChild(tr);
+        });
+      }
+    }
+  }
+
+  // Hook buffer tool button
+  if (btnBufferTool) {
+    btnBufferTool.addEventListener('click', () => {
+      if (bufferHud) {
+        const isHidden = bufferHud.style.display === 'none' || !bufferHud.style.display;
+        bufferHud.style.display = isHidden ? 'flex' : 'none';
+        if (isHidden) {
+          executeSpatialBufferQuery();
+        } else {
+          clearBufferOverlay();
+        }
+      }
+    });
+  }
+
+  // Radius pill buttons
+  bufferRadiusBtns.forEach(btn => {
+    btn.addEventListener('click', () => {
+      bufferRadiusBtns.forEach(b => b.classList.remove('active'));
+      btn.classList.add('active');
+      activeBufferRadiusM = parseInt(btn.getAttribute('data-radius'), 10) || 500;
+      if (bufferHud && bufferHud.style.display !== 'none') {
+        executeSpatialBufferQuery();
+      }
+    });
+  });
+
+  // Preset select dropdown
+  if (bufferPresetSelect) {
+    bufferPresetSelect.addEventListener('change', () => {
+      if (bufferPresetSelect.value === 'custom-point') {
+        alert('Click anywhere on the map to set the radial center point for the buffer.');
+      } else if (bufferPresetSelect.value === 'selected-parcel') {
+        if (!activeSelectedParcelData) {
+          alert('Please click on a parcel in the map first to select it.');
+        } else {
+          executeSpatialBufferQuery();
+        }
+      } else {
+        executeSpatialBufferQuery();
+      }
+    });
+  }
+
+  // Run analysis button
+  if (btnRunBufferAnalysis) {
+    btnRunBufferAnalysis.addEventListener('click', executeSpatialBufferQuery);
+  }
+
+  // Open report modal
+  if (btnOpenBufferReport) {
+    btnOpenBufferReport.addEventListener('click', () => {
+      if (modalBufferReport) {
+        modalBufferReport.style.display = 'flex';
+      }
+    });
+  }
+
+  // Clear buffer
+  if (btnClearBuffer) {
+    btnClearBuffer.addEventListener('click', clearBufferOverlay);
+  }
+
+  // Exit buffer HUD
+  if (btnExitBufferHud) {
+    btnExitBufferHud.addEventListener('click', () => {
+      if (bufferHud) bufferHud.style.display = 'none';
+      clearBufferOverlay();
+    });
+  }
+
+  // Inspector Buffer shortcut
+  if (btnInspectBuffer) {
+    btnInspectBuffer.addEventListener('click', () => {
+      if (!activeSelectedParcelData) {
+        alert('Please select a parcel on the map first.');
+        return;
+      }
+      if (bufferHud) bufferHud.style.display = 'flex';
+      if (bufferPresetSelect) bufferPresetSelect.value = 'selected-parcel';
+      executeSpatialBufferQuery();
+    });
+  }
+
+  // Map click for custom radial point
+  map.on('click', (e) => {
+    if (bufferHud && bufferHud.style.display !== 'none' && bufferPresetSelect && bufferPresetSelect.value === 'custom-point') {
+      customBufferPoint = [e.latlng.lat, e.latlng.lng];
+      executeSpatialBufferQuery();
+    }
+  });
+
+  // Close report modal
+  if (btnCloseBufferReportModal && modalBufferReport) {
+    btnCloseBufferReportModal.addEventListener('click', () => {
+      modalBufferReport.style.display = 'none';
+    });
+    modalBufferReport.addEventListener('click', (e) => {
+      if (e.target === modalBufferReport) {
+        modalBufferReport.style.display = 'none';
+      }
+    });
+  }
+
+  // Print buffer report
+  if (btnPrintBufferReport) {
+    btnPrintBufferReport.addEventListener('click', () => {
+      window.print();
+    });
+  }
+
+  // Export CSV
+  if (btnDownloadBufferCsv) {
+    btnDownloadBufferCsv.addEventListener('click', () => {
+      if (!activeBufferData || !activeBufferData.intersected_parcels) {
+        alert('No spatial buffer analysis data to export.');
+        return;
+      }
+      fetch('/api/spatial/export-impact-csv', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          report_no: activeBufferData.report_no,
+          source_name: activeBufferData.source_name,
+          buffer_distance_m: activeBufferData.buffer_distance_m,
+          parcels: activeBufferData.intersected_parcels
+        })
+      })
+      .then(res => res.blob())
+      .then(blob => {
+        const url = window.URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = `impact_assessment_${activeBufferData.report_no || 'report'}.csv`;
+        document.body.appendChild(a);
+        a.click();
+        a.remove();
+        window.URL.revokeObjectURL(url);
+      })
+      .catch(err => alert('Error downloading CSV: ' + err.message));
+    });
+  }
+
+  // Universal Modal Dismissal on Backdrop Click
+  document.querySelectorAll('.custom-modal-overlay, .td-modal-overlay, .new-lot-modal-overlay, .survey-modal-overlay, .delinquency-modal-overlay').forEach(overlay => {
+    overlay.addEventListener('click', (e) => {
+      if (e.target === overlay) {
+        overlay.style.display = 'none';
+      }
+    });
+  });
+
   // Global Escape key dismiss for all custom modals
   document.addEventListener('keydown', (e) => {
     if (e.key === 'Escape') {
-      if (modalCadastralConflicts && modalCadastralConflicts.style.display === 'flex') {
-        modalCadastralConflicts.style.display = 'none';
-      }
-      if (modalTaxDeclarationsRegistry && modalTaxDeclarationsRegistry.style.display === 'flex') {
-        modalTaxDeclarationsRegistry.style.display = 'none';
-      }
-      if (modalAssessmentRoll && modalAssessmentRoll.style.display === 'flex') {
-        modalAssessmentRoll.style.display = 'none';
-      }
-      if (modalAuditTrail && modalAuditTrail.style.display === 'flex') {
-        modalAuditTrail.style.display = 'none';
-      }
-      if (modalPostPayment && modalPostPayment.style.display === 'flex') {
-        modalPostPayment.style.display = 'none';
-      }
-      if (modalOfficialReceipt && modalOfficialReceipt.style.display === 'flex') {
-        modalOfficialReceipt.style.display = 'none';
-      }
-      if (modalTaxClearance && modalTaxClearance.style.display === 'flex') {
-        modalTaxClearance.style.display = 'none';
-      }
-      if (exportDropdownMenu && exportDropdownMenu.style.display === 'flex') {
-        exportDropdownMenu.style.display = 'none';
-      }
+      document.querySelectorAll('.custom-modal-overlay, .td-modal-overlay, .new-lot-modal-overlay, .survey-modal-overlay, .delinquency-modal-overlay').forEach(m => {
+        m.style.display = 'none';
+      });
+      if (exportDropdownMenu) exportDropdownMenu.style.display = 'none';
     }
   });
 });
+
 

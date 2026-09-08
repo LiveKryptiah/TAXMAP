@@ -6,7 +6,9 @@ import sqlite3
 import os
 import json
 import math
+import secrets
 from werkzeug.security import generate_password_hash, check_password_hash
+from datetime import datetime
 
 DB_PATH = os.path.join(os.path.dirname(os.path.abspath(__file__)), "taxmap.db")
 
@@ -60,6 +62,113 @@ ISABELA_LGUS = [
     ("03235", "Santiago City", 48900, 16.6917, 121.5486),
     ("03236", "Santo Tomas", 9650, 17.4833, 121.7833),
     ("03237", "Tumauini", 24200, 17.2792, 121.8083)
+]
+
+PROVINCIAL_SMV_RATES = {
+    "Residential": {
+        "assessment_level": 20.0,
+        "description": "Lands principally devoted to habitation",
+        "benchmark_unit_values": [
+            {"sub_class": "Residential - Urban Center / Poblacion", "unit_value": 4500.0},
+            {"sub_class": "Residential - First Class Subdivision", "unit_value": 3500.0},
+            {"sub_class": "Residential - Standard Urban / Barangay", "unit_value": 2500.0},
+            {"sub_class": "Residential - Rural / Agricultural Fringe", "unit_value": 1200.0}
+        ]
+    },
+    "Commercial": {
+        "assessment_level": 50.0,
+        "description": "Lands devoted for trading, commerce, services, and business",
+        "benchmark_unit_values": [
+            {"sub_class": "Commercial - Central Business District (CBD)", "unit_value": 12000.0},
+            {"sub_class": "Commercial - Maharlika National Highway Frontage", "unit_value": 8500.0},
+            {"sub_class": "Commercial - Secondary Arterial Commercial Zone", "unit_value": 6000.0},
+            {"sub_class": "Commercial - Neighborhood Commercial / Market", "unit_value": 4000.0}
+        ]
+    },
+    "Industrial": {
+        "assessment_level": 50.0,
+        "description": "Lands devoted to manufacturing, agro-industrial processing, warehousing",
+        "benchmark_unit_values": [
+            {"sub_class": "Industrial - Heavy Manufacturing / Processing", "unit_value": 7500.0},
+            {"sub_class": "Industrial - Agro-Processing & Warehousing Park", "unit_value": 5500.0},
+            {"sub_class": "Industrial - Light Industrial / Grain Storage Hub", "unit_value": 3800.0}
+        ]
+    },
+    "Agricultural": {
+        "assessment_level": 40.0,
+        "description": "Lands devoted principally to agriculture, planting of crops, raising livestock",
+        "benchmark_unit_values": [
+            {"sub_class": "Agricultural - First Class Irrigated Riceland", "unit_value": 450.0},
+            {"sub_class": "Agricultural - Second Class Rainfed Riceland", "unit_value": 280.0},
+            {"sub_class": "Agricultural - Upland Corn / Tobacco Field", "unit_value": 180.0},
+            {"sub_class": "Agricultural - Orchard / Fruit Plantation", "unit_value": 320.0},
+            {"sub_class": "Agricultural - Pasture / Grazing Land", "unit_value": 120.0}
+        ]
+    },
+    "Institutional": {
+        "assessment_level": 50.0,
+        "description": "Lands devoted for government, educational, scientific, cultural, and religious use",
+        "benchmark_unit_values": [
+            {"sub_class": "Institutional - Government Civic Center Complex", "unit_value": 5000.0},
+            {"sub_class": "Institutional - Educational / University Campus", "unit_value": 4000.0},
+            {"sub_class": "Institutional - Hospital / Public Health Facility", "unit_value": 4500.0}
+        ]
+    },
+    "Special": {
+        "assessment_level": 10.0,
+        "description": "Lands owned by local water districts, GOCCs, and economic zones",
+        "benchmark_unit_values": [
+            {"sub_class": "Special - Local Water District Utility Compound", "unit_value": 2500.0},
+            {"sub_class": "Special - Special Economic / Processing Zone", "unit_value": 3000.0}
+        ]
+    }
+}
+
+PROVINCIAL_SPATIAL_PRESETS = [
+    {
+        "id": "maharlika_highway",
+        "name": "Maharlika National Highway (AH26) Corridor",
+        "type": "corridor",
+        "category": "National Infrastructure & ROW",
+        "statutory_basis": "R.A. 10752 (Right-of-Way Act for National Infrastructure)",
+        "default_buffer_m": 500,
+        "description": "Primary national transport corridor traversing Ilagan City north-to-south. Used for road widening, setback compliance, and commercial frontage taxation.",
+        "coordinates": [
+            [16.9790, 121.8150],
+            [16.9760, 121.8153],
+            [16.9730, 121.8156],
+            [16.9700, 121.8158]
+        ]
+    },
+    {
+        "id": "cagayan_river",
+        "name": "Cagayan River / Pinacanauan Riparian Hazard Zone",
+        "type": "corridor",
+        "category": "Flood Hazard & Water Code Easement",
+        "statutory_basis": "P.D. 1067 (Water Code of the Philippines - Article 51 Environmental Easement)",
+        "default_buffer_m": 300,
+        "description": "Major river basin corridor subject to seasonal monsoon inundation and statutory riparian 40-meter public easement.",
+        "coordinates": [
+            [16.9795, 121.8105],
+            [16.9765, 121.8115],
+            [16.9730, 121.8112],
+            [16.9695, 121.8108]
+        ]
+    },
+    {
+        "id": "bypass_road",
+        "name": "Proposed Isabela Agro-Industrial Bypass Alignment",
+        "type": "corridor",
+        "category": "Proposed Provincial Road Project",
+        "statutory_basis": "Provincial Sangguniang Panlalawigan Infrastructure Plan 2026",
+        "default_buffer_m": 200,
+        "description": "Planned bypass road corridor traversing the eastern agro-industrial expansion district of Ilagan City.",
+        "coordinates": [
+            [16.9770, 121.8230],
+            [16.9740, 121.8210],
+            [16.9710, 121.8190]
+        ]
+    }
 ]
 
 DEFAULT_USERS = [
@@ -420,6 +529,68 @@ def init_db():
         status TEXT NOT NULL,
         delinquency_status TEXT DEFAULT 'CURRENT',
         overdue_months INTEGER DEFAULT 0
+    )
+    """)
+
+    cursor.execute("""
+    CREATE TABLE IF NOT EXISTS ownership_history (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        pin TEXT NOT NULL,
+        sequence_no INTEGER NOT NULL,
+        owner_name TEXT NOT NULL,
+        owner_address TEXT NOT NULL,
+        owner_tin TEXT,
+        td_no TEXT NOT NULL,
+        deed_type TEXT,
+        deed_no TEXT,
+        deed_date TEXT,
+        registry_of_deeds TEXT,
+        tct_oct_no TEXT,
+        inscription_date TEXT,
+        bir_car_no TEXT,
+        bir_car_date TEXT,
+        transfer_tax_or_no TEXT,
+        transfer_tax_amount REAL DEFAULT 0.0,
+        transfer_tax_date TEXT,
+        transferred_by TEXT,
+        officer_badge TEXT,
+        transfer_timestamp TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        remarks TEXT
+    )
+    """)
+
+    cursor.execute("""
+    CREATE TABLE IF NOT EXISTS assessment_revisions (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        revision_no TEXT UNIQUE NOT NULL,
+        pin TEXT NOT NULL,
+        td_no TEXT NOT NULL,
+        lot_no TEXT NOT NULL,
+        owner_name TEXT NOT NULL,
+        old_classification TEXT NOT NULL,
+        new_classification TEXT NOT NULL,
+        old_actual_use TEXT NOT NULL,
+        new_actual_use TEXT NOT NULL,
+        area_sqm REAL NOT NULL,
+        old_unit_value REAL NOT NULL,
+        new_unit_value REAL NOT NULL,
+        old_market_value REAL NOT NULL,
+        new_market_value REAL NOT NULL,
+        old_assessment_level REAL NOT NULL,
+        new_assessment_level REAL NOT NULL,
+        old_assessed_value REAL NOT NULL,
+        new_assessed_value REAL NOT NULL,
+        old_tax_due REAL NOT NULL,
+        new_tax_due REAL NOT NULL,
+        tax_variance REAL NOT NULL,
+        tax_variance_pct REAL NOT NULL,
+        reason TEXT NOT NULL,
+        ordinance_no TEXT NOT NULL,
+        effective_year INTEGER DEFAULT 2026,
+        effective_quarter TEXT DEFAULT '1st Quarter, 2026',
+        appraiser_username TEXT NOT NULL,
+        appraiser_badge TEXT NOT NULL,
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
     )
     """)
 
@@ -1465,6 +1636,326 @@ def issue_notice_of_delinquency(pin, officer_username="system", officer_badge="P
     }
 
 
+def transfer_ownership(pin, transfer_data, officer_username="system", officer_badge="PGI-REC-005", ip=None):
+    conn = get_db()
+    cursor = conn.cursor()
+    cursor.execute("SELECT * FROM parcels WHERE pin = ?", (pin,))
+    row = cursor.fetchone()
+    if not row:
+        conn.close()
+        return {"success": False, "message": f"Parcel '{pin}' not found."}
+    
+    p = dict(row)
+    if p.get("status", "").startswith("Cancelled"):
+        conn.close()
+        return {"success": False, "message": f"Parcel '{pin}' has been cancelled and cannot be transferred."}
+        
+    delinq = calculate_delinquency_breakdown(p)
+    if delinq["status"] == "DELINQUENT":
+        conn.close()
+        return {"success": False, "message": f"Parcel '{pin}' has delinquent taxes. A Certificate of Tax Clearance is required before transfer of ownership can be processed."}
+        
+    new_owner_name = transfer_data.get("new_owner_name", "")
+    if not new_owner_name.strip():
+        conn.close()
+        return {"success": False, "message": "New owner name is required."}
+        
+    old_owner = p['owner_name']
+    old_address = p['owner_address']
+    old_td = p['td_no']
+    
+    cursor.execute("SELECT MAX(sequence_no) as max_seq FROM ownership_history WHERE pin = ?", (pin,))
+    res = cursor.fetchone()
+    max_seq = res["max_seq"] if res and res["max_seq"] is not None else None
+    
+    if max_seq is None:
+        cursor.execute("INSERT INTO ownership_history (pin, sequence_no, owner_name, owner_address, td_no, deed_type, remarks) VALUES (?, 1, ?, ?, ?, 'Original Title', 'Initial owner record seeded on first transfer')",
+            (pin, old_owner, old_address, old_td))
+        current_seq = 1
+    else:
+        current_seq = max_seq
+        
+    new_seq = current_seq + 1
+    new_td = f"TD-2026-{p.get('lgu_code', '03215')}-TR{str(new_seq).zfill(3)}"
+    
+    cursor.execute("""
+        INSERT INTO ownership_history (
+            pin, sequence_no, owner_name, owner_address, owner_tin, td_no,
+            deed_type, deed_no, deed_date, registry_of_deeds, tct_oct_no,
+            inscription_date, bir_car_no, bir_car_date, transfer_tax_or_no,
+            transfer_tax_amount, transfer_tax_date, transferred_by, officer_badge, remarks
+        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+    """, (
+        pin, new_seq, new_owner_name, transfer_data.get("new_owner_address", ""),
+        transfer_data.get("new_owner_tin", ""), new_td,
+        transfer_data.get("deed_type", "Deed of Absolute Sale"),
+        transfer_data.get("deed_no", ""), transfer_data.get("deed_date", ""),
+        transfer_data.get("registry_of_deeds", ""), transfer_data.get("tct_oct_no", ""),
+        transfer_data.get("inscription_date", ""), transfer_data.get("bir_car_no", ""),
+        transfer_data.get("bir_car_date", ""), transfer_data.get("transfer_tax_or_no", ""),
+        float(transfer_data.get("transfer_tax_amount", 0)), transfer_data.get("transfer_tax_date", ""),
+        officer_username, officer_badge, "Transferred ownership"
+    ))
+    
+    cursor.execute("UPDATE parcels SET owner_name = ?, owner_address = ?, td_no = ? WHERE pin = ?", (new_owner_name, transfer_data.get("new_owner_address", ""), new_td, pin))
+    
+    transfer_ref = f"TOT-2026-{p.get('lgu_code', '03215')}-{pin.replace('-', '')[-6:]}"
+    
+    audit_details = f"Transferred ownership of {pin} from {old_owner} to {new_owner_name} via {transfer_data.get('deed_type', 'Deed of Absolute Sale')} ref {transfer_ref}. Officer: {officer_badge}."
+    cursor.execute("INSERT INTO audit_logs (username, action, details, ip_address) VALUES (?, 'OWNERSHIP_TRANSFERRED', ?, ?)", (officer_username, audit_details, ip))
+    
+    conn.commit()
+    conn.close()
+    
+    transfer_doc = {
+        "transfer_ref": transfer_ref,
+        "pin": pin,
+        "lot_no": p.get("lot_no"),
+        "block_no": p.get("block_no"),
+        "section_no": p.get("section_no"),
+        "survey_no": p.get("survey_no"),
+        "lgu_code": p.get("lgu_code"),
+        "lgu_name": p.get("lgu_name"),
+        "classification": p.get("classification"),
+        "actual_use": p.get("actual_use"),
+        "area_sqm": p.get("area_sqm"),
+        "market_value": p.get("market_value"),
+        "assessed_value": p.get("assessed_value"),
+        "old_owner_name": old_owner,
+        "old_owner_address": old_address,
+        "old_td_no": old_td,
+        "new_owner_name": new_owner_name,
+        "new_owner_address": transfer_data.get("new_owner_address", ""),
+        "new_owner_tin": transfer_data.get("new_owner_tin", ""),
+        "new_td_no": new_td,
+        "deed_type": transfer_data.get("deed_type", "Deed of Absolute Sale"),
+        "deed_no": transfer_data.get("deed_no", ""),
+        "deed_date": transfer_data.get("deed_date", ""),
+        "registry_of_deeds": transfer_data.get("registry_of_deeds", ""),
+        "tct_oct_no": transfer_data.get("tct_oct_no", ""),
+        "inscription_date": transfer_data.get("inscription_date", ""),
+        "bir_car_no": transfer_data.get("bir_car_no", ""),
+        "bir_car_date": transfer_data.get("bir_car_date", ""),
+        "transfer_tax_or_no": transfer_data.get("transfer_tax_or_no", ""),
+        "transfer_tax_amount": transfer_data.get("transfer_tax_amount", 0),
+        "transfer_tax_date": transfer_data.get("transfer_tax_date", ""),
+        "sequence_no": new_seq,
+        "officer_username": officer_username,
+        "officer_badge": officer_badge,
+        "assessor_name": "ATTY. RODOLFO V. RAMOS, REA, REB",
+        "date_issued": datetime.now().strftime("%B %d, %Y")
+    }
+    return {"success": True, "message": f"Transfer of ownership processed. New TD {new_td} issued to {new_owner_name}.", "transfer": transfer_doc}
+
+def get_ownership_history(pin):
+    conn = get_db()
+    cursor = conn.cursor()
+    cursor.execute("SELECT * FROM ownership_history WHERE pin = ? ORDER BY sequence_no ASC", (pin,))
+    rows = [dict(r) for r in cursor.fetchall()]
+    conn.close()
+    return rows
+
+
+def reclassify_parcel(pin, revision_data, officer_username="system", officer_badge="PGI-ASR-001", ip=None):
+    """
+    Reclassifies a parcel's actual land use and updates assessment metrics pursuant to R.A. 7160 Sec. 219-224.
+    Computes new market value, assessed value, annual tax due, and incremental variance.
+    Logs audit trail, saves record in assessment_revisions, and generates official Notice of Assessment.
+    """
+    conn = get_db()
+    cursor = conn.cursor()
+    cursor.execute("SELECT * FROM parcels WHERE pin = ?", (pin,))
+    row = cursor.fetchone()
+    if not row:
+        conn.close()
+        return {"success": False, "message": f"Parcel '{pin}' not found."}
+
+    p = dict(row)
+    if p.get("status", "").startswith("Cancelled"):
+        conn.close()
+        return {"success": False, "message": f"Parcel '{pin}' is cancelled and cannot be reassessed."}
+
+    new_class = revision_data.get("new_classification", p["classification"]).strip()
+    new_use = revision_data.get("new_actual_use", p["actual_use"]).strip()
+    area_sqm = float(p["area_sqm"])
+
+    # Unit value
+    try:
+        new_unit_val = float(revision_data.get("new_unit_value", p["unit_value"]))
+    except (ValueError, TypeError):
+        new_unit_val = float(p["unit_value"])
+
+    # Default assessment levels per classification
+    level_defaults = {
+        "residential": 20.0,
+        "commercial": 50.0,
+        "agricultural": 40.0,
+        "industrial": 50.0,
+        "institutional": 50.0,
+        "special": 10.0
+    }
+    try:
+        new_level = float(revision_data.get("new_assessment_level") or level_defaults.get(new_class.lower(), 20.0))
+    except (ValueError, TypeError):
+        new_level = level_defaults.get(new_class.lower(), 20.0)
+
+    # Compute valuations
+    old_mv = float(p["market_value"])
+    old_av = float(p["assessed_value"])
+    old_tax = float(p["tax_due"])
+
+    new_mv = round(area_sqm * new_unit_val, 2)
+    new_av = round(new_mv * (new_level / 100.0), 2)
+
+    is_exempt = "Exempt" in p.get("status", "") or new_class.lower() in ["institutional", "special"]
+    if is_exempt:
+        new_basic = 0.0
+        new_sef = 0.0
+        new_tax = 0.0
+    else:
+        new_basic = round(new_av * 0.02, 2)
+        new_sef = round(new_av * 0.01, 2)
+        new_tax = round(new_basic + new_sef, 2)
+
+    tax_var = round(new_tax - old_tax, 2)
+    tax_var_pct = round((tax_var / old_tax * 100.0), 2) if old_tax > 0 else 0.0
+
+    reason = revision_data.get("reason", "Land Use Reclassification / General Revision").strip()
+    ordinance_no = revision_data.get("ordinance_no", "Sangguniang Panlalawigan Ordinance No. 2026-04 (General Revision SMV)").strip()
+
+    # Generate revision serial reference
+    cursor.execute("SELECT COUNT(*) FROM assessment_revisions WHERE pin = ?", (pin,))
+    rev_count = cursor.fetchone()[0] + 1
+    revision_no = f"NAR-2026-{p.get('lgu_code', '03215')}-{pin.replace('-', '')[-6:]}-R{rev_count:02d}"
+
+    # Generate next TD version or append revision
+    current_td = p.get("td_no", "")
+    if "-R" in current_td:
+        base_td = current_td.split("-R")[0]
+        new_td = f"{base_td}-R{rev_count:02d}"
+    else:
+        new_td = f"{current_td}-R{rev_count:02d}"
+
+    # Insert into assessment_revisions
+    cursor.execute("""
+    INSERT INTO assessment_revisions (
+        revision_no, pin, td_no, lot_no, owner_name,
+        old_classification, new_classification, old_actual_use, new_actual_use,
+        area_sqm, old_unit_value, new_unit_value, old_market_value, new_market_value,
+        old_assessment_level, new_assessment_level, old_assessed_value, new_assessed_value,
+        old_tax_due, new_tax_due, tax_variance, tax_variance_pct,
+        reason, ordinance_no, effective_year, effective_quarter,
+        appraiser_username, appraiser_badge
+    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 2026, '1st Quarter, 2026', ?, ?)
+    """, (
+        revision_no, pin, new_td, p.get("lot_no", ""), p.get("owner_name", ""),
+        p["classification"], new_class, p["actual_use"], new_use,
+        area_sqm, float(p["unit_value"]), new_unit_val, old_mv, new_mv,
+        float(p["assessment_level"]), new_level, old_av, new_av,
+        old_tax, new_tax, tax_var, tax_var_pct,
+        reason, ordinance_no, officer_username, officer_badge
+    ))
+
+    # Update parcels table
+    cursor.execute("""
+    UPDATE parcels
+    SET td_no = ?, classification = ?, actual_use = ?, unit_value = ?,
+        market_value = ?, assessment_level = ?, assessed_value = ?, tax_due = ?
+    WHERE pin = ?
+    """, (new_td, new_class, new_use, new_unit_val, new_mv, new_level, new_av, new_tax, pin))
+
+    # Audit log
+    audit_details = (
+        f"Reclassified {pin} ({p.get('lot_no')}) from {p['classification']} to {new_class}. "
+        f"AV updated PHP {old_av:,.2f} -> PHP {new_av:,.2f} (Tax Variance: PHP {tax_var:+,.2f}). "
+        f"Notice: {revision_no}. Officer: {officer_badge}."
+    )
+    cursor.execute("""
+    INSERT INTO audit_logs (username, action, details, ip_address)
+    VALUES (?, 'ASSESSMENT_REVISED', ?, ?)
+    """, (officer_username, audit_details, ip))
+
+    conn.commit()
+    conn.close()
+
+    notice_doc = {
+        "revision_no": revision_no,
+        "pin": pin,
+        "td_no": new_td,
+        "old_td_no": current_td,
+        "lot_no": p.get("lot_no", ""),
+        "block_no": p.get("block_no", ""),
+        "section_no": p.get("section_no", ""),
+        "survey_no": p.get("survey_no", ""),
+        "lgu_code": p.get("lgu_code", "03215"),
+        "lgu_name": p.get("lgu_name", "Ilagan City"),
+        "owner_name": p.get("owner_name", ""),
+        "owner_address": p.get("owner_address", ""),
+        "area_sqm": area_sqm,
+        "area_ha": round(area_sqm / 10000.0, 4),
+        "comparison": {
+            "classification": {"old": p["classification"], "new": new_class},
+            "actual_use": {"old": p["actual_use"], "new": new_use},
+            "unit_value": {"old": float(p["unit_value"]), "new": new_unit_val, "diff": round(new_unit_val - float(p["unit_value"]), 2)},
+            "market_value": {"old": old_mv, "new": new_mv, "diff": round(new_mv - old_mv, 2)},
+            "assessment_level": {"old": float(p["assessment_level"]), "new": new_level, "diff": round(new_level - float(p["assessment_level"]), 2)},
+            "assessed_value": {"old": old_av, "new": new_av, "diff": round(new_av - old_av, 2)},
+            "basic_tax": {"old": round(old_av * 0.02, 2) if not is_exempt else 0.0, "new": new_basic},
+            "sef_tax": {"old": round(old_av * 0.01, 2) if not is_exempt else 0.0, "new": new_sef},
+            "tax_due": {"old": old_tax, "new": new_tax, "diff": tax_var, "diff_pct": tax_var_pct}
+        },
+        "reason": reason,
+        "ordinance_no": ordinance_no,
+        "effectivity": "1st Quarter, 2026 (General Revision Cycle)",
+        "appeal_deadline": "60 days from receipt of this notice pursuant to Sec. 226, R.A. 7160",
+        "date_issued": datetime.now().strftime("%B %d, %Y"),
+        "appraiser_name": "ENGR. MARITES D. PASCUAL",
+        "appraiser_title": "GIS Tax Mapper / Assessment Examiner",
+        "appraiser_badge": officer_badge,
+        "assessor_name": "ATTY. RODOLFO V. RAMOS, REA, REB",
+        "assessor_title": "Provincial Assessor",
+        "assessor_badge": "PGI-ASR-001"
+    }
+
+    return {
+        "success": True,
+        "message": f"Parcel '{pin}' successfully reassessed to {new_class}. Notice #{revision_no} generated.",
+        "revision": {
+            "revision_no": revision_no,
+            "pin": pin,
+            "td_no": new_td,
+            "new_classification": new_class,
+            "new_market_value": new_mv,
+            "new_assessed_value": new_av,
+            "new_tax_due": new_tax,
+            "tax_variance": tax_var,
+            "tax_variance_pct": tax_var_pct
+        },
+        "notice": notice_doc
+    }
+
+
+def get_assessment_revisions(pin=None, limit=50):
+    """
+    Retrieves assessment revision history for a parcel or all revisions in the LGU.
+    """
+    conn = get_db()
+    cursor = conn.cursor()
+    if pin:
+        cursor.execute("SELECT * FROM assessment_revisions WHERE pin = ? ORDER BY created_at DESC LIMIT ?", (pin, limit))
+    else:
+        cursor.execute("SELECT * FROM assessment_revisions ORDER BY created_at DESC LIMIT ?", (limit,))
+    rows = [dict(r) for r in cursor.fetchall()]
+    conn.close()
+    return rows
+
+
+def get_smv_rates():
+    """
+    Returns benchmark Schedule of Market Values (SMV) reference table.
+    """
+    return PROVINCIAL_SMV_RATES
+
 
 def get_audit_logs(limit=100, offset=0, action=None, query=None):
     """
@@ -2294,6 +2785,296 @@ def audit_cadastre_topology(lgu_code="03215"):
         "topology_health_pct": health_pct,
         "disputes": disputes
     }
+
+
+def prs92_grid_to_lat_lng(northing, easting):
+    lat = northing / 110574.0
+    lat_rad = math.radians(lat)
+    meters_per_lng_deg = 111320.0 * math.cos(lat_rad)
+    lng = 121.0 + ((easting - 500000.0) / meters_per_lng_deg)
+    return round(lat, 6), round(lng, 6)
+
+
+def haversine_distance_m(lat1, lng1, lat2, lng2):
+    R = 6371000.0
+    phi1 = math.radians(lat1)
+    phi2 = math.radians(lat2)
+    delta_phi = math.radians(lat2 - lat1)
+    delta_lambda = math.radians(lng2 - lng1)
+    a = math.sin(delta_phi / 2.0)**2 + math.cos(phi1) * math.cos(phi2) * math.sin(delta_lambda / 2.0)**2
+    c = 2.0 * math.atan2(math.sqrt(a), math.sqrt(1.0 - a))
+    return round(R * c, 2)
+
+
+def point_to_line_segment_distance_m(p_lat, p_lng, a_lat, a_lng, b_lat, b_lng):
+    pn, pe = lat_lng_to_prs92_grid(p_lat, p_lng)
+    an, ae = lat_lng_to_prs92_grid(a_lat, a_lng)
+    bn, be = lat_lng_to_prs92_grid(b_lat, b_lng)
+    dx = be - ae
+    dy = bn - an
+    seg_len_sq = dx * dx + dy * dy
+    if seg_len_sq < 1e-6:
+        return math.sqrt((pe - ae)**2 + (pn - an)**2)
+    t = max(0.0, min(1.0, ((pe - ae) * dx + (pn - an) * dy) / seg_len_sq))
+    proj_e = ae + t * dx
+    proj_n = an + t * dy
+    return round(math.sqrt((pe - proj_e)**2 + (pn - proj_n)**2), 2)
+
+
+def generate_point_buffer_polygon(lat, lng, radius_m, num_points=36):
+    pts = []
+    lat_rad = math.radians(lat)
+    m_per_lat = 110574.0
+    m_per_lng = 111320.0 * math.cos(lat_rad)
+    for i in range(num_points):
+        angle = math.radians(i * (360.0 / num_points))
+        d_lat = (radius_m * math.cos(angle)) / m_per_lat
+        d_lng = (radius_m * math.sin(angle)) / m_per_lng
+        pts.append([round(lat + d_lat, 6), round(lng + d_lng, 6)])
+    pts.append(pts[0])
+    return pts
+
+
+def generate_corridor_buffer_polygon(coords, buffer_m):
+    if not coords or len(coords) < 2:
+        return []
+    left_pts = []
+    right_pts = []
+    grid_pts = [lat_lng_to_prs92_grid(c[0], c[1]) for c in coords]
+    n = len(grid_pts)
+    for i in range(n - 1):
+        n1, e1 = grid_pts[i]
+        n2, e2 = grid_pts[i + 1]
+        dn = n2 - n1
+        de = e2 - e1
+        length = math.sqrt(dn * dn + de * de)
+        if length < 1e-6:
+            continue
+        un = -de / length
+        ue = dn / length
+        left_pts.append((n1 + buffer_m * un, e1 + buffer_m * ue))
+        right_pts.append((n1 - buffer_m * un, e1 - buffer_m * ue))
+        if i == n - 2:
+            left_pts.append((n2 + buffer_m * un, e2 + buffer_m * ue))
+            right_pts.append((n2 - buffer_m * un, e2 - buffer_m * ue))
+
+    corridor_grid = left_pts + list(reversed(right_pts))
+    result_lat_lng = [prs92_grid_to_lat_lng(pt[0], pt[1]) for pt in corridor_grid]
+    if result_lat_lng and result_lat_lng[0] != result_lat_lng[-1]:
+        result_lat_lng.append(result_lat_lng[0])
+    return [[pt[0], pt[1]] for pt in result_lat_lng]
+
+
+def get_spatial_presets():
+    """
+    Returns available predefined spatial reference corridors and hazard lines.
+    """
+    return PROVINCIAL_SPATIAL_PRESETS
+
+
+def query_spatial_buffer(buffer_params, officer_username="system", officer_badge="PGI-GIS-014", ip=None):
+    """
+    Executes geodetic spatial proximity query for a corridor or radial point against active cadastral parcels.
+    Computes intersected lots, distance offsets, and aggregated impact telemetry.
+    """
+    preset_id = buffer_params.get("preset_id")
+    feature_type = buffer_params.get("feature_type", "corridor")
+    buffer_distance_m = float(buffer_params.get("buffer_distance_m", 500.0))
+    lgu_code = buffer_params.get("lgu_code", "03215")
+    target_pin = buffer_params.get("target_pin")
+
+    source_name = "Custom Spatial Buffer"
+    source_category = "Spatial Proximity Zone"
+    source_statutory = "R.A. 7160 Local Government Code"
+    source_coords = []
+
+    # 1. Resolve source geometry
+    if preset_id:
+        norm_id = str(preset_id).lower().replace("preset-", "").replace("-", "_")
+        preset = next((p for p in PROVINCIAL_SPATIAL_PRESETS if p["id"] == preset_id or p["id"] == norm_id), None)
+        if preset:
+            source_name = preset["name"]
+            source_category = preset["category"]
+            source_statutory = preset["statutory_basis"]
+            source_coords = preset["coordinates"]
+            feature_type = preset["type"]
+    elif target_pin:
+        target_p = get_parcel_by_pin(target_pin)
+        if target_p:
+            source_name = f"Radial Buffer from {target_p.get('lot_no', target_pin)} ({target_p.get('owner_name')})"
+            source_category = "Parcel Proximity Analysis"
+            feature_type = "point"
+            center_lat = target_p["lat"]
+            center_lng = target_p["lng"]
+            source_coords = [[center_lat, center_lng]]
+    elif buffer_params.get("center_lat") and buffer_params.get("center_lng"):
+        center_lat = float(buffer_params["center_lat"])
+        center_lng = float(buffer_params["center_lng"])
+        source_name = f"Radial Point ({center_lat:.4f}° N, {center_lng:.4f}° E)"
+        source_category = "Point Proximity Radius"
+        feature_type = "point"
+        source_coords = [[center_lat, center_lng]]
+    elif buffer_params.get("custom_coords"):
+        source_coords = buffer_params["custom_coords"]
+        source_name = "User-Delineated Corridor"
+        feature_type = "corridor"
+
+    # Fallback to Maharlika highway if empty
+    if not source_coords:
+        preset = PROVINCIAL_SPATIAL_PRESETS[0]
+        source_name = preset["name"]
+        source_category = preset["category"]
+        source_statutory = preset["statutory_basis"]
+        source_coords = preset["coordinates"]
+        feature_type = "corridor"
+
+    # 2. Generate buffer polygon
+    if feature_type == "point" and len(source_coords) > 0:
+        c_lat, c_lng = source_coords[0]
+        buffer_polygon = generate_point_buffer_polygon(c_lat, c_lng, buffer_distance_m)
+    else:
+        buffer_polygon = generate_corridor_buffer_polygon(source_coords, buffer_distance_m)
+
+    # 3. Intersect against active parcels
+    all_parcels = get_parcels(lgu_code=lgu_code)
+    intersected_parcels = []
+
+    for p in all_parcels:
+        p_lat = p.get("lat")
+        p_lng = p.get("lng")
+        coords = p.get("coordinates") or []
+
+        # Compute min distance
+        min_dist = 999999.0
+        if feature_type == "point" and len(source_coords) > 0:
+            c_lat, c_lng = source_coords[0]
+            if p_lat is not None and p_lng is not None:
+                d_cent = haversine_distance_m(c_lat, c_lng, p_lat, p_lng)
+                min_dist = min(min_dist, d_cent)
+            for pt in coords:
+                d_pt = haversine_distance_m(c_lat, c_lng, pt[0], pt[1])
+                min_dist = min(min_dist, d_pt)
+        else:
+            test_points = []
+            if p_lat is not None and p_lng is not None:
+                test_points.append([p_lat, p_lng])
+            test_points.extend(coords)
+
+            for tp in test_points:
+                for k in range(len(source_coords) - 1):
+                    a = source_coords[k]
+                    b = source_coords[k + 1]
+                    d_seg = point_to_line_segment_distance_m(tp[0], tp[1], a[0], a[1], b[0], b[1])
+                    min_dist = min(min_dist, d_seg)
+
+        # Check intersection condition
+        if min_dist <= buffer_distance_m:
+            impact_status = "Direct Right-of-Way" if min_dist <= (buffer_distance_m * 0.35) else "Buffer Impact Zone"
+            intersected_parcels.append({
+                "pin": p["pin"],
+                "lot_no": p.get("lot_no", ""),
+                "block_no": p.get("block_no", ""),
+                "section_no": p.get("section_no", ""),
+                "survey_no": p.get("survey_no", ""),
+                "owner_name": p.get("owner_name", ""),
+                "owner_address": p.get("owner_address", ""),
+                "classification": p.get("classification", "Residential"),
+                "actual_use": p.get("actual_use", ""),
+                "area_sqm": float(p.get("area_sqm", 0.0)),
+                "area_ha": round(float(p.get("area_sqm", 0.0)) / 10000.0, 4),
+                "market_value": float(p.get("market_value", 0.0)),
+                "assessed_value": float(p.get("assessed_value", 0.0)),
+                "tax_due": float(p.get("tax_due", 0.0)),
+                "delinquency_status": p.get("delinquency_status", "CURRENT"),
+                "distance_to_source_m": round(min_dist, 1),
+                "distance_m": round(min_dist, 1),
+                "impact_status": impact_status
+            })
+
+    # Sort by distance
+    intersected_parcels.sort(key=lambda x: x["distance_to_source_m"])
+
+    # 4. Aggregate telemetry
+    tot_parcels = len(intersected_parcels)
+    tot_area_sqm = sum(x["area_sqm"] for x in intersected_parcels)
+    tot_mv = sum(x["market_value"] for x in intersected_parcels)
+    tot_av = sum(x["assessed_value"] for x in intersected_parcels)
+    tot_tax = sum(x["tax_due"] for x in intersected_parcels)
+    unique_owners = len(set(x["owner_name"] for x in intersected_parcels))
+
+    class_counts = {}
+    for x in intersected_parcels:
+        c_name = x["classification"]
+        class_counts[c_name] = class_counts.get(c_name, 0) + 1
+
+    clean_lgu = lgu_code if lgu_code != "ALL" else "03215"
+    report_no = f"SP-2026-{clean_lgu}-{secrets.token_hex(3).upper()}"
+
+    summary = {
+        "report_no": report_no,
+        "source_name": source_name,
+        "source_category": source_category,
+        "statutory_basis": source_statutory,
+        "buffer_distance_m": buffer_distance_m,
+        "lgu_code": lgu_code,
+        "total_impacted_parcels": tot_parcels,
+        "total_intersected_parcels": tot_parcels,
+        "total_affected_area_sqm": round(tot_area_sqm, 2),
+        "total_affected_area_ha": round(tot_area_sqm / 10000.0, 4),
+        "total_affected_market_value": round(tot_mv, 2),
+        "total_market_value": round(tot_mv, 2),
+        "total_affected_assessed_value": round(tot_av, 2),
+        "total_assessed_value": round(tot_av, 2),
+        "total_affected_tax_due": round(tot_tax, 2),
+        "unique_owners_count": unique_owners,
+        "classification_breakdown": class_counts,
+        "breakdown_by_classification": class_counts
+    }
+
+    # GeoJSON Feature for Map Rendering
+    buffer_geojson = {
+        "type": "Feature",
+        "geometry": {
+            "type": "Polygon",
+            "coordinates": [[[pt[1], pt[0]] for pt in buffer_polygon]]
+        },
+        "properties": {
+            "report_no": report_no,
+            "source_name": source_name,
+            "buffer_distance_m": buffer_distance_m,
+            "feature_type": feature_type,
+            "impacted_count": tot_parcels
+        }
+    }
+
+    # Audit log
+    audit_details = (
+        f"Executed spatial buffer query on '{source_name}' ({buffer_distance_m}m radius). "
+        f"Detected {tot_parcels} intersected cadastral parcels ({summary['total_affected_area_ha']} ha, "
+        f"AV: PHP {tot_av:,.2f}). Report #{report_no}. Officer: {officer_badge}."
+    )
+    conn = get_db()
+    cursor = conn.cursor()
+    cursor.execute("""
+    INSERT INTO audit_logs (username, action, details, ip_address)
+    VALUES (?, 'SPATIAL_BUFFER_QUERIED', ?, ?)
+    """, (officer_username, audit_details, ip))
+    conn.commit()
+    conn.close()
+
+    return {
+        "success": True,
+        "report_no": report_no,
+        "source_name": source_name,
+        "source_category": source_category,
+        "statutory_basis": source_statutory,
+        "buffer_distance_m": buffer_distance_m,
+        "date_generated": datetime.now().strftime("%B %d, %Y"),
+        "buffer_geojson": buffer_geojson,
+        "intersected_parcels": intersected_parcels,
+        "summary": summary
+    }
+
 
 if __name__ == "__main__":
     init_db()

@@ -745,4 +745,298 @@ assert b"reg-encroachment-alert" in resp_dash_topo.data
 assert b"reg-dispute-waiver" in resp_dash_topo.data
 print("[PASS] Dashboard UI verified with #btn-scan-conflicts, #modal-cadastral-conflicts, and #reg-encroachment-alert")
 
-print("\nALL 34 VERIFICATION TESTS PASSED SUCCESSFULLY!")
+# 35. Test Transfer of Ownership (Deed of Sale Conveyance) API
+xfer_test_pin = "032-15-0001-039-11"
+xfer_payload = {
+    "new_owner_name": "Juan D. Cruz",
+    "new_owner_address": "Brgy. San Antonio, Ilagan City, Isabela",
+    "new_owner_tin": "123-456-789-000",
+    "deed_type": "Deed of Absolute Sale",
+    "deed_no": "DS-2026-00145",
+    "deed_date": "2026-08-15",
+    "registry_of_deeds": "RD Ilagan City",
+    "tct_oct_no": "TCT-T-123456",
+    "inscription_date": "2026-08-20",
+    "bir_car_no": "eCAR-2026-0891245",
+    "bir_car_date": "2026-08-18",
+    "transfer_tax_or_no": "OR-2026-PGI-04521",
+    "transfer_tax_amount": 15000.00,
+    "transfer_tax_date": "2026-08-22"
+}
+resp_xfer = client.post(f'/api/parcels/{xfer_test_pin}/transfer-ownership', json=xfer_payload)
+assert resp_xfer.status_code == 200, f"Expected 200, got {resp_xfer.status_code}: {resp_xfer.data}"
+xfer_res = resp_xfer.get_json()
+assert xfer_res['success'] is True
+xfer = xfer_res['transfer']
+assert xfer['pin'] == xfer_test_pin
+assert xfer['new_owner_name'] == "Juan D. Cruz"
+assert xfer['new_td_no'].startswith("TD-2026-03215-TR")
+assert xfer['transfer_ref'].startswith("TOT-2026-03215-")
+assert xfer['deed_type'] == "Deed of Absolute Sale"
+print(f"[PASS] /api/parcels/{xfer_test_pin}/transfer-ownership transferred title to '{xfer['new_owner_name']}' under {xfer['new_td_no']}")
+
+# 36. Test Transfer Rejection on Delinquent Parcel
+delinq_xfer_pin = "032-15-0001-045-02"
+resp_xfer_bad = client.post(f'/api/parcels/{delinq_xfer_pin}/transfer-ownership', json={
+    "new_owner_name": "Maria L. Santos"
+})
+assert resp_xfer_bad.status_code == 400, f"Expected 400, got {resp_xfer_bad.status_code}: {resp_xfer_bad.data}"
+xfer_bad_res = resp_xfer_bad.get_json()
+assert xfer_bad_res['success'] is False
+assert "delinquent" in xfer_bad_res['message'].lower()
+assert "tax clearance" in xfer_bad_res['message'].lower()
+print(f"[PASS] /api/parcels/{delinq_xfer_pin}/transfer-ownership properly blocked for delinquent lot")
+
+# 37. Test Ownership History / Chain of Title API
+resp_hist = client.get(f'/api/parcels/{xfer_test_pin}/ownership-history')
+assert resp_hist.status_code == 200, f"Expected 200, got {resp_hist.status_code}: {resp_hist.data}"
+hist_res = resp_hist.get_json()
+assert hist_res['success'] is True
+assert hist_res['pin'] == xfer_test_pin
+chain = hist_res['chain']
+assert len(chain) >= 2
+assert chain[0]['sequence_no'] == 1
+assert chain[0]['deed_type'] == "Original Title"
+last_record = chain[-1]
+assert last_record['sequence_no'] >= 2
+assert last_record['owner_name'] == "Juan D. Cruz"
+assert last_record['tct_oct_no'] == "TCT-T-123456"
+assert last_record['bir_car_no'] == "eCAR-2026-0891245"
+print(f"[PASS] /api/parcels/{xfer_test_pin}/ownership-history verified with {len(chain)} sequential records in title chain")
+
+# 38. Verify Audit Trail for OWNERSHIP_TRANSFERRED
+conn = get_db()
+cur = conn.cursor()
+cur.execute("SELECT * FROM audit_logs WHERE action = 'OWNERSHIP_TRANSFERRED' ORDER BY id DESC LIMIT 1")
+log_xfer = cur.fetchone()
+conn.close()
+assert log_xfer is not None
+assert xfer_test_pin in log_xfer['details']
+assert "Juan D. Cruz" in log_xfer['details']
+assert "PGI-REC-005" in log_xfer['details']
+print(f"[PASS] Audit trail verified for OWNERSHIP_TRANSFERRED: '{log_xfer['details']}'")
+
+# 39. Test Dashboard UI Integration for Transfer of Ownership Modals & Buttons
+resp_dash_xfer = client.get('/dashboard')
+assert resp_dash_xfer.status_code == 200
+assert b"btn-transfer-ownership" in resp_dash_xfer.data
+assert b"modal-transfer-ownership" in resp_dash_xfer.data
+assert b"modal-transfer-certificate" in resp_dash_xfer.data
+assert b"modal-ownership-history" in resp_dash_xfer.data
+print("[PASS] Dashboard UI verified with #btn-transfer-ownership, #modal-transfer-ownership, #modal-transfer-certificate, and #modal-ownership-history")
+
+# 40. Test Schedule of Market Values (SMV) Benchmark Rates API
+resp_smv = client.get('/api/smv/rates')
+assert resp_smv.status_code == 200, f"Expected 200, got {resp_smv.status_code}: {resp_smv.data}"
+smv_data = resp_smv.get_json()
+assert smv_data['success'] is True
+assert "rates" in smv_data
+rates = smv_data['rates']
+assert "Residential" in rates
+assert "Commercial" in rates
+assert "Agricultural" in rates
+assert rates['Residential']['assessment_level'] == 20.0
+assert rates['Commercial']['assessment_level'] == 50.0
+assert len(rates['Commercial']['benchmark_unit_values']) >= 3
+print(f"[PASS] /api/smv/rates verified with {len(rates)} standard land classifications and SMV benchmarks")
+
+# 41. Test Land Reclassification & General Revision (GR) Adjustment API
+reclass_test_pin = "032-15-0001-044-05" # Villa Alibagu Homeowners Assn. (Residential Lot)
+reclass_payload = {
+    "new_classification": "Commercial",
+    "new_actual_use": "Commercial Retail & Warehouse Hub",
+    "new_unit_value": 6500.00,
+    "new_assessment_level": 50.0,
+    "reason": "Land Use Reclassification / Zoning Conversion",
+    "ordinance_no": "Sangguniang Panlalawigan Ordinance No. 2026-04 (General Revision SMV)"
+}
+resp_reclass = client.post(f'/api/parcels/{reclass_test_pin}/reclassify', json=reclass_payload)
+assert resp_reclass.status_code == 200, f"Expected 200, got {resp_reclass.status_code}: {resp_reclass.data}"
+reclass_res = resp_reclass.get_json()
+assert reclass_res['success'] is True
+rev = reclass_res['revision']
+assert rev['pin'] == reclass_test_pin
+assert rev['new_classification'] == "Commercial"
+assert rev['new_market_value'] == round(18200.0 * 6500.0, 2)
+assert rev['new_assessed_value'] == round(rev['new_market_value'] * 0.5, 2)
+assert rev['new_tax_due'] == round(rev['new_assessed_value'] * 0.03, 2)
+assert rev['tax_variance'] > 0
+notice = reclass_res['notice']
+assert notice['revision_no'].startswith("NAR-2026-03215-")
+assert notice['comparison']['classification']['old'] in ["Residential", "Commercial"]
+assert notice['comparison']['classification']['new'] == "Commercial"
+assert "60 days" in notice['appeal_deadline']
+print(f"[PASS] /api/parcels/{reclass_test_pin}/reclassify adjusted assessment: AV PHP {rev['new_assessed_value']:,.2f}, Tax Variance: +PHP {rev['tax_variance']:,.2f}")
+
+# 42. Verify Updated Parcel Properties in Cadastre API
+resp_parcel_check = client.get(f'/api/parcels/{reclass_test_pin}')
+assert resp_parcel_check.status_code == 200
+p_check = resp_parcel_check.get_json()['parcel']
+assert p_check['classification'] == "Commercial"
+assert p_check['actual_use'] == "Commercial Retail & Warehouse Hub"
+assert p_check['unit_value'] == 6500.00
+assert p_check['market_value'] == rev['new_market_value']
+assert p_check['assessed_value'] == rev['new_assessed_value']
+assert p_check['tax_due'] == rev['new_tax_due']
+print(f"[PASS] Active cadastre confirmed updated for {reclass_test_pin}: Class={p_check['classification']}, Tax=PHP {p_check['tax_due']:,.2f}")
+
+# 43. Test Assessment Revisions History API
+resp_rev_hist = client.get(f'/api/parcels/{reclass_test_pin}/revisions')
+assert resp_rev_hist.status_code == 200
+rev_hist_res = resp_rev_hist.get_json()
+assert rev_hist_res['success'] is True
+assert rev_hist_res['count'] >= 1
+latest_rev = rev_hist_res['revisions'][0]
+assert latest_rev['pin'] == reclass_test_pin
+assert latest_rev['new_classification'] == "Commercial"
+assert latest_rev['tax_variance'] > 0
+print(f"[PASS] /api/parcels/{reclass_test_pin}/revisions retrieved {rev_hist_res['count']} revision records")
+
+# 44. Verify Audit Trail for ASSESSMENT_REVISED
+conn = get_db()
+cur = conn.cursor()
+cur.execute("SELECT * FROM audit_logs WHERE action = 'ASSESSMENT_REVISED' ORDER BY id DESC LIMIT 1")
+log_reclass = cur.fetchone()
+conn.close()
+assert log_reclass is not None
+assert reclass_test_pin in log_reclass['details']
+assert "Commercial" in log_reclass['details']
+print(f"[PASS] Audit trail verified for ASSESSMENT_REVISED: '{log_reclass['details']}'")
+
+# 45. Test Dashboard UI Integration for Reclassification Modal & Action Button
+resp_dash_reclass = client.get('/dashboard')
+assert resp_dash_reclass.status_code == 200
+assert b"btn-reclassify-parcel" in resp_dash_reclass.data
+assert b"modal-reclassify-parcel" in resp_dash_reclass.data
+assert b"modal-notice-of-assessment" in resp_dash_reclass.data
+assert b"reclass-preview-box" in resp_dash_reclass.data
+print("[PASS] Dashboard UI verified with #btn-reclassify-parcel, #modal-reclassify-parcel, #modal-notice-of-assessment, and #reclass-preview-box")
+
+# 46. Test Spatial Presets API
+resp_presets = client.get('/api/spatial/presets')
+assert resp_presets.status_code == 200, f"Expected 200, got {resp_presets.status_code}: {resp_presets.data}"
+presets_data = resp_presets.get_json()
+assert presets_data['success'] is True
+presets = presets_data['presets']
+assert len(presets) >= 3
+preset_ids = [p['id'] for p in presets]
+assert 'maharlika_highway' in preset_ids
+assert 'cagayan_river' in preset_ids
+assert 'bypass_road' in preset_ids
+assert any('10752' in p['statutory_basis'] for p in presets)
+assert any('1067' in p['statutory_basis'] for p in presets)
+print(f"[PASS] /api/spatial/presets returned {len(presets)} provincial infrastructure corridors & hazard reference lines")
+
+# 47. Test Corridor Spatial Buffer Query (Maharlika Highway ROW - R.A. 10752)
+corridor_payload = {
+    "preset_id": "maharlika_highway",
+    "buffer_distance_m": 500,
+    "lgu_code": "03215"
+}
+resp_buffer = client.post('/api/spatial/buffer-query', json=corridor_payload)
+assert resp_buffer.status_code == 200, f"Expected 200, got {resp_buffer.status_code}: {resp_buffer.data}"
+buf_res = resp_buffer.get_json()
+assert buf_res['success'] is True
+assert buf_res['report_no'].startswith("SP-2026-03215-")
+assert "Maharlika" in buf_res['source_name']
+assert buf_res['buffer_distance_m'] == 500
+assert buf_res['buffer_geojson']['type'] == "Feature"
+assert buf_res['buffer_geojson']['geometry']['type'] == "Polygon"
+assert len(buf_res['buffer_geojson']['geometry']['coordinates'][0]) >= 4
+
+# Check intersected parcels
+parcels_affected = buf_res['intersected_parcels']
+assert len(parcels_affected) > 0
+first_affected = parcels_affected[0]
+assert 'pin' in first_affected
+assert 'lot_no' in first_affected
+assert 'owner_name' in first_affected
+assert 'distance_m' in first_affected
+assert first_affected['distance_m'] <= 500.0
+
+# Check summary KPIs
+summary = buf_res['summary']
+assert summary['total_intersected_parcels'] == len(parcels_affected)
+assert summary['total_affected_area_ha'] > 0
+assert summary['total_market_value'] > 0
+assert summary['total_assessed_value'] > 0
+assert len(summary['breakdown_by_classification']) > 0
+print(f"[PASS] Corridor Buffer Query verified: {len(parcels_affected)} lots ({summary['total_affected_area_ha']} ha, AV PHP {summary['total_assessed_value']:,.2f}) within 500m of Maharlika Highway")
+
+# 48. Test Radial Point Spatial Buffer Query (Custom Lat/Lng Radius)
+radial_payload = {
+    "center_lat": 16.9749,
+    "center_lng": 121.8153,
+    "buffer_distance_m": 300,
+    "lgu_code": "03215"
+}
+resp_radial = client.post('/api/spatial/buffer-query', json=radial_payload)
+assert resp_radial.status_code == 200
+radial_res = resp_radial.get_json()
+assert radial_res['success'] is True
+assert "Radial Point" in radial_res['source_name']
+assert radial_res['buffer_geojson']['geometry']['type'] == "Polygon"
+assert len(radial_res['intersected_parcels']) > 0
+capitol_found = any('042-18' in p['pin'] for p in radial_res['intersected_parcels'])
+assert capitol_found, "Isabela Capitol parcel (042-18) should be intersected by 300m radial buffer from its center"
+print(f"[PASS] Radial Point Buffer Query verified: {len(radial_res['intersected_parcels'])} lots within 300m radius of Capitol coordinates")
+
+# 49. Test Target Parcel Proximity Buffer Query (Parcel PIN)
+parcel_buffer_payload = {
+    "target_pin": "032-15-0001-042-18",
+    "buffer_distance_m": 400,
+    "lgu_code": "03215"
+}
+resp_pbuf = client.post('/api/spatial/buffer-query', json=parcel_buffer_payload)
+assert resp_pbuf.status_code == 200
+pbuf_res = resp_pbuf.get_json()
+assert pbuf_res['success'] is True
+assert "Radial Buffer from Lot 42-18" in pbuf_res['source_name']
+assert len(pbuf_res['intersected_parcels']) >= 1
+self_lot = next(p for p in pbuf_res['intersected_parcels'] if p['pin'] == "032-15-0001-042-18")
+assert self_lot['distance_m'] == 0.0
+print(f"[PASS] Parcel Proximity Buffer verified: {len(pbuf_res['intersected_parcels'])} neighbor lots around Lot 42-18 within 400m")
+
+# 50. Test Batch Spatial Impact Schedule CSV Export API
+export_payload = {
+    "report_no": buf_res['report_no'],
+    "source_name": buf_res['source_name'],
+    "buffer_distance_m": 500,
+    "parcels": parcels_affected
+}
+resp_csv = client.post('/api/spatial/export-impact-csv', json=export_payload)
+assert resp_csv.status_code == 200, f"Expected 200, got {resp_csv.status_code}"
+assert resp_csv.mimetype == "text/csv"
+assert f"impact_assessment_{buf_res['report_no']}.csv" in resp_csv.headers.get("Content-Disposition", "")
+csv_content = resp_csv.data.decode('utf-8')
+assert "SPATIAL PROXIMITY BUFFER & HAZARD IMPACT REPORT" in csv_content
+assert "Maharlika" in csv_content
+assert "PIN,Lot No,Survey No,Declared Owner" in csv_content
+assert parcels_affected[0]['pin'] in csv_content
+print(f"[PASS] /api/spatial/export-impact-csv successfully exported {len(parcels_affected)} parcel impact schedule rows")
+
+# 51. Verify Audit Trail Logging & Dashboard UI Integration for Buffer Tool
+conn = get_db()
+cur = conn.cursor()
+cur.execute("SELECT * FROM audit_logs WHERE action = 'SPATIAL_BUFFER_QUERIED' ORDER BY id DESC LIMIT 1")
+log_buf = cur.fetchone()
+conn.close()
+assert log_buf is not None
+assert "Maharlika" in log_buf['details'] or "Radial" in log_buf['details']
+print(f"[PASS] Audit trail verified for SPATIAL_BUFFER_QUERIED: '{log_buf['details']}'")
+
+resp_dash_buffer = client.get('/dashboard')
+assert resp_dash_buffer.status_code == 200
+assert b"btn-buffer-tool" in resp_dash_buffer.data
+assert b"buffer-hud" in resp_dash_buffer.data
+assert b"buffer-preset-select" in resp_dash_buffer.data
+assert b"btn-run-buffer-analysis" in resp_dash_buffer.data
+assert b"modal-buffer-report" in resp_dash_buffer.data
+assert b"buffer-rep-no" in resp_dash_buffer.data
+assert b"buffer-rep-table-body" in resp_dash_buffer.data
+assert b"btn-download-buffer-csv" in resp_dash_buffer.data
+assert b"btn-print-buffer-report" in resp_dash_buffer.data
+print("[PASS] Dashboard UI verified with #btn-buffer-tool, #buffer-hud, #buffer-preset-select, #modal-buffer-report, and #btn-download-buffer-csv")
+
+print("\nALL 51 VERIFICATION TESTS PASSED SUCCESSFULLY!")
+

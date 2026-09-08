@@ -19,7 +19,7 @@
   <!-- Design System CSS -->
   <link rel="stylesheet" href="/static/css/design-tokens.css">
   <link rel="stylesheet" href="/static/css/components.css">
-  <link rel="stylesheet" href="/static/css/dashboard.css">
+  <link rel="stylesheet" href="/static/css/dashboard.css?v={{ range(100000, 999999) | random }}">
 </head>
 <body>
   <div class="app-shell">
@@ -89,7 +89,7 @@
               <line x1="9" y1="21" x2="9" y2="9"></line>
             </svg>
             <span>Assessment Roll</span>
-            <span class="badge-workbench-pill" style="border-color: rgba(52,211,153,0.3); color: #34d399;">R.A. 7160</span>
+            <span class="badge-workbench-pill" >R.A. 7160</span>
           </a>
 
           <a href="#audit-log" class="sidebar-nav-item" id="sidebar-nav-audit-trail" title="Open Provincial Audit Logs">
@@ -190,6 +190,13 @@
             </svg>
             <span>Topology</span>
           </button>
+          <button class="btn button-outline-sm" id="btn-buffer-tool" title="GIS Spatial Proximity Buffer & Hazard Impact Zone (R.A. 10752 / P.D. 1067)">
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="margin-right: 4px; vertical-align: -1px;">
+              <circle cx="12" cy="12" r="9"></circle>
+              <circle cx="12" cy="12" r="4"></circle>
+            </svg>
+            <span>Buffer / Hazard</span>
+          </button>
           <div class="dropdown-container" style="position: relative;">
             <button class="btn button-outline-sm" id="btn-export-cadastre" title="Export Cadastral Section Data">
               <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
@@ -240,23 +247,23 @@
             </div>
             <div class="collection-hud-segment">
               <span class="collection-hud-label">COLLECTED (PAID)</span>
-              <span class="collection-hud-value mono-num" id="hud-total-collected" style="color: #34d399;">PHP 0.00</span>
+              <span class="collection-hud-value mono-num" id="hud-total-collected" style="color: #ffffff;">PHP 0.00</span>
             </div>
             <div class="collection-hud-segment">
               <span class="collection-hud-label">COLLECTION RATE</span>
-              <span class="collection-hud-value mono-num" id="hud-collection-rate" style="color: #34d399;">0%</span>
+              <span class="collection-hud-value mono-num" id="hud-collection-rate" style="color: #ffffff;">0%</span>
             </div>
             <div class="collection-hud-divider"></div>
             <div class="collection-hud-segment">
               <span class="collection-hud-label">DELINQUENT LOTS</span>
               <div style="display: flex; align-items: baseline; gap: 4px;">
-                <span class="collection-hud-value mono-num" id="hud-delinq-count" style="color: #ef4444;">0 Lots</span>
-                <span class="collection-hud-sub mono-num" id="hud-delinq-rate" style="color: #f87171;">(0%)</span>
+                <span class="collection-hud-value mono-num" id="hud-delinq-count" style="color: #ffffff;">0 Lots</span>
+                <span class="collection-hud-sub mono-num" id="hud-delinq-rate" style="color: #a1a1aa;">(0%)</span>
               </div>
             </div>
             <div class="collection-hud-segment">
               <span class="collection-hud-label">ARREARS + 2% PENALTIES</span>
-              <span class="collection-hud-value mono-num" id="hud-delinq-amount" style="color: #ef4444;">PHP 0.00</span>
+              <span class="collection-hud-value mono-num" id="hud-delinq-amount" style="color: #ffffff;">PHP 0.00</span>
             </div>
             <div class="collection-hud-legend" id="hud-thematic-legend" style="display: none;">
               <span class="legend-item"><span class="legend-dot dot-current"></span> Current</span>
@@ -300,6 +307,45 @@
               </button>
               <button type="button" class="btn button-outline-sm" id="btn-cancel-draw" style="font-size: 11px; padding: 3px 10px;">
                 Cancel
+              </button>
+            </div>
+          </div>
+
+          <!-- GIS Spatial Buffer & Hazard Impact Active HUD Banner -->
+          <div class="workbench-hud-banner buffer-hud-banner" id="buffer-hud" style="display: none;">
+            <div class="buffer-hud-left">
+              <span class="eyebrow-indicator indicator-pulse" style="background-color: #ffffff;"></span>
+              <span class="typography-caption-mono-sm hud-mode-title" style="color: #ffffff; font-weight: 600; white-space: nowrap;">
+                SPATIAL BUFFER &amp; HAZARD TOOL
+              </span>
+              <div class="buffer-controls-row">
+                <select id="buffer-preset-select" class="buffer-select-input" title="Select Provincial Reference Corridor or Custom Geometry">
+                  <option value="maharlika_highway">Maharlika Highway Corridor (R.A. 10752 ROW)</option>
+                  <option value="cagayan_river">Cagayan River Basin Hazard Zone (P.D. 1067)</option>
+                  <option value="bypass_road">Ilagan-Divilacan Bypass Road (ROW Alignment)</option>
+                  <option value="custom-point">Click Map for Radial Point Buffer</option>
+                  <option value="selected-parcel">Buffer Current Selected Parcel</option>
+                </select>
+                <div class="buffer-radius-pill-group">
+                  <button type="button" class="buffer-radius-btn" data-radius="100">100m</button>
+                  <button type="button" class="buffer-radius-btn" data-radius="200">200m</button>
+                  <button type="button" class="buffer-radius-btn active" data-radius="500">500m</button>
+                  <button type="button" class="buffer-radius-btn" data-radius="1000">1,000m</button>
+                </div>
+              </div>
+            </div>
+            <div class="workbench-hud-actions buffer-hud-actions">
+              <button type="button" class="btn button-primary-sm" id="btn-run-buffer-analysis" style="font-size: 11px; padding: 4px 12px; background-color: #ffffff; color: #0a0a0a; border-color: #ffffff; font-weight: 600; white-space: nowrap;">
+                Analyze Impact
+              </button>
+              <button type="button" class="btn button-outline-sm" id="btn-open-buffer-report" style="font-size: 11px; padding: 4px 10px; display: none; border-color: rgba(255,255,255,0.3); color: #ffffff; white-space: nowrap;">
+                Impact Report (<span id="buffer-badge-count">0</span>)
+              </button>
+              <button type="button" class="btn button-outline-sm" id="btn-clear-buffer" style="font-size: 11px; padding: 4px 10px;">
+                Clear
+              </button>
+              <button type="button" class="btn button-outline-sm" id="btn-exit-buffer-hud" style="font-size: 11px; padding: 4px 10px;">
+                Exit
               </button>
             </div>
           </div>
@@ -380,22 +426,22 @@
 
               <div class="prop-data-row">
                 <span class="prop-data-label">Annual Real Property Tax Due</span>
-                <span class="prop-data-value mono-num" id="insp-tax" style="color: #34d399; font-weight: 500;">PHP 0.00 (Exempt)</span>
+                <span class="prop-data-value mono-num" id="insp-tax" style="color: #ffffff; font-weight: 500;">PHP 0.00 (Exempt)</span>
               </div>
 
               <!-- Delinquency & Statutory Penalties Card -->
               <div class="prop-data-row delinquency-section" id="insp-delinquency-box" style="display: none; background: rgba(239, 68, 68, 0.08); border: 1px solid rgba(239, 68, 68, 0.25); border-radius: 4px; padding: 6px 8px; margin-top: 3px; min-width: 0;">
                 <div style="display: flex; justify-content: space-between; align-items: center; gap: 4px; margin-bottom: 3px; min-width: 0;">
-                  <span class="badge-status badge-delinquent" id="insp-delinq-badge" style="font-size: 10px; font-weight: 700; padding: 1px 5px; border-radius: 3px; background: rgba(239,68,68,0.2); color: #ef4444; border: 1px solid rgba(239,68,68,0.4); flex-shrink: 0;">DELINQUENT</span>
-                  <span class="typography-caption-mono-sm" id="insp-overdue-str" style="color: #ef4444; font-size: 10.5px; font-weight: 500; text-align: right; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; min-width: 0;">2 Years Overdue (24 Mos)</span>
+                  <span class="badge-status badge-delinquent" id="insp-delinq-badge" style="font-size: 10px; font-weight: 700; padding: 1px 5px; border-radius: 3px; background: #ffffff; color: #0a0a0a; border: 1px solid #ffffff; flex-shrink: 0;">DELINQUENT</span>
+                  <span class="typography-caption-mono-sm" id="insp-overdue-str" style="color: #a1a1aa; font-size: 10.5px; font-weight: 500; text-align: right; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; min-width: 0;">2 Years Overdue (24 Mos)</span>
                 </div>
                 <div style="display: flex; justify-content: space-between; align-items: baseline; gap: 6px; margin-bottom: 2px; min-width: 0;">
                   <span class="prop-data-label" style="font-size: 10px; flex-shrink: 0;">Interest (2%/mo)</span>
-                  <span class="prop-data-value mono-num" id="insp-penalty-val" style="color: #f87171; font-size: 11.5px; text-align: right; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; min-width: 0;">+ PHP 0.00 (48.0%)</span>
+                  <span class="prop-data-value mono-num" id="insp-penalty-val" style="color: #a1a1aa; font-size: 11.5px; text-align: right; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; min-width: 0;">+ PHP 0.00 (48.0%)</span>
                 </div>
                 <div style="display: flex; justify-content: space-between; align-items: baseline; gap: 6px; border-top: 1px dashed rgba(239, 68, 68, 0.3); padding-top: 3px; min-width: 0;">
                   <span class="prop-data-label" style="font-size: 10px; font-weight: 600; flex-shrink: 0;">Total Delinquent</span>
-                  <span class="prop-data-value mono-num" id="insp-total-delinq" style="color: #ef4444; font-size: 12.5px; font-weight: 700; text-align: right; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; min-width: 0;">PHP 0.00</span>
+                  <span class="prop-data-value mono-num" id="insp-total-delinq" style="color: #ffffff; font-size: 12.5px; font-weight: 700; text-align: right; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; min-width: 0;">PHP 0.00</span>
                 </div>
               </div>
             </div>
@@ -443,7 +489,7 @@
               <span class="icon-btn-label">Notice</span>
             </button>
 
-            <button type="button" id="btn-open-payment" class="btn button-icon-action button-success" style="display: none;" title="Post Real Property Tax Payment & Issue O.R. Form 51-C">
+            <button type="button" id="btn-open-payment" class="btn button-icon-action button-success" title="Post Real Property Tax Payment & Issue O.R. Form 51-C">
               <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
                 <rect x="2" y="5" width="20" height="14" rx="2"></rect>
                 <line x1="2" y1="10" x2="22" y2="10"></line>
@@ -457,6 +503,38 @@
                 <polyline points="9 12 11 14 15 10"></polyline>
               </svg>
               <span class="icon-btn-label">Clearance</span>
+            </button>
+
+            <button type="button" id="btn-transfer-ownership" class="btn button-icon-action button-outline-on-dark" title="Transfer of Ownership (Deed of Sale / Conveyance)">
+              <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
+                <path d="M16 3h5v5"></path><path d="M8 21H3v-5"></path>
+                <line x1="21" y1="3" x2="14" y2="10"></line>
+                <line x1="3" y1="21" x2="10" y2="14"></line>
+              </svg>
+              <span class="icon-btn-label">Transfer</span>
+            </button>
+
+            <button type="button" id="btn-reclassify-parcel" class="btn button-icon-action button-outline-on-dark" title="Reclassify Land Use & Adjust Assessment (R.A. 7160 Sec. 219)">
+              <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
+                <line x1="4" y1="21" x2="4" y2="14"></line>
+                <line x1="4" y1="10" x2="4" y2="3"></line>
+                <line x1="12" y1="21" x2="12" y2="12"></line>
+                <line x1="12" y1="8" x2="12" y2="3"></line>
+                <line x1="20" y1="21" x2="20" y2="16"></line>
+                <line x1="20" y1="12" x2="20" y2="3"></line>
+                <line x1="1" y1="14" x2="7" y2="14"></line>
+                <line x1="9" y1="8" x2="15" y2="8"></line>
+                <line x1="17" y1="16" x2="23" y2="16"></line>
+              </svg>
+              <span class="icon-btn-label">Reclass</span>
+            </button>
+
+            <button type="button" id="btn-inspect-buffer" class="btn button-icon-action button-outline-on-dark" title="Radial Proximity Buffer from this Lot">
+              <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
+                <circle cx="12" cy="12" r="9"></circle>
+                <circle cx="12" cy="12" r="3"></circle>
+              </svg>
+              <span class="icon-btn-label">Buffer</span>
             </button>
 
             <button type="button" id="btn-delete-parcel" class="btn button-icon-action button-danger-outline" title="Delete Lot (Cancel Record)">
@@ -621,6 +699,7 @@
 
       </div>
     </main>
+  </div>
 
   <!-- ====================================================================
        REGISTER NEW CADASTRAL LOT MODAL / SLIDE-OVER (SEMI FULLSIZE 2-COL)
@@ -798,7 +877,7 @@
               </div>
               <div class="form-group compact">
                 <label for="reg-tax-due" class="form-label">Estimated Tax (PHP)</label>
-                <input type="number" id="reg-tax-due" name="tax_due" class="text-input mono-num" placeholder="0.00" step="0.01" required style="padding: 5px 8px; font-size: 12px; color: #34d399;" />
+                <input type="number" id="reg-tax-due" name="tax_due" class="text-input mono-num" placeholder="0.00" step="0.01" required style="padding: 5px 8px; font-size: 12px; color: #ffffff;" />
               </div>
             </div>
 
@@ -809,8 +888,8 @@
         <!-- Dedicated Bottom Footer Actions (Full Height, Never Cut in Half) -->
         <div class="new-lot-modal-footer">
           <div id="reg-dispute-waiver-container" style="display: none; align-items: center; gap: 8px; margin-right: auto;">
-            <input type="checkbox" id="reg-dispute-waiver" style="accent-color: #ef4444; width: 14px; height: 14px; cursor: pointer;">
-            <label for="reg-dispute-waiver" style="font-size: 11px; color: #f87171; cursor: pointer; font-family: var(--fonts-mono);">
+            <input type="checkbox" id="reg-dispute-waiver" style="accent-color: #ffffff; width: 14px; height: 14px; cursor: pointer;">
+            <label for="reg-dispute-waiver" style="font-size: 11px; color: #ffffff; cursor: pointer; font-family: var(--fonts-mono);">
               Override Topology Lock: Acknowledge Boundary Dispute Exception
             </label>
           </div>
@@ -1254,12 +1333,12 @@
       <div class="delinquency-modal-action-bar no-print">
         <div style="display: flex; align-items: center; gap: 8px;">
           <div class="eyebrow-mono">
-            <span class="eyebrow-indicator" style="background-color: #ef4444;"></span>
-            <span style="color: #ef4444;">[ R.A. 7160 // NOTICE OF REAL PROPERTY TAX DELINQUENCY ]</span>
+            <span class="eyebrow-indicator" style="background-color: #ffffff;"></span>
+            <span style="color: #ffffff;">[ R.A. 7160 // NOTICE OF REAL PROPERTY TAX DELINQUENCY ]</span>
           </div>
         </div>
         <div style="display: flex; align-items: center; gap: 10px;">
-          <button type="button" id="btn-print-delinquency" class="btn button-primary" style="display: flex; align-items: center; gap: 6px; padding: 7px 16px; background-color: #ef4444; border-color: #ef4444;">
+          <button type="button" id="btn-print-delinquency" class="btn button-primary" style="display: flex; align-items: center; gap: 6px; padding: 7px 16px; background-color: #ffffff; color: #0a0a0a; border-color: #ffffff; font-weight: 600;">
             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
               <polyline points="6 9 6 2 18 2 18 9"></polyline>
               <path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"></path>
@@ -1305,7 +1384,7 @@
             </div>
             <div class="delinq-ref-col">
               <span class="delinq-label">STATUS:</span>
-              <span class="delinq-val mono-num" style="color: #b91c1c; font-weight: 700;">DELINQUENT // OVERDUE</span>
+              <span class="delinq-val mono-num" style="color: #000000; font-weight: 700;">DELINQUENT // OVERDUE</span>
             </div>
           </div>
 
@@ -1370,8 +1449,8 @@
                 <td colspan="3" style="text-align: right; font-weight: 700;">TOTAL DELINQUENT ASSESSMENT DUE:</td>
                 <td class="mono-num" id="delinq-foot-base" style="font-weight: 700;">PHP 1,782,000.00</td>
                 <td id="delinq-foot-rate" style="font-weight: 700;">48.0%</td>
-                <td class="mono-num" id="delinq-foot-penalty" style="font-weight: 700; color: #b91c1c;">PHP 855,360.00</td>
-                <td class="mono-num" id="delinq-foot-total" style="text-align: right; font-weight: 800; font-size: 15px; color: #b91c1c;">PHP 2,637,360.00</td>
+                <td class="mono-num" id="delinq-foot-penalty" style="font-weight: 700; color: #000000;">PHP 855,360.00</td>
+                <td class="mono-num" id="delinq-foot-total" style="text-align: right; font-weight: 800; font-size: 15px; color: #000000;">PHP 2,637,360.00</td>
               </tr>
             </tfoot>
           </table>
@@ -1408,6 +1487,8 @@
 
         </div>
       </div>
+    </div>
+  </div>
 
   <!-- ====================================================================
        1. TAX DECLARATION (RPTD) ARCHIVE & REGISTRY MODAL
@@ -1510,8 +1591,8 @@
       <div class="custom-modal-header no-print">
         <div>
           <div class="eyebrow-mono">
-            <span class="eyebrow-indicator" style="background-color: #34d399;"></span>
-            <span style="color: #34d399;">[ R.A. 7160 SEC. 248 // GENERAL REVISION ASSESSMENT ROLL ]</span>
+            <span class="eyebrow-indicator" style="background-color: #ffffff;"></span>
+            <span style="color: #ffffff;">[ R.A. 7160 SEC. 248 // GENERAL REVISION ASSESSMENT ROLL ]</span>
           </div>
           <div class="custom-modal-title">Real Property Assessment Roll</div>
         </div>
@@ -1554,7 +1635,7 @@
           </div>
           <div class="roll-kpi-card highlight">
             <div class="roll-kpi-label">PROJECTED ANNUAL YIELD (BASIC + SEF)</div>
-            <div class="roll-kpi-val mono-num" id="roll-kpi-tax" style="color: #34d399;">PHP 0.00</div>
+            <div class="roll-kpi-val mono-num" id="roll-kpi-tax" style="color: #ffffff;">PHP 0.00</div>
             <div class="roll-kpi-sub mono-num">3.0% Aggregate Levy</div>
           </div>
         </div>
@@ -1686,8 +1767,8 @@
       <div class="custom-modal-header">
         <div>
           <div class="eyebrow-mono">
-            <span class="eyebrow-indicator" style="background-color: #34d399;"></span>
-            <span style="color: #34d399;">[ RPT COLLECTION // TAX PAYMENT SETTLEMENT ]</span>
+            <span class="eyebrow-indicator" style="background-color: #ffffff;"></span>
+            <span style="color: #ffffff;">[ RPT COLLECTION // TAX PAYMENT SETTLEMENT ]</span>
           </div>
           <div class="custom-modal-title">Post Real Property Tax Payment</div>
         </div>
@@ -1721,11 +1802,11 @@
             </div>
             <div class="pay-breakdown-item">
               <span class="prop-data-label">Penalties / Interest (2%/mo)</span>
-              <span class="mono-num pay-breakdown-val" id="pay-penalties" style="color: #f87171;">PHP 0.00</span>
+              <span class="mono-num pay-breakdown-val" id="pay-penalties" style="color: #a1a1aa;">PHP 0.00</span>
             </div>
             <div class="pay-breakdown-item highlight-due">
-              <span class="prop-data-label" style="font-weight: 600; color: #34d399;">TOTAL AMOUNT DUE</span>
-              <span class="mono-num pay-breakdown-val" id="pay-total-due" style="color: #34d399; font-size: 16px; font-weight: 700;">PHP 0.00</span>
+              <span class="prop-data-label" style="font-weight: 600; color: #ffffff;">TOTAL AMOUNT DUE</span>
+              <span class="mono-num pay-breakdown-val" id="pay-total-due" style="color: #ffffff; font-size: 16px; font-weight: 700;">PHP 0.00</span>
             </div>
           </div>
 
@@ -1758,7 +1839,7 @@
             </div>
             <div class="form-group compact">
               <label class="form-label">Change Due (PHP)</label>
-              <input type="text" id="pay-change" class="text-input mono-num" value="PHP 0.00" readonly style="background-color: rgba(255,255,255,0.03); color: #34d399; font-weight: 600;" />
+              <input type="text" id="pay-change" class="text-input mono-num" value="PHP 0.00" readonly style="background-color: rgba(255,255,255,0.03); color: #ffffff; font-weight: 600;" />
             </div>
           </div>
 
@@ -1784,7 +1865,7 @@
       <div class="custom-modal-header no-print">
         <div style="display: flex; align-items: center; gap: 8px;">
           <div class="eyebrow-mono">
-            <span class="eyebrow-indicator" style="background-color: #34d399;"></span>
+            <span class="eyebrow-indicator" style="background-color: #ffffff;"></span>
             <span>[ BLGF // ACCOUNTABLE FORM NO. 51-C OFFICIAL RECEIPT ]</span>
           </div>
         </div>
@@ -1830,7 +1911,7 @@
           <div class="td-grid-box td-numbering-box" style="margin-top: 10px;">
             <div class="td-box-col">
               <span class="td-label">OFFICIAL RECEIPT NO. (O.R.):</span>
-              <span class="td-val mono-num td-accent" id="or-doc-no" style="font-size: 14px; font-weight: 700; color: #047857;">OR-2026-03215-01001</span>
+              <span class="td-val mono-num td-accent" id="or-doc-no" style="font-size: 14px; font-weight: 700; color: #000000;">OR-2026-03215-01001</span>
             </div>
             <div class="td-box-col">
               <span class="td-label">DATE & TIME OF PAYMENT:</span>
@@ -1909,7 +1990,7 @@
             <tfoot>
               <tr>
                 <th colspan="2" style="text-align: right; font-weight: 700;">TOTAL AMOUNT COLLECTED:</th>
-                <th class="mono-num td-bold td-accent" id="or-table-total" style="text-align: right; font-size: 14px; color: #047857;">PHP 0.00</th>
+                <th class="mono-num td-bold td-accent" id="or-table-total" style="text-align: right; font-size: 14px; color: #000000;">PHP 0.00</th>
               </tr>
             </tfoot>
           </table>
@@ -1961,7 +2042,7 @@
       <div class="custom-modal-header no-print">
         <div style="display: flex; align-items: center; gap: 8px;">
           <div class="eyebrow-mono">
-            <span class="eyebrow-indicator" style="background-color: #059669;"></span>
+            <span class="eyebrow-indicator" style="background-color: #ffffff;"></span>
             <span>[ R.A. 7160 // REAL PROPERTY TAX CLEARANCE CERTIFICATION ]</span>
           </div>
         </div>
@@ -1998,14 +2079,14 @@
           </div>
 
           <!-- Document Header -->
-          <div class="td-doc-header" style="border-bottom: 2.5px double #065f46;">
+          <div class="td-doc-header" style="border-bottom: 2px solid #000000;">
             <img src="/static/img/isabela_logo.png" class="td-doc-logo" alt="Province of Isabela Seal" />
             <div class="td-doc-titles">
               <div class="td-republic-text">REPUBLIC OF THE PHILIPPINES</div>
               <div class="td-province-text">PROVINCE OF ISABELA</div>
               <div class="td-lgu-text" id="tc-lgu-title">CITY OF ILAGAN</div>
               <div class="td-office-text">OFFICE OF THE PROVINCIAL / CITY TREASURER</div>
-              <div class="td-main-title" style="font-size: 15px; color: #064e3b; letter-spacing: 1px; margin-top: 5px;">
+              <div class="td-main-title" style="font-size: 15px; color: #000000; letter-spacing: 1px; margin-top: 5px;">
                 CERTIFICATION OF REAL PROPERTY TAX CLEARANCE
               </div>
               <div style="font-size: 8.5px; font-family: var(--font-mono); color: #475569; margin-top: 2px;">
@@ -2016,19 +2097,19 @@
           </div>
 
           <!-- Clearance Number & Validity Box -->
-          <div class="td-grid-box td-numbering-box" style="margin-top: 8px; border-color: #059669; background-color: #f0fdf4;">
+          <div class="td-grid-box td-numbering-box" style="margin-top: 8px; border-color: #111111; background-color: #f8fafc;">
             <div class="td-box-col">
-              <span class="td-label" style="color: #065f46;">CLEARANCE CERTIFICATE NO.:</span>
-              <span class="td-val mono-num td-accent" id="tc-doc-no" style="font-size: 13.5px; font-weight: 700; color: #065f46;">RPTC-2026-03215-00104</span>
+              <span class="td-label" style="color: #333333;">CLEARANCE CERTIFICATE NO.:</span>
+              <span class="td-val mono-num td-accent" id="tc-doc-no" style="font-size: 13.5px; font-weight: 700; color: #333333;">RPTC-2026-03215-00104</span>
             </div>
             <div class="td-box-col">
-              <span class="td-label" style="color: #065f46;">DATE ISSUED & VALIDITY:</span>
+              <span class="td-label" style="color: #333333;">DATE ISSUED & VALIDITY:</span>
               <span class="td-val mono-num" id="tc-doc-date-validity" style="color: #0f172a;">March 8, 2026 · Valid until June 6, 2026 (90 Days)</span>
             </div>
           </div>
 
           <!-- Property Identification Schedule -->
-          <div class="td-section-title" style="border-left-color: #059669; color: #064e3b; margin-top: 8px;">
+          <div class="td-section-title" style="border-left-color: #000000; color: #000000; margin-top: 8px;">
             I. REAL PROPERTY IDENTIFICATION & ASSESSMENT DATA
           </div>
           <div class="td-grid-box" style="padding: 6px 10px; margin-bottom: 6px;">
@@ -2081,7 +2162,7 @@
           </div>
 
           <!-- Official Attestation Clause -->
-          <div class="td-section-title" style="border-left-color: #059669; color: #064e3b; margin-top: 8px;">
+          <div class="td-section-title" style="border-left-color: #000000; color: #000000; margin-top: 8px;">
             II. TREASURY CERTIFICATION OF TAX CLEARANCE
           </div>
           <div class="td-grid-box" style="padding: 10px 12px; background-color: #f8fafc; border: 1px solid #cbd5e1;">
@@ -2092,7 +2173,7 @@
               <strong>THEREFORE</strong>, pursuant to Title II, Book II of Republic Act No. 7160 (The Local Government Code of 1991), the subject real property is hereby declared <strong>FREE FROM ANY REAL PROPERTY TAX LIEN, ENCUMBRANCE, OR DELINQUENT LIABILITY</strong> in favor of the Province of Isabela and the City/Municipality concerned as of this date.
             </p>
             <p style="font-size: 10.5px; line-height: 1.4; color: #475569; margin: 0;" id="tc-doc-purpose-clause">
-              This Certification of Real Property Tax Clearance is issued upon the request of the declared property owner or authorized representative for the specific statutory purpose of: <strong id="tc-doc-purpose-text" style="color: #065f46;">Transfer of Ownership / BIR eCAR Application / LRA Title Registration</strong>.
+              This Certification of Real Property Tax Clearance is issued upon the request of the declared property owner or authorized representative for the specific statutory purpose of: <strong id="tc-doc-purpose-text" style="color: #333333;">Transfer of Ownership / BIR eCAR Application / LRA Title Registration</strong>.
             </p>
           </div>
 
@@ -2101,7 +2182,7 @@
             
             <!-- Latest Payment Reference Card -->
             <div class="td-grid-box" style="padding: 8px 10px; margin-bottom: 0;">
-              <span class="td-label" style="color: #065f46;">SETTLEMENT PAYMENT REFERENCE:</span>
+              <span class="td-label" style="color: #333333;">SETTLEMENT PAYMENT REFERENCE:</span>
               <div style="margin-top: 4px; display: flex; flex-direction: column; gap: 2px;">
                 <div style="display: flex; justify-content: space-between;">
                   <span style="color: #64748b; font-size: 9.5px;">Official Receipt No.:</span>
@@ -2113,7 +2194,7 @@
                 </div>
                 <div style="display: flex; justify-content: space-between;">
                   <span style="color: #64748b; font-size: 9.5px;">Amount Paid:</span>
-                  <span class="mono-num" id="tc-doc-or-amount" style="font-weight: 600; color: #047857;">PHP 1,318,680.00</span>
+                  <span class="mono-num" id="tc-doc-or-amount" style="font-weight: 600; color: #000000;">PHP 1,318,680.00</span>
                 </div>
                 <div style="display: flex; justify-content: space-between;">
                   <span style="color: #64748b; font-size: 9.5px;">Period Covered:</span>
@@ -2124,7 +2205,7 @@
 
             <!-- Statutory Clearance Fee & Documentary Stamp Card -->
             <div class="td-grid-box" style="padding: 8px 10px; margin-bottom: 0;">
-              <span class="td-label" style="color: #065f46;">LEGAL FEES & DOCUMENTARY STAMP:</span>
+              <span class="td-label" style="color: #333333;">LEGAL FEES & DOCUMENTARY STAMP:</span>
               <div style="margin-top: 4px; display: flex; flex-direction: column; gap: 2px;">
                 <div style="display: flex; justify-content: space-between;">
                   <span style="color: #64748b; font-size: 9.5px;">Clearance Certification Fee:</span>
@@ -2140,7 +2221,7 @@
                 </div>
                 <div style="display: flex; justify-content: space-between;">
                   <span style="color: #64748b; font-size: 9.5px;">Total Fees Collected:</span>
-                  <span class="mono-num" style="font-weight: 600; color: #047857;">PHP 180.00</span>
+                  <span class="mono-num" style="font-weight: 600; color: #000000;">PHP 180.00</span>
                 </div>
               </div>
             </div>
@@ -2216,7 +2297,7 @@
       <div class="conflicts-kpi-grid">
         <div class="conflicts-kpi-card">
           <span class="conflicts-kpi-label">CADASTRE TOPOLOGY HEALTH</span>
-          <div class="conflicts-kpi-val" id="conflicts-kpi-health" style="color: #34d399;">100.0%</div>
+          <div class="conflicts-kpi-val" id="conflicts-kpi-health" style="color: #ffffff;">100.0%</div>
           <span class="conflicts-kpi-sub">Clean lot boundaries</span>
         </div>
         <div class="conflicts-kpi-card">
@@ -2226,7 +2307,7 @@
         </div>
         <div class="conflicts-kpi-card">
           <span class="conflicts-kpi-label">OVERLAP DISPUTES</span>
-          <div class="conflicts-kpi-val mono-num" id="conflicts-kpi-count" style="color: #34d399;">0</div>
+          <div class="conflicts-kpi-val mono-num" id="conflicts-kpi-count" style="color: #ffffff;">0</div>
           <span class="conflicts-kpi-sub">Double-titling conflicts</span>
         </div>
         <div class="conflicts-kpi-card">
@@ -2260,7 +2341,7 @@
         <!-- Clean State (Default) -->
         <div id="conflicts-empty-state" class="conflicts-clean-state">
           <div class="conflicts-clean-icon">
-            <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="#34d399" stroke-width="2">
+            <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="#ffffff" stroke-width="2">
               <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path>
               <polyline points="22 4 12 14.01 9 11.01"></polyline>
             </svg>
@@ -2295,6 +2376,810 @@
     </div>
   </div>
 
+  <!-- ====================================================================
+       TRANSFER OF OWNERSHIP FORM MODAL (DEED OF SALE / CONVEYANCE)
+       ==================================================================== -->
+  <div class="custom-modal-overlay" id="modal-transfer-ownership" style="display: none;">
+    <div class="custom-modal-card" style="max-width: 720px;">
+      <div class="custom-modal-header">
+        <div class="eyebrow-mono">
+          <span class="eyebrow-indicator"></span>
+          <span>[ TRANSFER OF OWNERSHIP // DEED OF CONVEYANCE ]</span>
+        </div>
+        <button type="button" class="workbench-close-btn" id="btn-close-transfer-modal" title="Close">&times;</button>
+      </div>
+      <form id="form-transfer-ownership">
+        <div class="custom-modal-body" style="max-height: 65vh; overflow-y: auto; padding: 16px 20px;">
+          
+          <!-- Current Parcel Info (Read-Only) -->
+          <div style="background: rgba(255,255,255,0.04); border: 1px solid var(--colors-hairline); border-radius: 6px; padding: 10px 14px; margin-bottom: 14px;">
+            <div class="eyebrow-mono" style="font-size: 9px; margin-bottom: 6px;">CURRENT PARCEL RECORD</div>
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 6px 16px; font-size: 12px;">
+              <div><span style="color: #94a3b8;">PIN:</span> <span id="xfer-cur-pin" class="mono-num" style="color: var(--colors-ink);">—</span></div>
+              <div><span style="color: #94a3b8;">TD No.:</span> <span id="xfer-cur-td" class="mono-num" style="color: var(--colors-ink);">—</span></div>
+              <div><span style="color: #94a3b8;">Owner:</span> <span id="xfer-cur-owner" style="color: var(--colors-ink); font-weight: 500;">—</span></div>
+              <div><span style="color: #94a3b8;">Status:</span> <span id="xfer-cur-status" style="color: var(--colors-ink);">—</span></div>
+            </div>
+          </div>
+
+          <!-- Section: New Owner -->
+          <div class="eyebrow-mono" style="font-size: 9px; margin-bottom: 8px; color: #ffffff;">NEW DECLARED OWNER / TRANSFEREE</div>
+          <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 14px;">
+            <div style="grid-column: 1 / -1;">
+              <label class="form-label-sm">Full Name of New Owner *</label>
+              <input type="text" id="xfer-new-owner" class="form-input-dark" placeholder="e.g. Juan D. Cruz" required />
+            </div>
+            <div style="grid-column: 1 / -1;">
+              <label class="form-label-sm">Mailing Address</label>
+              <input type="text" id="xfer-new-address" class="form-input-dark" placeholder="e.g. Brgy. San Antonio, Ilagan City, Isabela" />
+            </div>
+            <div>
+              <label class="form-label-sm">TIN (Tax Identification No.)</label>
+              <input type="text" id="xfer-new-tin" class="form-input-dark" placeholder="e.g. 123-456-789-000" />
+            </div>
+          </div>
+
+          <!-- Section: Deed / Instrument -->
+          <div class="eyebrow-mono" style="font-size: 9px; margin-bottom: 8px; color: #ffffff;">DEED / INSTRUMENT OF CONVEYANCE</div>
+          <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 14px;">
+            <div>
+              <label class="form-label-sm">Type of Deed</label>
+              <select id="xfer-deed-type" class="form-input-dark">
+                <option value="Deed of Absolute Sale">Deed of Absolute Sale</option>
+                <option value="Deed of Donation">Deed of Donation</option>
+                <option value="Extrajudicial Settlement">Extrajudicial Settlement</option>
+                <option value="Judicial Partition">Judicial Partition</option>
+                <option value="Deed of Exchange">Deed of Exchange</option>
+                <option value="Consolidation of Title">Consolidation of Title</option>
+                <option value="Other">Other</option>
+              </select>
+            </div>
+            <div>
+              <label class="form-label-sm">Deed / Document No.</label>
+              <input type="text" id="xfer-deed-no" class="form-input-dark" placeholder="e.g. DS-2026-00145" />
+            </div>
+            <div>
+              <label class="form-label-sm">Date of Deed</label>
+              <input type="date" id="xfer-deed-date" class="form-input-dark" />
+            </div>
+          </div>
+
+          <!-- Section: Registry of Deeds -->
+          <div class="eyebrow-mono" style="font-size: 9px; margin-bottom: 8px; color: #a78bfa;">REGISTRY OF DEEDS / LRA TITLE</div>
+          <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 14px;">
+            <div>
+              <label class="form-label-sm">Registry of Deeds</label>
+              <input type="text" id="xfer-registry" class="form-input-dark" placeholder="e.g. RD Ilagan City" />
+            </div>
+            <div>
+              <label class="form-label-sm">TCT / OCT No.</label>
+              <input type="text" id="xfer-tct-oct" class="form-input-dark" placeholder="e.g. TCT-T-123456" />
+            </div>
+            <div>
+              <label class="form-label-sm">Date of Inscription</label>
+              <input type="date" id="xfer-inscription-date" class="form-input-dark" />
+            </div>
+          </div>
+
+          <!-- Section: BIR CAR -->
+          <div class="eyebrow-mono" style="font-size: 9px; margin-bottom: 8px; color: #fb923c;">BIR CERTIFICATE AUTHORIZING REGISTRATION</div>
+          <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 14px;">
+            <div>
+              <label class="form-label-sm">CAR / eCAR No.</label>
+              <input type="text" id="xfer-car-no" class="form-input-dark" placeholder="e.g. eCAR-2026-0891245" />
+            </div>
+            <div>
+              <label class="form-label-sm">CAR Date</label>
+              <input type="date" id="xfer-car-date" class="form-input-dark" />
+            </div>
+          </div>
+
+          <!-- Section: Transfer Tax -->
+          <div class="eyebrow-mono" style="font-size: 9px; margin-bottom: 8px; color: #f472b6;">PROVINCIAL TRANSFER TAX</div>
+          <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 10px; margin-bottom: 8px;">
+            <div>
+              <label class="form-label-sm">O.R. No.</label>
+              <input type="text" id="xfer-tax-or" class="form-input-dark" placeholder="e.g. OR-2026-PGI-04521" />
+            </div>
+            <div>
+              <label class="form-label-sm">Amount Paid (PHP)</label>
+              <input type="number" id="xfer-tax-amount" class="form-input-dark" step="0.01" placeholder="0.00" />
+            </div>
+            <div>
+              <label class="form-label-sm">Date Paid</label>
+              <input type="date" id="xfer-tax-date" class="form-input-dark" />
+            </div>
+          </div>
+
+        </div>
+        <div class="custom-modal-footer">
+          <button type="button" id="btn-cancel-transfer" class="btn button-outline-sm">Cancel</button>
+          <button type="submit" id="btn-execute-transfer" class="btn button-primary" style="display: flex; align-items: center; gap: 6px;">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
+              <path d="M16 3h5v5"></path><path d="M8 21H3v-5"></path>
+              <line x1="21" y1="3" x2="14" y2="10"></line>
+              <line x1="3" y1="21" x2="10" y2="14"></line>
+            </svg>
+            <span>Execute Transfer</span>
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- ====================================================================
+       OFFICIAL CERTIFICATE OF TRANSFER OF OWNERSHIP MODAL & PRINT ENGINE
+       ==================================================================== -->
+  <div class="td-modal-overlay" id="modal-transfer-certificate" style="display: none;">
+    <div class="td-modal-card">
+      <div class="td-modal-action-bar no-print">
+        <div style="display: flex; align-items: center; gap: 8px;">
+          <div class="eyebrow-mono">
+            <span class="eyebrow-indicator" style="background-color: #ffffff;"></span>
+            <span style="color: #ffffff;">[ CERTIFICATE OF TRANSFER OF OWNERSHIP ]</span>
+          </div>
+        </div>
+        <div style="display: flex; align-items: center; gap: 10px;">
+          <button type="button" id="btn-print-transfer" class="btn button-primary" style="display: flex; align-items: center; gap: 6px; padding: 7px 16px; background-color: #ffffff; color: #0a0a0a; border-color: #ffffff; font-weight: 600;">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
+              <polyline points="6 9 6 2 18 2 18 9"></polyline>
+              <path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"></path>
+              <rect x="6" y="14" width="12" height="8"></rect>
+            </svg>
+            <span>Print Certificate</span>
+          </button>
+          <button type="button" id="btn-view-history" class="btn button-outline-sm" style="display: flex; align-items: center; gap: 6px;">
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
+              <circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 16 14"></polyline>
+            </svg>
+            <span>Ownership History</span>
+          </button>
+          <button type="button" class="workbench-close-btn" id="btn-close-transfer-cert" title="Close">&times;</button>
+        </div>
+      </div>
+
+      <div class="td-document-scroll-wrapper">
+        <div class="tax-declaration-document" id="transfer-certificate-document">
+          <div class="td-watermark-seal"><img src="/static/img/isabela_logo.png" alt="Seal" /></div>
+
+          <div class="td-doc-header">
+            <img src="/static/img/isabela_logo.png" class="td-doc-logo" alt="Province of Isabela Seal" />
+            <div class="td-doc-titles">
+              <div class="td-republic-text">REPUBLIC OF THE PHILIPPINES</div>
+              <div class="td-province-text">PROVINCE OF ISABELA</div>
+              <div class="td-lgu-text" id="xfer-cert-lgu">CITY OF ILAGAN</div>
+              <div class="td-office-text">OFFICE OF THE PROVINCIAL ASSESSOR</div>
+              <div class="td-main-title" style="color: #000000;">CERTIFICATE OF TRANSFER OF OWNERSHIP</div>
+              <div style="font-size: 9px; color: #666; letter-spacing: 1px;">ISSUED PURSUANT TO SECTION 224 OF R.A. 7160 (LOCAL GOVERNMENT CODE OF 1991)</div>
+            </div>
+            <img src="/static/img/isabela_logo.png" class="td-doc-logo" alt="Provincial Assessor Seal" />
+          </div>
+
+          <!-- Reference Bar -->
+          <div class="td-grid-box td-numbering-box">
+            <div class="td-box-col">
+              <span class="td-label">TRANSFER REFERENCE NO.:</span>
+              <span class="td-val mono-num" style="color: #000000; font-weight: 700;" id="xfer-cert-ref">TOT-2026-03215-000001</span>
+            </div>
+            <div class="td-box-col">
+              <span class="td-label">DATE ISSUED:</span>
+              <span class="td-val" id="xfer-cert-date">September 8, 2026</span>
+            </div>
+            <div class="td-box-col">
+              <span class="td-label">PIN:</span>
+              <span class="td-val mono-num" id="xfer-cert-pin">032-15-0001-039-11</span>
+            </div>
+          </div>
+
+          <!-- TD Succession -->
+          <div class="td-grid-box td-info-box">
+            <div class="td-row-2">
+              <div style="background: rgba(239,68,68,0.06); border: 1px solid rgba(239,68,68,0.2); border-radius: 4px; padding: 8px 10px;">
+                <span class="td-label" style="color: #000000;">CANCELLED TAX DECLARATION:</span>
+                <div class="td-val-bold mono-num" style="color: #555555; text-decoration: line-through;" id="xfer-cert-old-td">TD-2026-03215-00891</div>
+                <div class="td-val" style="font-size: 10px; margin-top: 2px;">Former Owner: <strong id="xfer-cert-old-owner">Provincial Government of Isabela</strong></div>
+                <div class="td-val" style="font-size: 10px;" id="xfer-cert-old-address">Capitol Compound, Ilagan City</div>
+              </div>
+              <div style="background: rgba(16,185,129,0.06); border: 1px solid rgba(16,185,129,0.2); border-radius: 4px; padding: 8px 10px;">
+                <span class="td-label" style="color: #000000;">NEW TAX DECLARATION ISSUED:</span>
+                <div class="td-val-bold mono-num" style="color: #000000;" id="xfer-cert-new-td">TD-2026-03215-TR002</div>
+                <div class="td-val" style="font-size: 10px; margin-top: 2px;">New Owner: <strong id="xfer-cert-new-owner">Juan D. Cruz</strong></div>
+                <div class="td-val" style="font-size: 10px;" id="xfer-cert-new-address">Brgy. San Antonio, Ilagan City</div>
+                <div class="td-val mono-num" style="font-size: 10px;" id="xfer-cert-new-tin">TIN: 123-456-789-000</div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Cadastral Identification -->
+          <div class="td-grid-box td-info-box" style="margin-top: 8px;">
+            <div class="td-row-4">
+              <div><span class="td-label">LOT NO.:</span><div class="td-val mono-num" id="xfer-cert-lot">Lot 39-11</div></div>
+              <div><span class="td-label">BLOCK:</span><div class="td-val mono-num" id="xfer-cert-block">Blk 03</div></div>
+              <div><span class="td-label">SECTION:</span><div class="td-val mono-num" id="xfer-cert-section">014-A</div></div>
+              <div><span class="td-label">SURVEY:</span><div class="td-val mono-num" id="xfer-cert-survey">Cad 211</div></div>
+            </div>
+            <div class="td-row-4" style="margin-top: 6px;">
+              <div><span class="td-label">CLASSIFICATION:</span><div class="td-val" id="xfer-cert-class">Agricultural</div></div>
+              <div><span class="td-label">ACTUAL USE:</span><div class="td-val" id="xfer-cert-use">Rice Paddy / Farm</div></div>
+              <div><span class="td-label">AREA:</span><div class="td-val mono-num" id="xfer-cert-area">5,200.00 sq.m.</div></div>
+              <div><span class="td-label">ASSESSED VALUE:</span><div class="td-val mono-num" id="xfer-cert-av">PHP 1,040,000.00</div></div>
+            </div>
+          </div>
+
+          <!-- Deed & Legal Reference Table -->
+          <div class="td-section-title" style="margin-top: 10px;">DEED OF CONVEYANCE & LEGAL REFERENCE DETAILS</div>
+          <table class="td-table">
+            <tbody>
+              <tr><td style="width: 200px; font-weight: 600;">Type of Instrument</td><td id="xfer-cert-deed-type">Deed of Absolute Sale</td></tr>
+              <tr><td style="font-weight: 600;">Document / Deed No.</td><td class="mono-num" id="xfer-cert-deed-no">DS-2026-00145</td></tr>
+              <tr><td style="font-weight: 600;">Date of Instrument</td><td id="xfer-cert-deed-date">August 15, 2026</td></tr>
+              <tr><td style="font-weight: 600;">Registry of Deeds</td><td id="xfer-cert-registry">RD Ilagan City</td></tr>
+              <tr><td style="font-weight: 600;">TCT / OCT No.</td><td class="mono-num" id="xfer-cert-tct">TCT-T-123456</td></tr>
+              <tr><td style="font-weight: 600;">Date of Inscription</td><td id="xfer-cert-inscr-date">August 20, 2026</td></tr>
+              <tr><td style="font-weight: 600;">BIR CAR / eCAR No.</td><td class="mono-num" id="xfer-cert-car">eCAR-2026-0891245</td></tr>
+              <tr><td style="font-weight: 600;">CAR Date</td><td id="xfer-cert-car-date">August 18, 2026</td></tr>
+              <tr><td style="font-weight: 600;">Transfer Tax O.R. No.</td><td class="mono-num" id="xfer-cert-tax-or">OR-2026-PGI-04521</td></tr>
+              <tr><td style="font-weight: 600;">Transfer Tax Amount</td><td class="mono-num" id="xfer-cert-tax-amt">PHP 15,000.00</td></tr>
+            </tbody>
+          </table>
+
+          <!-- Memoranda -->
+          <div class="td-grid-box td-memo-box" style="margin-top: 8px;">
+            <div style="font-size: 10px; color: #444; line-height: 1.35;">
+              <strong>MEMORANDA:</strong> This Certificate of Transfer is issued pursuant to Section 224 of Republic Act No. 7160. The previous Tax Declaration has been cancelled and a new Tax Declaration has been issued in the name of the transferee. This transfer is for real property tax assessment purposes only and does not vest, confirm, or defeat legal ownership of title. The property assessment values remain unchanged pending the next General Revision cycle.
+            </div>
+          </div>
+
+          <!-- Dual Signatures -->
+          <div class="td-signatures-row">
+            <div class="td-sign-col">
+              <div class="td-sign-role">Processed & Recorded By:</div>
+              <div class="td-sign-space"></div>
+              <div class="td-sign-name" id="xfer-cert-officer">ELENA M. CASTILLO</div>
+              <div class="td-sign-sub">Records Officer / Assessment Clerk</div>
+              <div class="td-sign-badge" id="xfer-cert-officer-badge">Badge No. PGI-REC-005</div>
+            </div>
+            <div class="td-sign-col">
+              <div class="td-sign-role">Approved By:</div>
+              <div class="td-sign-space"></div>
+              <div class="td-sign-name" id="xfer-cert-assessor">ATTY. RODOLFO V. RAMOS, REA, REB</div>
+              <div class="td-sign-sub">Provincial Assessor</div>
+              <div class="td-sign-badge">Badge No. PGI-ASR-001</div>
+            </div>
+          </div>
+
+          <div class="td-doc-footer-meta">
+            <span>OFFICE OF THE PROVINCIAL ASSESSOR · PROVINCIAL CAPITOL, CITY OF ILAGAN, ISABELA</span>
+            <span>SYSTEM-GENERATED CERTIFICATE OF TRANSFER · TM-RPAIS 2026</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ====================================================================
+       OWNERSHIP HISTORY / CHAIN OF TITLE TIMELINE MODAL
+       ==================================================================== -->
+  <div class="custom-modal-overlay" id="modal-ownership-history" style="display: none;">
+    <div class="custom-modal-card modal-lg">
+      <div class="custom-modal-header">
+        <div class="eyebrow-mono">
+          <span class="eyebrow-indicator"></span>
+          <span>[ CHAIN OF OWNERSHIP // TITLE LINEAGE ]</span>
+        </div>
+        <button type="button" class="workbench-close-btn" id="btn-close-history-modal" title="Close">&times;</button>
+      </div>
+      <div class="custom-modal-body" style="padding: 16px 20px; max-height: 65vh; overflow-y: auto;">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px;">
+          <div>
+            <div style="font-size: 14px; font-weight: 500; color: var(--colors-ink);" id="history-parcel-title">PIN: 032-15-0001-039-11</div>
+            <div style="font-size: 11px; color: #94a3b8; font-family: var(--font-mono);" id="history-parcel-lot">Lot 39-11 · Cad 211</div>
+          </div>
+          <div style="font-size: 11px; color: #94a3b8; font-family: var(--font-mono);" id="history-count">2 Records</div>
+        </div>
+        <div class="ownership-timeline" id="ownership-timeline-container">
+          <!-- Dynamically populated -->
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ====================================================================
+       LAND RECLASSIFICATION & GENERAL REVISION (GR) ADJUSTMENT MODAL
+       REPUBLIC ACT NO. 7160 SECTION 219 - 224
+       ==================================================================== -->
+  <div class="custom-modal-overlay" id="modal-reclassify-parcel" style="display: none;">
+    <div class="custom-modal-card" style="max-width: 740px;">
+      <div class="custom-modal-header">
+        <div class="eyebrow-mono">
+          <span class="eyebrow-indicator" style="background-color: #ffffff;"></span>
+          <span style="color: #ffffff;">[ R.A. 7160 // LAND RECLASSIFICATION & ASSESSMENT ADJUSTMENT ]</span>
+        </div>
+        <button type="button" class="workbench-close-btn" id="btn-close-reclass-modal" title="Close">&times;</button>
+      </div>
+      <form id="form-reclassify-parcel">
+        <div class="custom-modal-body" style="max-height: 68vh; overflow-y: auto; padding: 16px 20px;">
+          
+          <!-- Current Parcel Record Strip -->
+          <div style="background: rgba(255,255,255,0.03); border: 1px solid var(--colors-hairline); border-radius: 6px; padding: 10px 14px; margin-bottom: 14px;">
+            <div class="eyebrow-mono" style="font-size: 9px; margin-bottom: 6px; color: #94a3b8;">ACTIVE CADASTRAL RECORD</div>
+            <div style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 6px 14px; font-size: 11.5px;">
+              <div><span style="color: #64748b;">PIN:</span> <span id="reclass-cur-pin" class="mono-num" style="color: var(--colors-ink); font-weight: 500;">—</span></div>
+              <div><span style="color: #64748b;">Lot:</span> <span id="reclass-cur-lot" class="mono-num" style="color: var(--colors-ink);">—</span></div>
+              <div><span style="color: #64748b;">Area:</span> <span id="reclass-cur-area" class="mono-num" style="color: var(--colors-ink);">—</span></div>
+              <div><span style="color: #64748b;">Current Class:</span> <span id="reclass-cur-class" style="color: var(--colors-ink); font-weight: 600;">—</span></div>
+            </div>
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 6px 14px; font-size: 11.5px; margin-top: 6px;">
+              <div><span style="color: #64748b;">Declared Owner:</span> <span id="reclass-cur-owner" style="color: var(--colors-ink);">—</span></div>
+              <div><span style="color: #64748b;">Current Annual Tax:</span> <span id="reclass-cur-tax" class="mono-num" style="color: #ffffff; font-weight: 600;">—</span></div>
+            </div>
+          </div>
+
+          <!-- Section: Target Reclassification & Benchmark SMV -->
+          <div class="eyebrow-mono" style="font-size: 9px; margin-bottom: 8px; color: #ffffff;">NEW LAND CLASSIFICATION & BENCHMARK SMV</div>
+          <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 12px;">
+            <div>
+              <label class="form-label-sm">Target Classification *</label>
+              <select id="reclass-new-class" class="form-input-dark" required>
+                <option value="Residential">Residential (20% Assessment Level)</option>
+                <option value="Commercial">Commercial (50% Assessment Level)</option>
+                <option value="Industrial">Industrial (50% Assessment Level)</option>
+                <option value="Agricultural">Agricultural (40% Assessment Level)</option>
+                <option value="Institutional">Institutional (50% Assessment Level)</option>
+                <option value="Special">Special (10% Assessment Level)</option>
+              </select>
+            </div>
+            <div>
+              <label class="form-label-sm">Specific Actual Land Use *</label>
+              <input type="text" id="reclass-new-use" class="form-input-dark" placeholder="e.g. Commercial Grain Retail & Storage" required />
+            </div>
+          </div>
+
+          <!-- SMV Quick Preset Chips -->
+          <div style="margin-bottom: 14px;">
+            <label class="form-label-sm" style="display: flex; justify-content: space-between;">
+              <span>Schedule of Market Values (SMV) Presets</span>
+              <span style="color: #64748b; font-size: 9px;">Provincial Ordinance Benchmark</span>
+            </label>
+            <div id="reclass-smv-presets" class="smv-preset-row">
+              <!-- Dynamically populated from SMV rates -->
+            </div>
+          </div>
+
+          <!-- Unit Value and Assessment Level Inputs -->
+          <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 16px;">
+            <div>
+              <label class="form-label-sm">Base Unit Value (PHP / sq.m.) *</label>
+              <input type="number" id="reclass-unit-value" class="form-input-dark" step="0.01" min="1" placeholder="e.g. 7500.00" required />
+            </div>
+            <div>
+              <label class="form-label-sm">Assessment Level (%) *</label>
+              <input type="number" id="reclass-assessment-level" class="form-input-dark" step="0.1" min="1" max="100" placeholder="e.g. 50" required />
+            </div>
+          </div>
+
+          <!-- LIVE COMPARATIVE TELEMETRY CARD (Reactive Real-Time Preview) -->
+          <div class="reclass-preview-box">
+            <div class="eyebrow-mono" style="font-size: 9.5px; color: #cbd5e1; margin-bottom: 8px; display: flex; justify-content: space-between; align-items: center;">
+              <span>⚡ LIVE RE-ASSESSMENT IMPACT TELEMETRY</span>
+              <span class="mono-num" id="reclass-variance-badge" style="padding: 2px 8px; border-radius: 4px; font-size: 9px; font-weight: 700;">CALCULATING...</span>
+            </div>
+            <div class="reclass-preview-grid">
+              <div class="reclass-stat-cell">
+                <div class="reclass-stat-label">Market Value (MV)</div>
+                <div class="reclass-stat-old" id="prev-mv-old">PHP 0.00</div>
+                <div class="reclass-stat-new" id="prev-mv-new">PHP 0.00</div>
+                <div class="reclass-stat-diff" id="prev-mv-diff">+PHP 0.00</div>
+              </div>
+              <div class="reclass-stat-cell">
+                <div class="reclass-stat-label">Assessment Level</div>
+                <div class="reclass-stat-old" id="prev-lvl-old">0%</div>
+                <div class="reclass-stat-new" id="prev-lvl-new">0%</div>
+                <div class="reclass-stat-diff" id="prev-lvl-diff">0%</div>
+              </div>
+              <div class="reclass-stat-cell">
+                <div class="reclass-stat-label">Assessed Value (AV)</div>
+                <div class="reclass-stat-old" id="prev-av-old">PHP 0.00</div>
+                <div class="reclass-stat-new" id="prev-av-new">PHP 0.00</div>
+                <div class="reclass-stat-diff" id="prev-av-diff">+PHP 0.00</div>
+              </div>
+              <div class="reclass-stat-cell highlight">
+                <div class="reclass-stat-label">Annual Tax Due (3%)</div>
+                <div class="reclass-stat-old" id="prev-tax-old">PHP 0.00</div>
+                <div class="reclass-stat-new" id="prev-tax-new">PHP 0.00</div>
+                <div class="reclass-stat-diff" id="prev-tax-diff">+PHP 0.00 (+0.0%)</div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Section: Justification & Authority -->
+          <div class="eyebrow-mono" style="font-size: 9px; margin-top: 14px; margin-bottom: 8px; color: #e2e8f0;">LEGAL AUTHORITY & RE-ASSESSMENT JUSTIFICATION</div>
+          <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
+            <div>
+              <label class="form-label-sm">Reason for Reassessment</label>
+              <select id="reclass-reason" class="form-input-dark">
+                <option value="Land Use Reclassification / Zoning Conversion">Land Use Reclassification / Zoning Conversion</option>
+                <option value="General Revision of Property Assessments (R.A. 7160 Sec. 219)">General Revision of Property Assessments (R.A. 7160 Sec. 219)</option>
+                <option value="Physical Change / Commercial Site Development">Physical Change / Commercial Site Development</option>
+                <option value="Correction of Assessment / Value Adjustment">Correction of Assessment / Value Adjustment</option>
+                <option value="Sangguniang Resolution / Comprehensive Land Use Plan (CLUP)">Sangguniang Resolution / CLUP Enactment</option>
+              </select>
+            </div>
+            <div>
+              <label class="form-label-sm">Enabling Provincial Ordinance</label>
+              <input type="text" id="reclass-ordinance" class="form-input-dark" value="Sangguniang Panlalawigan Ordinance No. 2026-04 (General Revision SMV)" />
+            </div>
+          </div>
+
+        </div>
+        <div class="custom-modal-footer">
+          <button type="button" id="btn-cancel-reclass" class="btn button-outline-sm">Cancel</button>
+          <button type="submit" id="btn-execute-reclass" class="btn button-primary" style="display: flex; align-items: center; gap: 6px; background-color: #ffffff; color: #0a0a0a; border-color: #ffffff; font-weight: 600;">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
+              <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
+              <polyline points="14 2 14 8 20 8"></polyline>
+              <line x1="16" y1="13" x2="8" y2="13"></line>
+              <line x1="16" y1="17" x2="8" y2="17"></line>
+            </svg>
+            <span>Apply Reclassification & Issue Notice</span>
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- ====================================================================
+       OFFICIAL NOTICE OF ASSESSMENT / GENERAL REVISION MODAL & PRINT ENGINE
+       REPUBLIC ACT NO. 7160 SECTION 223
+       ==================================================================== -->
+  <div class="td-modal-overlay" id="modal-notice-of-assessment" style="display: none;">
+    <div class="td-modal-card">
+      
+      <!-- Top Action Bar (Hidden in Print) -->
+      <div class="td-modal-action-bar no-print">
+        <div style="display: flex; align-items: center; gap: 8px;">
+          <div class="eyebrow-mono">
+            <span class="eyebrow-indicator" style="background-color: #ffffff;"></span>
+            <span style="color: #ffffff;">[ R.A. 7160 SEC. 223 // NOTICE OF ASSESSMENT REVISION ]</span>
+          </div>
+        </div>
+        <div style="display: flex; align-items: center; gap: 10px;">
+          <button type="button" id="btn-print-notice-assessment" class="btn button-primary" style="display: flex; align-items: center; gap: 6px; padding: 7px 16px; background-color: #ffffff; color: #0a0a0a; border-color: #ffffff; font-weight: 600;">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
+              <polyline points="6 9 6 2 18 2 18 9"></polyline>
+              <path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"></path>
+              <rect x="6" y="14" width="12" height="8"></rect>
+            </svg>
+            <span>Print Official Notice</span>
+          </button>
+          <button type="button" class="workbench-close-btn" id="btn-close-notice-modal" title="Close">&times;</button>
+        </div>
+      </div>
+
+      <!-- Printable Official Document Body -->
+      <div class="td-document-scroll-wrapper">
+        <div class="tax-declaration-document" id="notice-assessment-document">
+          <div class="td-watermark-seal"><img src="/static/img/isabela_logo.png" alt="Seal" /></div>
+
+          <!-- Document Header -->
+          <div class="td-doc-header">
+            <img src="/static/img/isabela_logo.png" class="td-doc-logo" alt="Province of Isabela Seal" />
+            <div class="td-doc-titles">
+              <div class="td-republic-text">REPUBLIC OF THE PHILIPPINES</div>
+              <div class="td-province-text">PROVINCE OF ISABELA</div>
+              <div class="td-lgu-text" id="nar-doc-lgu">CITY OF ILAGAN</div>
+              <div class="td-office-text">OFFICE OF THE PROVINCIAL ASSESSOR</div>
+              <div class="td-main-title" style="color: #000000;">NOTICE OF ASSESSMENT OF REAL PROPERTY</div>
+              <div style="font-size: 9px; color: #555; letter-spacing: 0.5px;">ISSUED PURSUANT TO SECTION 223 OF REPUBLIC ACT NO. 7160 (LOCAL GOVERNMENT CODE OF 1991)</div>
+            </div>
+            <img src="/static/img/isabela_logo.png" class="td-doc-logo" alt="Provincial Assessor Seal" />
+          </div>
+
+          <!-- Reference Bar -->
+          <div class="td-grid-box td-numbering-box">
+            <div class="td-box-col">
+              <span class="td-label">NOTICE OF ASSESSMENT NO.:</span>
+              <span class="td-val mono-num" style="color: #000000; font-weight: 700;" id="nar-doc-no">NAR-2026-03215-000101</span>
+            </div>
+            <div class="td-box-col">
+              <span class="td-label">DATE ISSUED:</span>
+              <span class="td-val" id="nar-doc-date">September 8, 2026</span>
+            </div>
+            <div class="td-box-col">
+              <span class="td-label">EFFECTIVITY CYCLE:</span>
+              <span class="td-val mono-num" id="nar-doc-effectivity">1st Quarter, 2026 (GR-2026)</span>
+            </div>
+          </div>
+
+          <!-- Taxpayer / Cadastral Identification -->
+          <div class="td-grid-box td-info-box">
+            <div class="td-row-2">
+              <div>
+                <span class="td-label">TO PROPERTY OWNER / ADMINISTRATOR:</span>
+                <div class="td-val-bold" id="nar-doc-owner">North Luzon Agro-Commercial Corp.</div>
+                <div class="td-val" style="font-size: 11px;" id="nar-doc-address">Maharlika Highway, Ilagan City, Isabela</div>
+              </div>
+              <div>
+                <span class="td-label">CADASTRAL LOT IDENTIFICATION:</span>
+                <div class="td-val mono-num" id="nar-doc-cadastral">Lot 44-05, Blk 08, Cad 211</div>
+                <div class="td-val mono-num" style="font-size: 11px;">PIN: <strong id="nar-doc-pin">032-15-0001-044-05</strong></div>
+                <div class="td-val mono-num" style="font-size: 11px;">NEW TD NO: <strong id="nar-doc-td">TD-2026-03215-00891-R01</strong></div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Statutory Appraisal & Assessment Comparative Schedule -->
+          <div class="td-section-title" style="margin-top: 10px;">COMPARATIVE SCHEDULE OF REAL PROPERTY RE-ASSESSMENT</div>
+          <table class="td-table">
+            <thead>
+              <tr>
+                <th>Assessment Metric</th>
+                <th>Prior Assessment</th>
+                <th>Revised Assessment</th>
+                <th>Incremental Variance (Δ)</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td style="font-weight: 600;">Land Classification</td>
+                <td id="nar-comp-class-old">Agricultural</td>
+                <td class="td-bold" style="color: #000000;" id="nar-comp-class-new">Commercial</td>
+                <td id="nar-comp-class-diff">Reclassified</td>
+              </tr>
+              <tr>
+                <td style="font-weight: 600;">Actual Use</td>
+                <td id="nar-comp-use-old">Rice Paddy / Farm</td>
+                <td class="td-bold" id="nar-comp-use-new">Commercial Grain Storage Hub</td>
+                <td>—</td>
+              </tr>
+              <tr>
+                <td style="font-weight: 600;">Base Unit Value (PHP/sq.m.)</td>
+                <td class="mono-num" id="nar-comp-unit-old">250.00</td>
+                <td class="mono-num td-bold" id="nar-comp-unit-new">7,500.00</td>
+                <td class="mono-num" style="color: #000000;" id="nar-comp-unit-diff">+7,250.00</td>
+              </tr>
+              <tr>
+                <td style="font-weight: 600;">Total Market Value (PHP)</td>
+                <td class="mono-num" id="nar-comp-mv-old">1,300,000.00</td>
+                <td class="mono-num td-bold" id="nar-comp-mv-new">39,000,000.00</td>
+                <td class="mono-num" style="color: #000000;" id="nar-comp-mv-diff">+37,700,000.00</td>
+              </tr>
+              <tr>
+                <td style="font-weight: 600;">Assessment Level</td>
+                <td class="mono-num" id="nar-comp-lvl-old">40%</td>
+                <td class="mono-num td-bold" id="nar-comp-lvl-new">50%</td>
+                <td class="mono-num" id="nar-comp-lvl-diff">+10%</td>
+              </tr>
+              <tr>
+                <td style="font-weight: 600;">Assessed Value (PHP)</td>
+                <td class="mono-num" id="nar-comp-av-old">520,000.00</td>
+                <td class="mono-num td-bold" id="nar-comp-av-new">19,500,000.00</td>
+                <td class="mono-num td-bold" style="color: #000000;" id="nar-comp-av-diff">+18,980,000.00</td>
+              </tr>
+              <tr style="background: rgba(2,132,199,0.05);">
+                <td style="font-weight: 700;">Annual Real Property Tax (3%)</td>
+                <td class="mono-num" id="nar-comp-tax-old">PHP 15,600.00</td>
+                <td class="mono-num td-bold td-tax-accent" id="nar-comp-tax-new">PHP 585,000.00</td>
+                <td class="mono-num td-bold" style="color: #000000;" id="nar-comp-tax-diff">+PHP 569,400.00 (+3650%)</td>
+              </tr>
+            </tbody>
+          </table>
+
+          <!-- Legal Authority & Statutory Appeal Notice -->
+          <div class="td-grid-box td-memo-box" style="margin-top: 8px;">
+            <div><strong>STATUTORY AUTHORITY:</strong> Issued pursuant to Sangguniang Panlalawigan General Revision SMV Ordinance No. 2026-04 and Sections 219, 223, and 224 of R.A. 7160.</div>
+            <div style="font-size: 10.5px; color: #333; margin-top: 5px; line-height: 1.4;">
+              <strong>NOTICE OF STATUTORY RIGHT TO APPEAL (SECTION 226, R.A. 7160):</strong> You are hereby officially notified of the revised real property appraisal and assessment schedule indicated above. If you are not satisfied with the assessment made by this Office, you may, within <strong>SIXTY (60) DAYS</strong> from the date of receipt of this notice, appeal in writing to the <strong>Local Board of Assessment Appeals (LBAA)</strong> of the Province of Isabela, by filing a petition under oath in the form prescribed by law, together with copies of the tax declaration and such affidavits or documents in support of the appeal.
+            </div>
+          </div>
+
+          <!-- Dual Official Signatures -->
+          <div class="td-signatures-row">
+            <div class="td-sign-col">
+              <div class="td-sign-role">Appraised & Prepared By:</div>
+              <div class="td-sign-space"></div>
+              <div class="td-sign-name" id="nar-doc-appraiser">ENGR. MARITES D. PASCUAL</div>
+              <div class="td-sign-sub">GIS Tax Mapper / Assessment Examiner</div>
+              <div class="td-sign-badge" id="nar-doc-appraiser-badge">License / Badge: PGI-GIS-014</div>
+            </div>
+            <div class="td-sign-col">
+              <div class="td-sign-role">Approved & Re-Assessed By:</div>
+              <div class="td-sign-space"></div>
+              <div class="td-sign-name" id="nar-doc-assessor">ATTY. RODOLFO V. RAMOS, REA, REB</div>
+              <div class="td-sign-sub">Provincial Assessor</div>
+              <div class="td-sign-badge">Badge No. PGI-ASR-001</div>
+            </div>
+          </div>
+
+          <div class="td-doc-footer-meta">
+            <span>OFFICE OF THE PROVINCIAL ASSESSOR · PROVINCIAL CAPITOL, CITY OF ILAGAN, ISABELA</span>
+            <span>SYSTEM-GENERATED NOTICE OF ASSESSMENT REVISION · TM-RPAIS 2026</span>
+          </div>
+
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ====================================================================
+       OFFICIAL SPATIAL PROXIMITY BUFFER & HAZARD IMPACT REPORT MODAL
+       R.A. 10752 (RIGHT-OF-WAY ACT) / P.D. 1067 (WATER CODE)
+       ==================================================================== -->
+  <div class="td-modal-overlay" id="modal-buffer-report" style="display: none;">
+    <div class="td-modal-card" style="max-width: 960px;">
+      
+      <!-- Top Action Bar (Hidden in Print) -->
+      <div class="td-modal-action-bar no-print">
+        <div style="display: flex; align-items: center; gap: 8px;">
+          <div class="eyebrow-mono">
+            <span class="eyebrow-indicator" style="background-color: #ffffff;"></span>
+            <span style="color: #ffffff;">[ GIS SPATIAL PROXIMITY BUFFER &amp; HAZARD IMPACT REPORT ]</span>
+          </div>
+        </div>
+        <div style="display: flex; align-items: center; gap: 10px;">
+          <button type="button" id="btn-download-buffer-csv" class="btn button-outline-sm" style="display: flex; align-items: center; gap: 6px; padding: 7px 14px; border-color: rgba(0,0,0,0.3); color: #000000;">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
+              <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+              <polyline points="7 10 12 15 17 10"></polyline>
+              <line x1="12" y1="15" x2="12" y2="3"></line>
+            </svg>
+            <span>Export Schedule CSV</span>
+          </button>
+          <button type="button" id="btn-print-buffer-report" class="btn button-primary" style="display: flex; align-items: center; gap: 6px; padding: 7px 16px; background-color: #ffffff; color: #0a0a0a; border-color: #ffffff; font-weight: 600;">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
+              <polyline points="6 9 6 2 18 2 18 9"></polyline>
+              <path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"></path>
+              <rect x="6" y="14" width="12" height="8"></rect>
+            </svg>
+            <span>Print Official Report</span>
+          </button>
+          <button type="button" class="workbench-close-btn" id="btn-close-buffer-report-modal" title="Close">&times;</button>
+        </div>
+      </div>
+
+      <!-- Printable Official Document Body -->
+      <div class="td-document-scroll-wrapper">
+        <div class="tax-declaration-document" id="buffer-report-document">
+          <div class="td-watermark-seal"><img src="/static/img/isabela_logo.png" alt="Seal" /></div>
+
+          <!-- Document Header -->
+          <div class="td-doc-header">
+            <img src="/static/img/isabela_logo.png" class="td-doc-logo" alt="Province of Isabela Seal" />
+            <div class="td-doc-titles">
+              <div class="td-republic-text">REPUBLIC OF THE PHILIPPINES</div>
+              <div class="td-province-text">PROVINCE OF ISABELA</div>
+              <div class="td-lgu-text" id="buffer-rep-lgu">CITY OF ILAGAN</div>
+              <div class="td-office-text">OFFICE OF THE PROVINCIAL ASSESSOR · GIS &amp; TAX MAPPING DIVISION</div>
+              <div class="td-main-title" style="color: #000000; font-size: 15px;">SPATIAL PROXIMITY BUFFER &amp; HAZARD IMPACT REPORT</div>
+              <div style="font-size: 9px; color: #555; letter-spacing: 0.5px;" id="buffer-rep-statutory">ISSUED PURSUANT TO REPUBLIC ACT NO. 10752 (RIGHT-OF-WAY ACT) &amp; P.D. 1067</div>
+            </div>
+            <img src="/static/img/isabela_logo.png" class="td-doc-logo" alt="Provincial Assessor Seal" />
+          </div>
+
+          <!-- Reference & Delineation Metadata Box -->
+          <div class="td-grid-box" style="margin-top: 10px;">
+            <div class="td-grid-row">
+              <div class="td-grid-cell" style="flex: 2;">
+                <span class="td-cell-label">REFERENCE CORRIDOR / ALIGNMENT</span>
+                <span class="td-cell-val" id="buffer-rep-source" style="font-weight: 700; color: #000000;">Maharlika Highway National Corridor</span>
+              </div>
+              <div class="td-grid-cell">
+                <span class="td-cell-label">REPORT REFERENCE NO.</span>
+                <span class="td-cell-val mono-num" id="buffer-rep-no" style="font-weight: 700;">SP-2026-03215-001</span>
+              </div>
+              <div class="td-grid-cell">
+                <span class="td-cell-label">DATE OF SPATIAL QUERY</span>
+                <span class="td-cell-val" id="buffer-rep-date">September 08, 2026</span>
+              </div>
+            </div>
+            <div class="td-grid-row">
+              <div class="td-grid-cell">
+                <span class="td-cell-label">CORRIDOR CLASSIFICATION</span>
+                <span class="td-cell-val" id="buffer-rep-category">National Highway ROW Alignment</span>
+              </div>
+              <div class="td-grid-cell">
+                <span class="td-cell-label">BUFFER CORRIDOR RADIUS</span>
+                <span class="td-cell-val mono-num" id="buffer-rep-radius" style="font-weight: 700;">500 Meters (Offset)</span>
+              </div>
+              <div class="td-grid-cell" style="flex: 2;">
+                <span class="td-cell-label">EVALUATING GEODETIC OFFICER</span>
+                <span class="td-cell-val" id="buffer-rep-officer">ENGR. MARITES D. PASCUAL, GE (PGI-GIS-014)</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- Summary KPI Telemetry Grid -->
+          <div class="buffer-kpi-summary-grid">
+            <div class="buffer-kpi-item">
+              <span class="buffer-kpi-label">INTERSECTED PARCELS</span>
+              <span class="buffer-kpi-val mono-num" id="buffer-rep-lots" style="color: #000000;">0 Lots</span>
+              <span class="buffer-kpi-sub">Within Proximity Corridor</span>
+            </div>
+            <div class="buffer-kpi-item">
+              <span class="buffer-kpi-label">AFFECTED LAND AREA</span>
+              <span class="buffer-kpi-val mono-num" id="buffer-rep-area">0.00 ha</span>
+              <span class="buffer-kpi-sub" id="buffer-rep-sqm">0.00 sq.m.</span>
+            </div>
+            <div class="buffer-kpi-item">
+              <span class="buffer-kpi-label">TOTAL MARKET VALUE (SMV)</span>
+              <span class="buffer-kpi-val mono-num" id="buffer-rep-mv" style="color: #000000;">PHP 0.00</span>
+              <span class="buffer-kpi-sub">Baseline Base Unit Value</span>
+            </div>
+            <div class="buffer-kpi-item">
+              <span class="buffer-kpi-label">TOTAL ASSESSED VALUE</span>
+              <span class="buffer-kpi-val mono-num" id="buffer-rep-av" style="color: #0d9488;">PHP 0.00</span>
+              <span class="buffer-kpi-sub">Tax Base Valuation</span>
+            </div>
+          </div>
+
+          <!-- Classification Breakdown Badges -->
+          <div class="buffer-breakdown-bar" id="buffer-rep-class-breakdown">
+            <!-- Populated dynamically -->
+          </div>
+
+          <!-- Itemized Cadastral Schedule Table -->
+          <div class="td-section-title" style="margin-top: 12px; margin-bottom: 4px;">
+            ITEMIZED SCHEDULE OF INTERSECTED CADASTRAL LOTS
+          </div>
+          <table class="td-table buffer-schedule-table">
+            <thead>
+              <tr>
+                <th style="width: 14%;">Property PIN</th>
+                <th style="width: 10%;">Lot / Survey</th>
+                <th style="width: 22%;">Declared Owner</th>
+                <th style="width: 14%;">Location</th>
+                <th style="width: 10%;">Class</th>
+                <th style="width: 10%;">Area (sq.m.)</th>
+                <th style="width: 10%;">Assessed Value</th>
+                <th style="width: 10%;">Corridor Dist.</th>
+              </tr>
+            </thead>
+            <tbody id="buffer-rep-table-body">
+              <tr>
+                <td colspan="8" style="text-align: center; color: #64748b; padding: 12px;">No intersected parcels in active buffer zone.</td>
+              </tr>
+            </tbody>
+          </table>
+
+          <!-- Statutory Legal Clauses -->
+          <div class="td-grid-box td-memo-box" style="margin-top: 10px;">
+            <div><strong>STATUTORY PROVISIONS &amp; STATUTORY COMPLIANCE:</strong></div>
+            <div style="font-size: 10px; color: #333; margin-top: 4px; line-height: 1.4;">
+              <strong>1. RIGHT-OF-WAY ACT (R.A. NO. 10752):</strong> For infrastructure corridors, acquisition of private real property for national and local government infrastructure projects shall be compensated based on current market value pursuant to standards prescribed under Section 5. Assessed values herein reflect official local tax appraisal rolls.
+            </div>
+            <div style="font-size: 10px; color: #333; margin-top: 3px; line-height: 1.4;">
+              <strong>2. WATER CODE (P.D. NO. 1067, ART. 51):</strong> For river and stream corridors, the banks of rivers and streams and the shores of the seas throughout their entire length and within a zone of three (3) meters in urban areas, twenty (20) meters in agricultural areas and forty (40) meters in forest areas, along their margins, are subject to the easement of public use in the interest of recreation, navigation, floatage, fishing and salvage.
+            </div>
+          </div>
+
+          <!-- Dual Official Signatures -->
+          <div class="td-signatures-row">
+            <div class="td-sign-col">
+              <div class="td-sign-role">Geodetically Delineated &amp; Appraised By:</div>
+              <div class="td-sign-space"></div>
+              <div class="td-sign-name" id="buffer-rep-doc-mapper">ENGR. MARITES D. PASCUAL, GE</div>
+              <div class="td-sign-sub">GIS Tax Mapper / Cadastral Examiner</div>
+              <div class="td-sign-badge">PRC License No. 005921 · Badge: PGI-GIS-014</div>
+            </div>
+            <div class="td-sign-col">
+              <div class="td-sign-role">Noted &amp; Officially Certified By:</div>
+              <div class="td-sign-space"></div>
+              <div class="td-sign-name" id="buffer-rep-doc-assessor">ATTY. RODOLFO V. RAMOS, REA, REB</div>
+              <div class="td-sign-sub">Provincial Assessor</div>
+              <div class="td-sign-badge">Badge No. PGI-ASR-001</div>
+            </div>
+          </div>
+
+          <div class="td-doc-footer-meta">
+            <span>OFFICE OF THE PROVINCIAL ASSESSOR · PROVINCIAL CAPITOL, CITY OF ILAGAN, ISABELA</span>
+            <span>SYSTEM-GENERATED SPATIAL BUFFER &amp; HAZARD IMPACT REPORT · TM-RPAIS 2026</span>
+          </div>
+
+        </div>
+      </div>
+    </div>
+  </div>
+
   <!-- Initial parcels payload embedded safely for instant Leaflet rendering -->
   <script id="initial-parcels-data" type="application/json">
     {{ initial_parcels | tojson | safe }}
@@ -2305,6 +3190,6 @@
   <!-- Leaflet 1.9.4 JS -->
   <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
   <!-- Tax Map Leaflet Engine -->
-  <script src="/static/js/taxmap.js"></script>
+  <script src="/static/js/taxmap.js?v={{ range(100000, 999999) | random }}"></script>
 </body>
 </html>

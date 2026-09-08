@@ -15,14 +15,24 @@ from database import (
     post_tax_payment, get_official_receipt,
     export_cadastre_geojson, export_cadastre_csv,
     issue_tax_clearance, find_cadastral_overlaps,
-    audit_cadastre_topology
+    audit_cadastre_topology, transfer_ownership, get_ownership_history,
+    reclassify_parcel, get_assessment_revisions, get_smv_rates,
+    get_spatial_presets, query_spatial_buffer
 )
+
 
 app = Flask(__name__)
 app.secret_key = os.environ.get("FLASK_SECRET_KEY", secrets.token_hex(24))
 
 # Ensure database is initialized
 init_db()
+
+@app.after_request
+def add_no_cache_headers(response):
+    response.headers["Cache-Control"] = "no-cache, no-store, must-revalidate, max-age=0"
+    response.headers["Pragma"] = "no-cache"
+    response.headers["Expires"] = "0"
+    return response
 
 @app.route("/taxmap.mp4")
 def serve_taxmap_video():
@@ -304,6 +314,85 @@ def api_issue_delinquency(pin):
         return jsonify(result), 200
     return jsonify(result), 400
 
+@app.route("/api/parcels/<path:pin>/transfer-ownership", methods=["POST"])
+def api_transfer_ownership(pin):
+    user = session.get("user", {
+        "username": "records.inquiry",
+        "badge_no": "PGI-REC-005",
+        "role": "RECORDS_OFFICER"
+    })
+    data = request.get_json(force=True, silent=True) or {}
+    
+    if not data.get("new_owner_name", "").strip():
+        return jsonify({"success": False, "message": "New owner name is required."}), 400
+    
+    result = transfer_ownership(
+        pin=pin,
+        transfer_data=data,
+        officer_username=user.get("username"),
+        officer_badge=user.get("badge_no"),
+        ip=request.remote_addr
+    )
+    
+    if result.get("success"):
+        return jsonify(result), 200
+    else:
+        status_code = 404 if "not found" in result.get("message", "").lower() else 400
+        return jsonify(result), status_code
+
+@app.route("/api/parcels/<path:pin>/ownership-history", methods=["GET"])
+def api_ownership_history(pin):
+    history = get_ownership_history(pin)
+    return jsonify({
+        "success": True,
+        "pin": pin,
+        "count": len(history),
+        "chain": history
+    }), 200
+
+@app.route("/api/parcels/<path:pin>/reclassify", methods=["POST"])
+def api_reclassify_parcel(pin):
+    user = session.get("user", {
+        "username": "assessor.pgi",
+        "badge_no": "PGI-ASR-001",
+        "role": "PROVINCIAL_ASSESSOR"
+    })
+    data = request.get_json(force=True, silent=True) or {}
+    
+    result = reclassify_parcel(
+        pin=pin,
+        revision_data=data,
+        officer_username=user.get("username"),
+        officer_badge=user.get("badge_no"),
+        ip=request.remote_addr
+    )
+    
+    if result.get("success"):
+        return jsonify(result), 200
+    else:
+        status_code = 404 if "not found" in result.get("message", "").lower() else 400
+        return jsonify(result), status_code
+
+@app.route("/api/parcels/<path:pin>/revisions", methods=["GET"])
+def api_parcel_revisions(pin):
+    revisions = get_assessment_revisions(pin=pin)
+    return jsonify({
+        "success": True,
+        "pin": pin,
+        "count": len(revisions),
+        "revisions": revisions
+    }), 200
+
+@app.route("/api/smv/rates", methods=["GET"])
+def api_smv_rates():
+    rates = get_smv_rates()
+    return jsonify({
+        "success": True,
+        "jurisdiction": "Province of Isabela",
+        "ordinance": "Sangguniang Panlalawigan General Revision SMV Ordinance No. 2026-04",
+        "rates": rates
+    }), 200
+
 @app.route("/api/tax-declarations", methods=["GET"])
 def api_tax_declarations():
     lgu = request.args.get("lgu", "ALL")
@@ -454,6 +543,76 @@ def api_cadastre_conflicts():
         "success": True,
         "report": report
     }), 200
+
+@app.route("/api/spatial/presets", methods=["GET"])
+def api_spatial_presets():
+    presets = get_spatial_presets()
+    return jsonify({
+        "success": True,
+        "presets": presets
+    }), 200
+
+@app.route("/api/spatial/buffer-query", methods=["POST"])
+def api_spatial_buffer_query():
+    data = request.get_json(force=True, silent=True) or {}
+    user = session.get("user", {
+        "username": "mapper.pgi",
+        "badge_no": "PGI-GIS-014",
+        "role": "MUNICIPAL_APPRAISER"
+    })
+    result = query_spatial_buffer(
+        buffer_params=data,
+        officer_username=user.get("username", "mapper.pgi"),
+        officer_badge=user.get("badge_no", "PGI-GIS-014"),
+        ip=request.remote_addr
+    )
+    return jsonify(result), 200
+
+@app.route("/api/spatial/export-impact-csv", methods=["POST"])
+def api_export_impact_csv():
+    import io
+    import csv
+    data = request.get_json(force=True, silent=True) or {}
+    report_no = data.get("report_no", "SP-IMPACT")
+    source_name = data.get("source_name", "Spatial Buffer")
+    buffer_distance_m = data.get("buffer_distance_m", 500)
+    parcels = data.get("parcels", [])
+
+    output = io.StringIO()
+    writer = csv.writer(output)
+    writer.writerow(["PROVINCE OF ISABELA - OFFICE OF THE PROVINCIAL ASSESSOR"])
+    writer.writerow([f"SPATIAL PROXIMITY BUFFER & HAZARD IMPACT REPORT - #{report_no}"])
+    writer.writerow([f"Reference / Infrastructure Corridor: {source_name}"])
+    writer.writerow([f"Buffer Corridor Distance: {buffer_distance_m} Meters"])
+    writer.writerow([])
+    writer.writerow([
+        "PIN", "Lot No", "Survey No", "Declared Owner", "Barangay / Municipality",
+        "Actual Use / Class", "Total Area (sqm)", "Affected Area (sqm)",
+        "Assessed Value (PHP)", "Distance to Centerline (m)", "Impact Severity"
+    ])
+    for p in parcels:
+        writer.writerow([
+            p.get("pin", ""),
+            p.get("lot_no", ""),
+            p.get("survey_no", ""),
+            p.get("owner_name", ""),
+            p.get("barangay", ""),
+            p.get("classification", ""),
+            p.get("area_sqm", 0),
+            p.get("affected_area_sqm", p.get("area_sqm", 0)),
+            p.get("assessed_value", 0),
+            p.get("distance_m", 0),
+            p.get("impact_status", "Within Zone")
+        ])
+
+    csv_text = output.getvalue()
+    filename = f"impact_assessment_{report_no}.csv"
+    return Response(
+        csv_text,
+        mimetype="text/csv",
+        headers={"Content-Disposition": f"attachment; filename={filename}"}
+    )
+
 
 if __name__ == "__main__":
     port = int(os.environ.get("PORT", 5000))

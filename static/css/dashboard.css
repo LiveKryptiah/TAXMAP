@@ -661,27 +661,20 @@
   border-color: rgba(255, 255, 255, 0.4) !important;
 }
 
-.button-icon-action.button-danger {
-  background-color: #ef4444 !important;
-  border: 1px solid #ef4444 !important;
+.button-icon-action.button-danger,
+.button-icon-action.button-success,
+.button-icon-action.button-danger-outline {
+  background-color: rgba(255, 255, 255, 0.04) !important;
+  border: 1px solid rgba(255, 255, 255, 0.16) !important;
   color: #ffffff !important;
 }
 
-.button-icon-action.button-danger:hover {
-  background-color: #dc2626 !important;
-  border-color: #dc2626 !important;
-}
-
-.button-icon-action.button-danger-outline {
-  background-color: transparent !important;
-  border: 1px solid rgba(239, 68, 68, 0.35) !important;
-  color: #f87171 !important;
-}
-
+.button-icon-action.button-danger:hover,
+.button-icon-action.button-success:hover,
 .button-icon-action.button-danger-outline:hover {
-  background-color: rgba(239, 68, 68, 0.15) !important;
-  border-color: #ef4444 !important;
-  color: #ef4444 !important;
+  background-color: rgba(255, 255, 255, 0.12) !important;
+  border-color: rgba(255, 255, 255, 0.45) !important;
+  color: #ffffff !important;
 }
 
 /* ==========================================================================
@@ -832,7 +825,7 @@
   padding: 1px 6px;
   border-radius: var(--rounded-pill);
   border: 1px solid rgba(255, 255, 255, 0.3);
-  color: #34d399;
+  color: #ffffff;
 }
 
 .wb-card {
@@ -1003,8 +996,8 @@
 /* Danger outline delete button */
 .button-danger-outline {
   background: transparent;
-  border: 1px solid rgba(239, 68, 68, 0.35);
-  color: #f87171;
+  border: 1px solid rgba(255, 255, 255, 0.25);
+  color: #ffffff;
   font-family: var(--font-body);
   font-size: 13px;
   border-radius: var(--rounded-pill);
@@ -1014,9 +1007,9 @@
 }
 
 .button-danger-outline:hover {
-  background-color: rgba(239, 68, 68, 0.12);
-  border-color: rgba(239, 68, 68, 0.7);
-  color: #fca5a5;
+  background-color: rgba(255, 255, 255, 0.1);
+  border-color: #ffffff;
+  color: #ffffff;
 }
 
 /* Modal Overlay */
@@ -1601,7 +1594,7 @@
 .td-tax-accent {
   font-size: 11.5px;
   font-weight: 700;
-  color: #047857;
+  color: #000000;
 }
 
 /* Signatures */
@@ -1936,11 +1929,11 @@
 .survey-tie-accent {
   font-size: 11px;
   font-weight: 600;
-  color: #0369a1;
-  background-color: #e0f2fe;
+  color: #000000;
+  background-color: #f8fafc;
   padding: 3px 6px;
   border-radius: 2px;
-  border-left: 3px solid #0284c7;
+  border-left: 3px solid #111111;
 }
 
 .survey-tie-divider {
@@ -2141,24 +2134,24 @@
 }
 
 .dot-current {
-  background-color: #10b981;
-  box-shadow: 0 0 6px rgba(16, 185, 129, 0.6);
+  background-color: #ffffff;
+  box-shadow: 0 0 6px rgba(255, 255, 255, 0.5);
 }
 
 .dot-delinquent {
-  background-color: #ef4444;
-  box-shadow: 0 0 6px rgba(239, 68, 68, 0.6);
+  background-color: #71717a;
+  box-shadow: none;
 }
 
 .dot-exempt {
-  background-color: #94a3b8;
-  box-shadow: 0 0 6px rgba(148, 163, 184, 0.4);
+  background-color: #3f3f46;
+  box-shadow: none;
 }
 
 .thematic-active-btn {
-  background-color: rgba(239, 68, 68, 0.15) !important;
-  border-color: rgba(239, 68, 68, 0.5) !important;
-  color: #f87171 !important;
+  background-color: #ffffff !important;
+  border-color: #ffffff !important;
+  color: #0a0a0a !important;
 }
 
 /* ==========================================================================
@@ -2231,7 +2224,7 @@
   align-items: center;
   justify-content: space-between;
   text-align: center;
-  border-bottom: 2px solid #b91c1c;
+  border-bottom: 2px solid #000000;
   padding-bottom: 8px;
   margin-bottom: 10px;
 }
@@ -2278,7 +2271,7 @@
   font-size: 14px;
   font-weight: 800;
   letter-spacing: 1.2px;
-  color: #b91c1c;
+  color: #000000;
   margin-top: 4px;
   text-transform: uppercase;
   border-top: 1px solid #cbd5e1;
@@ -2303,8 +2296,8 @@
   display: grid;
   grid-template-columns: 1.5fr 1fr 1.2fr 1.3fr;
   gap: 10px;
-  background-color: #fef2f2;
-  border: 1.5px solid #b91c1c;
+  background-color: #f8fafc;
+  border: 1.5px solid #000000;
 }
 
 .delinq-ref-col {
@@ -2346,7 +2339,7 @@
   font-family: var(--font-mono);
   font-size: 12px;
   font-weight: 700;
-  color: #b91c1c;
+  color: #000000;
 }
 
 .delinq-party-box {
@@ -2384,9 +2377,9 @@
   font-weight: 800;
   text-transform: uppercase;
   letter-spacing: 0.8px;
-  color: #b91c1c;
+  color: #000000;
   margin: 10px 0 5px 0;
-  border-left: 3px solid #b91c1c;
+  border-left: 3px solid #000000;
   padding-left: 6px;
 }
 
@@ -2399,11 +2392,11 @@
 }
 
 .delinq-table th {
-  background-color: #fef2f2;
-  border: 1px solid #dc2626;
+  background-color: #f8fafc;
+  border: 1px solid #1e293b;
   padding: 5px 6px;
   font-weight: 700;
-  color: #991b1b;
+  color: #000000;
   text-align: left;
 }
 
@@ -2414,9 +2407,9 @@
 }
 
 .delinq-total-row td {
-  background-color: #fef2f2;
-  border-top: 2px solid #b91c1c;
-  border-bottom: 2px solid #b91c1c;
+  background-color: #f8fafc;
+  border-top: 2px solid #000000;
+  border-bottom: 2px solid #000000;
   padding: 6px 6px;
 }
 
@@ -2424,8 +2417,8 @@
   font-size: 10px;
   line-height: 1.4;
   color: #1e293b;
-  border: 1.5px solid #b91c1c;
-  background-color: #fff5f5;
+  border: 1.5px solid #000000;
+  background-color: #f8fafc;
   padding: 8px 10px;
   margin-bottom: 12px;
   border-radius: 2px;
@@ -2517,6 +2510,9 @@
   .parcel-inspector-panel,
   .cadastral-workbench-panel,
   .new-lot-modal-overlay,
+  #modal-transfer-ownership,
+  #modal-ownership-history,
+  #modal-reclassify-parcel,
   .td-modal-action-bar,
   .survey-modal-action-bar,
   .delinquency-modal-action-bar,
@@ -2534,7 +2530,10 @@
   .survey-modal-overlay,
   .delinquency-modal-overlay,
   #modal-official-receipt,
-  #modal-tax-clearance {
+  #modal-tax-clearance,
+  #modal-transfer-certificate,
+  #modal-notice-of-assessment,
+  #modal-buffer-report {
     position: static !important;
     display: block !important;
     width: 100% !important;
@@ -2550,7 +2549,9 @@
   .survey-modal-card,
   .delinquency-modal-card,
   #modal-official-receipt .custom-modal-card,
-  #modal-tax-clearance .custom-modal-card {
+  #modal-tax-clearance .custom-modal-card,
+  #modal-notice-of-assessment .td-modal-card,
+  #modal-buffer-report .td-modal-card {
     position: static !important;
     width: 100% !important;
     max-width: 100% !important;
@@ -2594,7 +2595,7 @@
   }
 
   .delinquency-document {
-    border: 2px solid #b91c1c !important;
+    border: 2px solid #000000 !important;
   }
 
   .survey-diagram-card {
@@ -2880,8 +2881,8 @@
 }
 
 .roll-kpi-card.highlight {
-  border-color: rgba(52, 211, 153, 0.3);
-  background: rgba(52, 211, 153, 0.03);
+  border-color: rgba(255, 255, 255, 0.3);
+  background: rgba(255, 255, 255, 0.05);
 }
 
 .roll-kpi-label {
@@ -2957,33 +2958,34 @@
 }
 
 .badge-audit-create {
-  background-color: rgba(52, 211, 153, 0.15);
-  color: #34d399;
-  border: 1px solid rgba(52, 211, 153, 0.3);
+  background-color: rgba(255, 255, 255, 0.08);
+  color: #ffffff;
+  border: 1px solid rgba(255, 255, 255, 0.25);
 }
 
 .badge-audit-subdivide {
-  background-color: rgba(168, 85, 247, 0.15);
-  color: #c084fc;
-  border: 1px solid rgba(168, 85, 247, 0.3);
+  background-color: rgba(255, 255, 255, 0.05);
+  color: #d4d4d8;
+  border: 1px solid rgba(255, 255, 255, 0.18);
 }
 
 .badge-audit-delete {
-  background-color: rgba(239, 68, 68, 0.15);
-  color: #f87171;
-  border: 1px solid rgba(239, 68, 68, 0.3);
+  background-color: #ffffff;
+  color: #0a0a0a;
+  border: 1px solid #ffffff;
+  font-weight: 600;
 }
 
 .badge-audit-doc {
-  background-color: rgba(56, 189, 248, 0.15);
-  color: #38bdf8;
-  border: 1px solid rgba(56, 189, 248, 0.3);
+  background-color: rgba(255, 255, 255, 0.06);
+  color: #e4e4e7;
+  border: 1px solid rgba(255, 255, 255, 0.2);
 }
 
 .badge-audit-auth {
-  background-color: rgba(148, 163, 184, 0.15);
-  color: #cbd5e1;
-  border: 1px solid rgba(148, 163, 184, 0.3);
+  background-color: transparent;
+  color: #a1a1aa;
+  border: 1px solid rgba(255, 255, 255, 0.15);
 }
 
 /* ==========================================================================
@@ -3040,13 +3042,13 @@
 
 /* Button Success Variant */
 .btn.button-success {
-  border-color: rgba(52, 211, 153, 0.35);
-  color: #34d399;
+  border-color: rgba(255, 255, 255, 0.25);
+  color: #ffffff;
 }
 
 .btn.button-success:hover {
-  background-color: rgba(52, 211, 153, 0.12);
-  border-color: #34d399;
+  background-color: rgba(255, 255, 255, 0.1);
+  border-color: rgba(255, 255, 255, 0.5);
   color: #ffffff;
 }
 
@@ -3077,8 +3079,8 @@
 }
 
 .pay-breakdown-item.highlight-due {
-  border-color: rgba(52, 211, 153, 0.35);
-  background: rgba(52, 211, 153, 0.04);
+  border-color: rgba(255, 255, 255, 0.35);
+  background: rgba(255, 255, 255, 0.06);
 }
 
 .pay-breakdown-val {
@@ -3102,14 +3104,14 @@
   font-family: var(--font-body);
   font-size: 11px;
   line-height: 1.4;
-  border: 2px solid #064e3b;
+  border: 2px solid #111111;
   box-sizing: border-box;
 }
 
 .official-receipt-document .td-table th {
-  background-color: #f0fdf4;
-  border: 1px solid #10b981;
-  color: #064e3b;
+  background-color: #f8fafc;
+  border: 1px solid #1e293b;
+  color: #000000;
 }
 
 .official-receipt-document .td-table td {
@@ -3117,8 +3119,8 @@
 }
 
 .official-receipt-document .td-numbering-box {
-  background-color: #f0fdf4;
-  border: 1.5px solid #059669;
+  background-color: #f8fafc;
+  border: 1.5px solid #1e293b;
 }
 
 /* ==========================================================================
@@ -3136,14 +3138,14 @@
   font-family: var(--font-body);
   font-size: 11px;
   line-height: 1.4;
-  border: 3px double #065f46;
+  border: 3px double #111111;
   box-sizing: border-box;
 }
 
 .tax-clearance-document .td-table th {
-  background-color: #f0fdf4;
-  border: 1px solid #059669;
-  color: #064e3b;
+  background-color: #f8fafc;
+  border: 1px solid #1e293b;
+  color: #000000;
 }
 
 .tax-clearance-document .td-table td {
@@ -3162,13 +3164,13 @@
 }
 
 .encroachment-alert-box.clean {
-  background: rgba(52, 211, 153, 0.05);
-  border: 1px solid rgba(52, 211, 153, 0.25);
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid rgba(255, 255, 255, 0.15);
 }
 
 .encroachment-alert-box.hazard {
-  background: rgba(239, 68, 68, 0.09);
-  border: 1px solid rgba(239, 68, 68, 0.45);
+  background: rgba(255, 255, 255, 0.06);
+  border: 1px solid rgba(255, 255, 255, 0.3);
 }
 
 .encroachment-alert-header {
@@ -3191,12 +3193,12 @@
 }
 
 .encroachment-pulse-dot.clean {
-  background-color: #34d399;
-  box-shadow: 0 0 6px rgba(52, 211, 153, 0.6);
+  background-color: #ffffff;
+  box-shadow: 0 0 6px rgba(255, 255, 255, 0.4);
 }
 
 .encroachment-pulse-dot.hazard {
-  background-color: #ef4444;
+  background-color: #a1a1aa;
   box-shadow: 0 0 8px rgba(239, 68, 68, 0.9);
   animation: pulse-hazard-dot 1.2s infinite alternate ease-in-out;
 }
@@ -3214,11 +3216,11 @@
 }
 
 .encroachment-status-badge.clean {
-  color: #34d399;
+  color: #ffffff;
 }
 
 .encroachment-status-badge.hazard {
-  color: #f87171;
+  color: #ffffff;
 }
 
 .encroachment-status-sub {
@@ -3230,9 +3232,9 @@
 .encroachment-alert-body {
   margin-top: 6px;
   padding-top: 6px;
-  border-top: 1px dashed rgba(239, 68, 68, 0.3);
+  border-top: 1px dashed rgba(255, 255, 255, 0.2);
   font-size: 11px;
-  color: #fca5a5;
+  color: #ffffff;
   line-height: 1.4;
 }
 
@@ -3251,10 +3253,10 @@
 
 /* Pulsing SVG Hazard Polygon on Leaflet */
 .leaflet-encroachment-hazard {
-  stroke: #ef4444 !important;
-  stroke-width: 2.5 !important;
-  stroke-dasharray: 6, 4 !important;
-  fill: #dc2626 !important;
+  stroke: #ffffff !important;
+  stroke-width: 2 !important;
+  stroke-dasharray: 4, 4 !important;
+  fill: #ffffff !important;
   fill-opacity: 0.45 !important;
   animation: pulseEncroachmentPolygon 2s infinite ease-in-out !important;
 }
@@ -3403,7 +3405,7 @@
 .conflicts-clean-title {
   font-size: 13px;
   font-weight: 600;
-  color: #34d399;
+  color: #ffffff;
   letter-spacing: 0.5px;
   margin: 0 0 6px 0;
   font-family: var(--fonts-mono);
@@ -3462,21 +3464,22 @@
 }
 
 .severity-critical {
-  background: rgba(239, 68, 68, 0.15);
-  color: #f87171;
-  border: 1px solid rgba(239, 68, 68, 0.35);
+  background: #ffffff;
+  color: #0a0a0a;
+  border: 1px solid #ffffff;
+  font-weight: 600;
 }
 
 .severity-moderate {
-  background: rgba(245, 158, 11, 0.15);
-  color: #fbbf24;
-  border: 1px solid rgba(245, 158, 11, 0.35);
+  background: rgba(255, 255, 255, 0.1);
+  color: #ffffff;
+  border: 1px solid rgba(255, 255, 255, 0.3);
 }
 
 .severity-minor {
-  background: rgba(96, 165, 250, 0.15);
-  color: #93c5fd;
-  border: 1px solid rgba(96, 165, 250, 0.35);
+  background: transparent;
+  color: #a1a1aa;
+  border: 1px solid rgba(255, 255, 255, 0.15);
 }
 
 .btn-locate-conflict {
@@ -3495,8 +3498,449 @@
 }
 
 .btn-locate-conflict:hover {
-  background: #1e293b;
-  border-color: #ef4444;
-  color: #ef4444;
+  background: rgba(255, 255, 255, 0.1);
+  border-color: #ffffff;
+  color: #ffffff;
 }
+
+/* ==========================================================================
+   OWNERSHIP HISTORY TIMELINE STYLES
+   ========================================================================== */
+.ownership-timeline {
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+  position: relative;
+  padding-left: 20px;
+}
+
+.history-item {
+  display: flex;
+  gap: 12px;
+  padding: 10px 0;
+  position: relative;
+  border-left: 2px solid var(--colors-hairline);
+  padding-left: 16px;
+  margin-left: 4px;
+}
+
+.history-item:last-child {
+  border-left-color: transparent;
+}
+
+.history-item.history-current {
+  border-left-color: transparent;
+}
+
+.history-dot {
+  position: absolute;
+  left: -6px;
+  top: 14px;
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  flex-shrink: 0;
+  border: 2px solid var(--colors-canvas-card);
+}
+
+.history-content {
+  flex: 1;
+  min-width: 0;
+}
+
+.history-seq {
+  font-family: var(--font-mono);
+  font-size: 10px;
+  font-weight: 600;
+  color: var(--colors-body-mid);
+}
+
+.history-badge {
+  font-family: var(--font-mono);
+  font-size: 9px;
+  font-weight: 700;
+  letter-spacing: 0.5px;
+  padding: 1px 6px;
+  border-radius: 3px;
+  text-transform: uppercase;
+}
+
+.history-owner {
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--colors-ink);
+  margin-bottom: 2px;
+}
+
+.history-address {
+  font-size: 11px;
+  color: var(--colors-body-mid);
+  margin-bottom: 4px;
+}
+
+.history-meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  font-family: var(--font-mono);
+  font-size: 10px;
+  color: #64748b;
+}
+
+.history-meta span {
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid var(--colors-hairline);
+  padding: 1px 6px;
+  border-radius: 3px;
+}
+
+/* Form styles for transfer modal */
+.form-label-sm {
+  display: block;
+  font-family: var(--font-mono);
+  font-size: 10px;
+  letter-spacing: 0.4px;
+  text-transform: uppercase;
+  color: #94a3b8;
+  margin-bottom: 4px;
+}
+
+.form-input-dark {
+  width: 100%;
+  background-color: var(--colors-canvas-soft);
+  color: var(--colors-ink);
+  border: 1px solid var(--colors-hairline);
+  border-radius: 6px;
+  font-family: var(--font-body);
+  font-size: 13px;
+  padding: 8px 10px;
+  outline: none;
+  transition: border-color var(--transition-fast);
+  box-sizing: border-box;
+}
+
+.form-input-dark:focus {
+  border-color: rgba(255, 255, 255, 0.4);
+}
+
+.form-input-dark::placeholder {
+  color: #4a4e57;
+}
+
+select.form-input-dark {
+  cursor: pointer;
+  appearance: auto;
+}
+
+/* ==========================================================================
+   LAND RECLASSIFICATION & GENERAL REVISION (GR) STYLES
+   ========================================================================== */
+.smv-preset-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  max-height: 90px;
+  overflow-y: auto;
+  padding: 4px 0;
+}
+
+.smv-chip {
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid var(--colors-hairline);
+  color: var(--colors-ink);
+  font-family: var(--font-mono);
+  font-size: 10px;
+  padding: 4px 8px;
+  border-radius: 4px;
+  cursor: pointer;
+  transition: all var(--transition-fast);
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+}
+
+.smv-chip:hover {
+  background: rgba(255, 255, 255, 0.1);
+  border-color: rgba(255, 255, 255, 0.4);
+  color: #ffffff;
+}
+
+.smv-chip.active {
+  background: #ffffff;
+  border-color: #ffffff;
+  color: #0a0a0a;
+}
+
+.reclass-preview-box {
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  border-radius: 6px;
+  padding: 12px 14px;
+  margin: 12px 0;
+}
+
+.reclass-preview-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 8px;
+}
+
+.reclass-stat-cell {
+  background: rgba(255, 255, 255, 0.02);
+  border: 1px solid var(--colors-hairline);
+  border-radius: 4px;
+  padding: 8px;
+  min-width: 0;
+}
+
+.reclass-stat-cell.highlight {
+  background: rgba(255, 255, 255, 0.08);
+  border-color: rgba(255, 255, 255, 0.3);
+}
+
+.reclass-stat-label {
+  font-family: var(--font-mono);
+  font-size: 9px;
+  text-transform: uppercase;
+  color: #94a3b8;
+  margin-bottom: 4px;
+  letter-spacing: 0.3px;
+}
+
+.reclass-stat-old {
+  font-family: var(--font-mono);
+  font-size: 10px;
+  color: #64748b;
+  text-decoration: line-through;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.reclass-stat-new {
+  font-family: var(--font-mono);
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--colors-ink);
+  margin-top: 2px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.reclass-stat-diff {
+  font-family: var(--font-mono);
+  font-size: 10px;
+  font-weight: 600;
+  margin-top: 3px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.variance-positive {
+  color: #ffffff;
+  font-weight: 600;
+}
+
+.variance-negative {
+  color: #a1a1aa;
+  font-weight: 500;
+}
+
+.variance-neutral {
+  color: #94a3b8;
+}
+
+/* ==========================================================================
+   GIS Spatial Proximity Buffer & Hazard Impact Tool Styles
+   ========================================================================== */
+
+.buffer-hud-banner {
+  border-left: 3px solid #ffffff !important;
+  background: rgba(10, 10, 10, 0.94) !important;
+  backdrop-filter: blur(8px);
+  padding: 6px 14px !important;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.4);
+  z-index: 1000;
+}
+
+.buffer-hud-left {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  min-width: 0;
+  flex: 1;
+}
+
+.buffer-controls-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-width: 0;
+  flex-wrap: wrap;
+}
+
+.buffer-select-input {
+  background: #1e293b;
+  color: #f8fafc;
+  border: 1px solid rgba(255, 255, 255, 0.18);
+  border-radius: 4px;
+  height: 28px;
+  padding: 0 8px;
+  font-size: 11px;
+  font-family: var(--font-sans);
+  outline: none;
+  cursor: pointer;
+  max-width: 320px;
+}
+
+.buffer-select-input:focus {
+  border-color: rgba(255, 255, 255, 0.6);
+}
+
+.buffer-radius-pill-group {
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+  background: rgba(0, 0, 0, 0.25);
+  padding: 2px 4px;
+  border-radius: 14px;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.buffer-radius-btn {
+  background: transparent;
+  border: none;
+  color: #94a3b8;
+  font-family: var(--font-mono);
+  font-size: 11px;
+  padding: 3px 8px;
+  border-radius: 10px;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.buffer-radius-btn:hover {
+  color: #f8fafc;
+  background: rgba(255, 255, 255, 0.08);
+}
+
+.buffer-radius-btn.active {
+  background: #ffffff;
+  color: #0a0a0a;
+  font-weight: 700;
+  border-color: #ffffff;
+  box-shadow: none;
+}
+
+.buffer-hud-actions {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex-shrink: 0;
+}
+
+/* Buffer KPI Grid in Modal */
+.buffer-kpi-summary-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 10px;
+  background: #f8fafc;
+  border: 1px solid #111111;
+  border-radius: 4px;
+  padding: 10px 14px;
+  margin-top: 10px;
+}
+
+.buffer-kpi-item {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.buffer-kpi-label {
+  font-family: var(--font-mono);
+  font-size: 9px;
+  color: #64748b;
+  font-weight: 700;
+  letter-spacing: 0.5px;
+  text-transform: uppercase;
+}
+
+.buffer-kpi-val {
+  font-size: 16px;
+  font-weight: 700;
+  color: #0f172a;
+}
+
+.buffer-kpi-sub {
+  font-size: 9.5px;
+  color: #64748b;
+  font-family: var(--font-mono);
+}
+
+.buffer-breakdown-bar {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-top: 8px;
+  align-items: center;
+}
+
+.buffer-breakdown-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 3px 10px;
+  border-radius: 12px;
+  font-size: 11px;
+  font-family: var(--font-mono);
+  background: #f8fafc;
+  border: 1px solid #e2e8f0;
+  color: #334155;
+}
+
+.buffer-breakdown-chip strong {
+  color: #0f172a;
+}
+
+.buffer-schedule-table {
+  width: 100%;
+  font-size: 10.5px;
+}
+
+.impact-badge {
+  display: inline-block;
+  padding: 2px 6px;
+  border-radius: 3px;
+  font-size: 9.5px;
+  font-family: var(--font-mono);
+  font-weight: 700;
+  letter-spacing: 0.3px;
+  text-transform: uppercase;
+}
+
+.impact-badge.impact-direct {
+  background: #111111;
+  color: #ffffff;
+  border: 1px solid #111111;
+}
+
+.impact-badge.impact-proximity {
+  background: #e2e8f0;
+  color: #0f172a;
+  border: 1px solid #94a3b8;
+}
+
+.impact-badge.impact-fringe {
+  background: #f1f5f9;
+  color: #475569;
+  border: 1px solid #cbd5e1;
+}
+
 

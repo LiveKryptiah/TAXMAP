@@ -488,10 +488,6 @@ document.addEventListener('DOMContentLoaded', () => {
           const hudDelinqCount = document.getElementById('hud-delinq-count');
           const hudDelinqRate = document.getElementById('hud-delinq-rate');
           const hudDelinqAmt = document.getElementById('hud-delinq-amount');
-          const minHudTitle = document.getElementById('min-hud-title');
-          const hudProgressFill = document.getElementById('hud-progress-fill');
-          const hudProgressSub = document.getElementById('hud-progress-sub');
-          const hudDelinqSummary = document.getElementById('hud-delinq-summary');
 
           const lguDisplayName = t.lgu_name || 'Isabela LGU';
           if (hudLgu) hudLgu.textContent = lguDisplayName;
@@ -501,20 +497,6 @@ document.addEventListener('DOMContentLoaded', () => {
           if (hudDelinqCount) hudDelinqCount.textContent = `${t.delinquent_count} Lot${t.delinquent_count === 1 ? '' : 's'}`;
           if (hudDelinqRate) hudDelinqRate.textContent = `(${t.delinquency_rate_pct}%)`;
           if (hudDelinqAmt) hudDelinqAmt.textContent = formatCurrencyShort(t.total_delinquent_due);
-
-          // Update minimal & drawer widgets
-          if (minHudTitle) {
-            minHudTitle.textContent = `${lguDisplayName} · ${t.collection_rate_pct}%`;
-          }
-          if (hudProgressFill) {
-            hudProgressFill.style.width = `${Math.min(100, Math.max(0, t.collection_rate_pct))}%`;
-          }
-          if (hudProgressSub) {
-            hudProgressSub.textContent = `${t.collection_rate_pct}% Paid`;
-          }
-          if (hudDelinqSummary) {
-            hudDelinqSummary.textContent = `${t.delinquent_count} Lot${t.delinquent_count === 1 ? '' : 's'} Overdue (${t.delinquency_rate_pct}%)`;
-          }
         }
       })
       .catch(err => console.warn('Error loading collection telemetry:', err));
@@ -523,30 +505,14 @@ document.addEventListener('DOMContentLoaded', () => {
   // Initial Telemetry Load
   loadCollectionTelemetry('03215');
 
-  // 8b. Modern Glassmorphic Telemetry Interactive Controls (Expand Drawer & Minimize to Chip)
+  // 8b. Modern Glassmorphic Telemetry Pill Toggle (Collapse / Expand)
   const collectionHud = document.getElementById('collection-hud');
-  const btnToggleTelemetryExpand = document.getElementById('btn-toggle-telemetry-expand');
   const btnMinimizeTelemetry = document.getElementById('btn-minimize-telemetry');
-  const telemetryMinChip = document.getElementById('telemetry-minimized-chip');
-
-  if (btnToggleTelemetryExpand && collectionHud) {
-    btnToggleTelemetryExpand.addEventListener('click', (e) => {
-      e.stopPropagation();
-      collectionHud.classList.toggle('drawer-open');
-    });
-  }
 
   if (btnMinimizeTelemetry && collectionHud) {
     btnMinimizeTelemetry.addEventListener('click', (e) => {
       e.stopPropagation();
-      collectionHud.classList.remove('drawer-open');
-      collectionHud.classList.add('is-minimized');
-    });
-  }
-
-  if (telemetryMinChip && collectionHud) {
-    telemetryMinChip.addEventListener('click', () => {
-      collectionHud.classList.remove('is-minimized');
+      collectionHud.classList.toggle('is-collapsed');
     });
   }
 
@@ -561,10 +527,9 @@ document.addEventListener('DOMContentLoaded', () => {
         btnToggleThematic.textContent = 'Thematic: ON';
         btnToggleThematic.classList.add('thematic-active-btn');
         if (collectionHud) {
-          collectionHud.classList.remove('is-minimized');
-          collectionHud.classList.add('drawer-open');
+          collectionHud.classList.remove('is-collapsed');
         }
-        if (hudThematicLegend) hudThematicLegend.style.display = 'flex';
+        if (hudThematicLegend) hudThematicLegend.style.display = 'inline-flex';
       } else {
         btnToggleThematic.textContent = 'Thematic: OFF';
         btnToggleThematic.classList.remove('thematic-active-btn');

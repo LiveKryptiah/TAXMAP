@@ -1047,24 +1047,28 @@ assert b"btn-expand-inspector" in resp_dash_glass.data
 assert b"expand-btn-pin-label" in resp_dash_glass.data
 print("[PASS] Dashboard UI verified with floating glassmorph inspector section (#btn-toggle-inspector, #btn-expand-inspector)")
 
-# 53. Test Modern Glassmorphic Minimal Revenue Telemetry HUD
+# 53. Test Modern Glassmorphic Minimal Revenue Telemetry HUD Pill
 resp_dash_telemetry = client.get('/dashboard')
 assert resp_dash_telemetry.status_code == 200
 assert b"modern-glass-hud" in resp_dash_telemetry.data
-assert b"telemetry-bar-primary" in resp_dash_telemetry.data
-assert b"btn-toggle-telemetry-expand" in resp_dash_telemetry.data
+assert b"collection-hud" in resp_dash_telemetry.data
 assert b"btn-minimize-telemetry" in resp_dash_telemetry.data
-assert b"hud-telemetry-drawer" in resp_dash_telemetry.data
-assert b"hud-progress-fill" in resp_dash_telemetry.data
-assert b"telemetry-minimized-chip" in resp_dash_telemetry.data
+assert b"hud-lgu-name" in resp_dash_telemetry.data
+assert b"hud-total-collectibles" in resp_dash_telemetry.data
+assert b"hud-total-collected" in resp_dash_telemetry.data
+assert b"hud-collection-rate" in resp_dash_telemetry.data
+assert b"hud-delinq-count" in resp_dash_telemetry.data
+assert b"hud-delinq-amount" in resp_dash_telemetry.data
+assert b"hud-thematic-legend" in resp_dash_telemetry.data
 with open("static/css/dashboard.css", "r", encoding="utf-8") as f:
     css_content = f.read()
 assert "backdrop-filter: blur(24px) saturate(190%)" in css_content
-assert ".telemetry-minimized-chip" in css_content
-assert ".collection-hud-banner.drawer-open" in css_content
-print("[PASS] Dashboard UI verified with Modern Glassmorphic Minimal Revenue Telemetry HUD (#btn-toggle-telemetry-expand, #btn-minimize-telemetry, #telemetry-minimized-chip)")
+assert ".collection-hud-banner.is-collapsed" in css_content
+assert "border-radius: 9999px" in css_content
+print("[PASS] Dashboard UI verified with Modern Glassmorphic Minimal Revenue Telemetry HUD Pill (#btn-minimize-telemetry, #collection-hud)")
 
 print("\nALL 53 VERIFICATION TESTS PASSED SUCCESSFULLY!")
+
 
 
 

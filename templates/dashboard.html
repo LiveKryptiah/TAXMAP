@@ -234,88 +234,54 @@
             </span>
           </div>
 
-          <!-- Collection & Delinquency HUD Telemetry Banner (Modern Glassmorphic Minimal) -->
+          <!-- Collection & Delinquency HUD Telemetry (Modern Glassmorphic Minimal Pill) -->
           <div class="collection-hud-banner modern-glass-hud" id="collection-hud">
-            <!-- Compact Header Bar (Always Visible Minimal State) -->
-            <div class="telemetry-bar-primary">
-              <div class="collection-hud-segment telemetry-brand-segment">
-                <span class="telemetry-live-dot" title="Live Cadastral Telemetry"></span>
-                <span class="collection-hud-label telemetry-micro-tag">REVENUE</span>
-                <span class="sr-only collection-hud-label">LGU REVENUE TELEMETRY</span>
-                <span class="collection-hud-value telemetry-lgu-title" id="hud-lgu-name">Ilagan City</span>
-              </div>
-              
-              <div class="collection-hud-divider"></div>
-              
-              <div class="collection-hud-segment telemetry-kpi-segment" title="Real Property Tax Collected">
-                <span class="telemetry-kpi-badge">
-                  <i class="fas fa-arrow-up" style="font-size: 8px; color: #4ade80;"></i>
-                  <span class="collection-hud-value mono-num" id="hud-collection-rate">0%</span>
-                </span>
-                <span class="collection-hud-value mono-num telemetry-compact-val" id="hud-total-collected">PHP 0.00</span>
-              </div>
-              
-              <div class="collection-hud-divider"></div>
-              
-              <div class="collection-hud-segment telemetry-delinq-segment" title="Delinquent Lots Portfolio">
-                <span class="telemetry-delinq-badge">
-                  <span class="telemetry-amber-dot"></span>
-                  <span class="collection-hud-value mono-num" id="hud-delinq-count">0 Lots</span>
-                  <span class="collection-hud-sub mono-num" id="hud-delinq-rate">(0%)</span>
-                </span>
-              </div>
-
-              <!-- Interactive Controls (Expand Details Drawer & Minimize to Chip) -->
-              <div class="telemetry-actions">
-                <button type="button" class="telemetry-action-btn" id="btn-toggle-telemetry-expand" title="Expand / Collapse Detailed Revenue Telemetry" aria-label="Toggle details">
-                  <i class="fas fa-chevron-down" id="telemetry-expand-icon"></i>
-                </button>
-                <button type="button" class="telemetry-action-btn" id="btn-minimize-telemetry" title="Minimize Telemetry to Chip" aria-label="Minimize telemetry">
-                  <i class="fas fa-minus"></i>
-                </button>
-              </div>
+            <!-- Segment 1: Live Status & LGU -->
+            <div class="collection-hud-segment telemetry-brand-seg">
+              <span class="telemetry-live-dot" title="Live Cadastral Telemetry"></span>
+              <span class="collection-hud-label telemetry-brand-label">REVENUE</span>
+              <span class="collection-hud-value telemetry-lgu-name" id="hud-lgu-name">Ilagan City</span>
             </div>
 
-            <!-- Expandable Detailed Micro-Drawer -->
-            <div class="collection-hud-drawer" id="hud-telemetry-drawer">
-              <div class="telemetry-drawer-grid">
-                <div class="telemetry-micro-card">
-                  <span class="collection-hud-label">TOTAL COLLECTIBLES</span>
-                  <span class="collection-hud-value mono-num telemetry-drawer-num" id="hud-total-collectibles">PHP 0.00</span>
-                </div>
-                <div class="telemetry-micro-card">
-                  <div style="display: flex; justify-content: space-between; align-items: baseline;">
-                    <span class="collection-hud-label">COLLECTION PROGRESS</span>
-                    <span class="telemetry-drawer-progress-sub" id="hud-progress-sub">0% Paid</span>
-                  </div>
-                  <div class="telemetry-progress-bar-container">
-                    <div class="telemetry-progress-bar-fill" id="hud-progress-fill" style="width: 0%;"></div>
-                  </div>
-                </div>
-                <div class="telemetry-micro-card">
-                  <span class="collection-hud-label">ARREARS + 2% PENALTIES</span>
-                  <span class="collection-hud-value mono-num telemetry-drawer-num" id="hud-delinq-amount" style="color: #fbbf24;">PHP 0.00</span>
-                </div>
-                <div class="telemetry-micro-card">
-                  <span class="collection-hud-label">DELINQUENCY PORTFOLIO</span>
-                  <span class="telemetry-drawer-text" id="hud-delinq-summary">0 Accounts overdue</span>
-                </div>
-              </div>
+            <div class="collection-hud-divider telemetry-collapsible"></div>
 
-              <!-- Thematic Legend Integrated inside drawer -->
-              <div class="collection-hud-legend" id="hud-thematic-legend" style="display: none;">
-                <span class="legend-item"><span class="legend-dot dot-current"></span> Current</span>
-                <span class="legend-item"><span class="legend-dot dot-delinquent"></span> Delinquent</span>
-                <span class="legend-item"><span class="legend-dot dot-exempt"></span> Exempt</span>
-              </div>
+            <!-- Segment 2: Target Collectibles -->
+            <div class="collection-hud-segment telemetry-data-seg telemetry-collapsible" title="Total Annual Assessment Collectibles">
+              <span class="collection-hud-label">TARGET</span>
+              <span class="collection-hud-value mono-num" id="hud-total-collectibles">PHP 0.00</span>
             </div>
 
-            <!-- Minimized Pill State -->
-            <div class="telemetry-minimized-chip" id="telemetry-minimized-chip" title="Click to Restore Revenue Telemetry">
-              <span class="telemetry-live-dot"></span>
-              <span class="telemetry-min-title" id="min-hud-title">Ilagan · 0%</span>
-              <i class="fas fa-expand-alt telemetry-min-icon"></i>
+            <div class="collection-hud-divider"></div>
+
+            <!-- Segment 3: Realized Collection (Paid) & Rate -->
+            <div class="collection-hud-segment telemetry-data-seg" title="Real Property Tax Collected">
+              <span class="collection-hud-label">PAID</span>
+              <span class="collection-hud-value mono-num text-emerald" id="hud-total-collected">PHP 0.00</span>
+              <span class="collection-hud-value mono-num telemetry-rate-chip" id="hud-collection-rate">0%</span>
             </div>
+
+            <div class="collection-hud-divider telemetry-collapsible"></div>
+
+            <!-- Segment 4: Delinquent Portfolio & Arrears -->
+            <div class="collection-hud-segment telemetry-data-seg telemetry-collapsible" title="Delinquent Lots & Overdue Balance">
+              <span class="collection-hud-label">DELINQ</span>
+              <span class="collection-hud-value mono-num text-amber" id="hud-delinq-count">0 Lots</span>
+              <span class="collection-hud-sub mono-num" id="hud-delinq-rate">(0%)</span>
+              <span class="telemetry-sub-sep">·</span>
+              <span class="collection-hud-value mono-num text-amber" id="hud-delinq-amount">PHP 0.00</span>
+            </div>
+
+            <!-- Thematic Legend (When active) -->
+            <div class="collection-hud-legend" id="hud-thematic-legend" style="display: none;">
+              <span class="legend-item"><span class="legend-dot dot-current"></span> Current</span>
+              <span class="legend-item"><span class="legend-dot dot-delinquent"></span> Delinquent</span>
+              <span class="legend-item"><span class="legend-dot dot-exempt"></span> Exempt</span>
+            </div>
+
+            <!-- Compact Mode Collapse / Expand Toggle Button -->
+            <button type="button" class="telemetry-toggle-btn" id="btn-minimize-telemetry" title="Toggle Minimal View" aria-label="Toggle minimal telemetry">
+              <i class="fas fa-chevron-left" id="telemetry-collapse-icon"></i>
+            </button>
           </div>
 
           <!-- Top Workbench Mode Active HUD Banner -->

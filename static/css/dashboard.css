@@ -14,20 +14,30 @@
 }
 
 /* --------------------------------------------------------------------------
-   Left Sidebar Navigation (ex-app-shell-row specification)
+   Left Sidebar Navigation (Translucent Frosted Glass Over Map)
    -------------------------------------------------------------------------- */
 .app-sidebar {
+  position: absolute;
+  top: 0;
+  left: 0;
+  bottom: 0;
   width: 260px;
   min-width: 260px;
   height: 100vh;
-  background-color: var(--colors-canvas);
-  border-right: 1px solid var(--colors-hairline);
+  background: rgba(10, 12, 16, 0.55);
+  backdrop-filter: blur(30px) saturate(210%);
+  -webkit-backdrop-filter: blur(30px) saturate(210%);
+  border-right: 1px solid rgba(255, 255, 255, 0.12);
   display: flex;
   flex-direction: column;
   justify-content: space-between;
   padding: var(--spacing-lg) var(--spacing-md);
-  z-index: 40;
+  z-index: 1300;
   user-select: none;
+  box-shadow: 
+    8px 0 32px rgba(0, 0, 0, 0.6),
+    inset -1px 0 0 rgba(255, 255, 255, 0.08);
+  box-sizing: border-box;
 }
 
 .sidebar-top {
@@ -72,13 +82,16 @@
 
 /* Officer Session Chip */
 .sidebar-officer-chip {
-  background-color: var(--colors-canvas-card);
-  border: 1px solid var(--colors-hairline);
+  background: rgba(255, 255, 255, 0.04);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border: 1px solid rgba(255, 255, 255, 0.10);
   border-radius: var(--rounded-sm);
   padding: 10px 12px;
   display: flex;
   flex-direction: column;
   gap: 3px;
+  box-shadow: inset 0 1px 0 0 rgba(255, 255, 255, 0.12);
 }
 
 .officer-name {
@@ -127,13 +140,18 @@
 }
 
 .sidebar-nav-item:hover {
-  color: var(--colors-ink);
-  background-color: var(--colors-canvas-soft);
+  color: #ffffff;
+  background-color: rgba(255, 255, 255, 0.08);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
 }
 
 .sidebar-nav-item.active {
-  color: var(--colors-ink);
-  background-color: rgba(255, 255, 255, 0.05);
+  color: #ffffff;
+  background-color: rgba(255, 255, 255, 0.12);
+  backdrop-filter: blur(14px);
+  -webkit-backdrop-filter: blur(14px);
+  box-shadow: inset 0 1px 0 0 rgba(255, 255, 255, 0.15);
 }
 
 .sidebar-nav-item.active::before {
@@ -143,8 +161,9 @@
   top: 6px;
   bottom: 6px;
   width: 2px;
-  background-color: var(--colors-primary);
+  background-color: #ffffff;
   border-radius: 2px;
+  box-shadow: 0 0 8px rgba(255, 255, 255, 0.8);
 }
 
 /* LGU Switcher in Sidebar */
@@ -157,19 +176,24 @@
 
 .sidebar-lgu-select {
   width: 100%;
-  background-color: var(--colors-canvas-soft);
+  background-color: rgba(255, 255, 255, 0.05);
+  backdrop-filter: blur(14px);
+  -webkit-backdrop-filter: blur(14px);
   color: var(--colors-ink);
-  border: 1px solid var(--colors-hairline);
+  border: 1px solid rgba(255, 255, 255, 0.14);
   border-radius: var(--rounded-sm);
   font-family: var(--font-body);
   font-size: 12px;
   padding: 8px 10px;
   outline: none;
   cursor: pointer;
+  box-shadow: inset 0 1px 0 0 rgba(255, 255, 255, 0.10);
+  transition: all var(--transition-fast);
 }
 
 .sidebar-lgu-select:focus {
   border-color: rgba(255, 255, 255, 0.4);
+  background-color: rgba(255, 255, 255, 0.08);
 }
 
 /* Sidebar Bottom */
@@ -178,7 +202,23 @@
   flex-direction: column;
   gap: var(--spacing-md);
   padding: 12px 4px 4px 4px;
-  border-top: 1px solid var(--colors-hairline);
+  border-top: 1px solid rgba(255, 255, 255, 0.10);
+}
+
+.sidebar-bottom .button-outline-sm {
+  background: rgba(255, 255, 255, 0.05);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  color: var(--colors-ink);
+  border-radius: var(--rounded-pill);
+  transition: all var(--transition-fast);
+}
+
+.sidebar-bottom .button-outline-sm:hover {
+  background: rgba(255, 255, 255, 0.12);
+  border-color: rgba(255, 255, 255, 0.35);
+  color: #ffffff;
 }
 
 .sidebar-status-meta {
@@ -188,49 +228,53 @@
 }
 
 /* --------------------------------------------------------------------------
-   Main GIS Workspace (Center Stage)
+   Main GIS Workspace (Center Stage & Full Edge-to-Edge Canvas Under Overlays)
    -------------------------------------------------------------------------- */
 .app-main {
-  flex: 1;
-  min-width: 0;
-  max-width: calc(100vw - 260px);
-  height: 100vh;
-  position: relative;
-  overflow: hidden;
-  background-color: var(--colors-canvas);
-}
-
-/* Top Utility & Search Strip (Translucent Frosted Glass Header) */
-.workspace-header {
   position: absolute;
   top: 0;
   left: 0;
   right: 0;
-  height: 56px;
-  min-height: 56px;
-  border-bottom: 1px solid rgba(255, 255, 255, 0.12);
-  display: flex;
+  bottom: 0;
+  width: 100vw;
+  height: 100vh;
+  overflow: hidden;
+  background-color: var(--colors-canvas);
+  z-index: 1;
+}
+
+/* Top Utility & Search Strip (Translucent Frosted Glass 2-Tier Command Header) */
+.workspace-header {
+  position: absolute;
+  top: 0;
+  left: 260px;
+  right: 0;
+  display: grid;
+  grid-template-columns: auto 1fr;
+  grid-template-rows: auto auto;
   align-items: center;
-  justify-content: space-between;
-  padding: 0 16px;
-  gap: 10px;
+  padding: 8px 16px;
+  gap: 8px 16px;
   background: rgba(10, 12, 16, 0.45);
   backdrop-filter: blur(30px) saturate(210%);
   -webkit-backdrop-filter: blur(30px) saturate(210%);
-  z-index: 950;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.12);
+  z-index: 1200;
   box-shadow: 0 8px 32px rgba(0, 0, 0, 0.5), inset 0 1px 0 0 rgba(255, 255, 255, 0.16);
-  max-width: 100%;
+  max-width: calc(100vw - 260px);
   overflow: visible;
+  box-sizing: border-box;
   transition: all var(--transition-fast);
 }
 
 .search-box-container {
+  grid-column: 1;
+  grid-row: 1;
   display: flex;
   align-items: center;
   position: relative;
-  width: 220px;
-  min-width: 140px;
-  flex-shrink: 1;
+  width: 240px;
+  min-width: 160px;
 }
 
 .search-box-input {
@@ -260,25 +304,13 @@
   pointer-events: none;
 }
 
-/* Classification Filter Pills */
-.filter-pills-row {
-  display: flex;
-  align-items: center;
-  gap: 6px;
-  overflow-x: auto;
-  flex-shrink: 1;
-  min-width: 0;
-  scrollbar-width: none;
-}
-
-.filter-pills-row::-webkit-scrollbar {
-  display: none;
-}
-
 .workspace-header-actions {
+  grid-column: 2;
+  grid-row: 1;
   display: flex;
   gap: 6px;
   align-items: center;
+  justify-content: flex-end;
   flex-shrink: 0;
 }
 
@@ -317,6 +349,23 @@
   box-shadow: 0 6px 18px rgba(255, 255, 255, 0.35);
 }
 
+/* Classification Filter Pills (Dedicated Full-Width Row 2 — Never Squeezed or Cut Off) */
+.filter-pills-row {
+  grid-column: 1 / -1;
+  grid-row: 2;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  width: 100%;
+  overflow-x: auto;
+  scrollbar-width: none;
+  padding: 2px 0;
+}
+
+.filter-pills-row::-webkit-scrollbar {
+  display: none;
+}
+
 .filter-pill {
   font-family: var(--font-body);
   font-size: 12px;
@@ -333,6 +382,7 @@
   white-space: nowrap;
   box-shadow: inset 0 1px 0 0 rgba(255, 255, 255, 0.08);
   transition: all var(--transition-fast);
+  flex-shrink: 0;
 }
 
 .filter-pill:hover {
@@ -384,8 +434,8 @@
 /* Floating HUD Controls */
 .map-hud-top {
   position: absolute;
-  top: 68px;
-  left: 56px;
+  top: 98px;
+  left: 316px;
   z-index: 1000;
   display: flex;
   align-items: center;
@@ -407,9 +457,13 @@
   font-family: var(--font-body) !important;
 }
 
-/* Position Leaflet controls below floating frosted header */
+/* Position Leaflet controls below floating frosted header and right of sidebar */
 .leaflet-top {
-  top: 68px !important;
+  top: 98px !important;
+}
+
+.leaflet-left {
+  left: 274px !important;
 }
 
 /* Pure Black & White Only Ultra-Dark Map Tiles (Zero-API-Key) */
@@ -521,9 +575,9 @@
 /* Floating Expand Trigger Pill (visible when inspector is collapsed) */
 .floating-inspector-expand-btn {
   position: absolute;
-  top: 68px;
+  top: 98px;
   right: 14px;
-  z-index: 980;
+  z-index: 1050;
   display: inline-flex;
   align-items: center;
   gap: 8px;
@@ -567,14 +621,14 @@
 .parcel-inspector-panel,
 .cadastral-workbench-panel {
   position: absolute;
-  top: 68px;
+  top: 98px;
   right: 14px;
   bottom: 14px;
   width: 350px;
   max-width: calc(100% - 28px);
-  max-height: calc(100% - 82px);
+  max-height: calc(100% - 112px);
   height: auto;
-  z-index: 990;
+  z-index: 1050;
   background: rgba(10, 12, 16, 0.50);
   backdrop-filter: blur(30px) saturate(210%);
   -webkit-backdrop-filter: blur(30px) saturate(210%);
@@ -883,8 +937,8 @@
 /* Floating Workbench HUD Banner across map */
 .workbench-hud-banner {
   position: absolute;
-  top: 68px;
-  left: 56px;
+  top: 98px;
+  left: 316px;
   right: 16px;
   z-index: 1000;
   display: flex;
@@ -2258,8 +2312,8 @@
    ========================================================================== */
 .collection-hud-banner {
   position: absolute;
-  top: 102px;
-  left: 56px;
+  top: 132px;
+  left: 316px;
   z-index: 1000;
   display: inline-flex;
   flex-direction: row;

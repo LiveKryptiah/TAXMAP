@@ -488,14 +488,33 @@ document.addEventListener('DOMContentLoaded', () => {
           const hudDelinqCount = document.getElementById('hud-delinq-count');
           const hudDelinqRate = document.getElementById('hud-delinq-rate');
           const hudDelinqAmt = document.getElementById('hud-delinq-amount');
+          const minHudTitle = document.getElementById('min-hud-title');
+          const hudProgressFill = document.getElementById('hud-progress-fill');
+          const hudProgressSub = document.getElementById('hud-progress-sub');
+          const hudDelinqSummary = document.getElementById('hud-delinq-summary');
 
-          if (hudLgu) hudLgu.textContent = t.lgu_name || 'Isabela LGU';
+          const lguDisplayName = t.lgu_name || 'Isabela LGU';
+          if (hudLgu) hudLgu.textContent = lguDisplayName;
           if (hudCollectibles) hudCollectibles.textContent = formatCurrencyShort(t.total_collectibles);
           if (hudCollected) hudCollected.textContent = formatCurrencyShort(t.total_collected);
           if (hudRate) hudRate.textContent = `${t.collection_rate_pct}%`;
           if (hudDelinqCount) hudDelinqCount.textContent = `${t.delinquent_count} Lot${t.delinquent_count === 1 ? '' : 's'}`;
           if (hudDelinqRate) hudDelinqRate.textContent = `(${t.delinquency_rate_pct}%)`;
           if (hudDelinqAmt) hudDelinqAmt.textContent = formatCurrencyShort(t.total_delinquent_due);
+
+          // Update minimal & drawer widgets
+          if (minHudTitle) {
+            minHudTitle.textContent = `${lguDisplayName} · ${t.collection_rate_pct}%`;
+          }
+          if (hudProgressFill) {
+            hudProgressFill.style.width = `${Math.min(100, Math.max(0, t.collection_rate_pct))}%`;
+          }
+          if (hudProgressSub) {
+            hudProgressSub.textContent = `${t.collection_rate_pct}% Paid`;
+          }
+          if (hudDelinqSummary) {
+            hudDelinqSummary.textContent = `${t.delinquent_count} Lot${t.delinquent_count === 1 ? '' : 's'} Overdue (${t.delinquency_rate_pct}%)`;
+          }
         }
       })
       .catch(err => console.warn('Error loading collection telemetry:', err));
@@ -503,6 +522,33 @@ document.addEventListener('DOMContentLoaded', () => {
 
   // Initial Telemetry Load
   loadCollectionTelemetry('03215');
+
+  // 8b. Modern Glassmorphic Telemetry Interactive Controls (Expand Drawer & Minimize to Chip)
+  const collectionHud = document.getElementById('collection-hud');
+  const btnToggleTelemetryExpand = document.getElementById('btn-toggle-telemetry-expand');
+  const btnMinimizeTelemetry = document.getElementById('btn-minimize-telemetry');
+  const telemetryMinChip = document.getElementById('telemetry-minimized-chip');
+
+  if (btnToggleTelemetryExpand && collectionHud) {
+    btnToggleTelemetryExpand.addEventListener('click', (e) => {
+      e.stopPropagation();
+      collectionHud.classList.toggle('drawer-open');
+    });
+  }
+
+  if (btnMinimizeTelemetry && collectionHud) {
+    btnMinimizeTelemetry.addEventListener('click', (e) => {
+      e.stopPropagation();
+      collectionHud.classList.remove('drawer-open');
+      collectionHud.classList.add('is-minimized');
+    });
+  }
+
+  if (telemetryMinChip && collectionHud) {
+    telemetryMinChip.addEventListener('click', () => {
+      collectionHud.classList.remove('is-minimized');
+    });
+  }
 
   // 8c. Thematic Heatmap Toggle
   const btnToggleThematic = document.getElementById('btn-toggle-thematic');
@@ -514,6 +560,10 @@ document.addEventListener('DOMContentLoaded', () => {
       if (thematicMode) {
         btnToggleThematic.textContent = 'Thematic: ON';
         btnToggleThematic.classList.add('thematic-active-btn');
+        if (collectionHud) {
+          collectionHud.classList.remove('is-minimized');
+          collectionHud.classList.add('drawer-open');
+        }
         if (hudThematicLegend) hudThematicLegend.style.display = 'flex';
       } else {
         btnToggleThematic.textContent = 'Thematic: OFF';

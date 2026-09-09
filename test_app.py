@@ -1038,5 +1038,15 @@ assert b"btn-download-buffer-csv" in resp_dash_buffer.data
 assert b"btn-print-buffer-report" in resp_dash_buffer.data
 print("[PASS] Dashboard UI verified with #btn-buffer-tool, #buffer-hud, #buffer-preset-select, #modal-buffer-report, and #btn-download-buffer-csv")
 
-print("\nALL 51 VERIFICATION TESTS PASSED SUCCESSFULLY!")
+# 52. Test Floating Glassmorph Section Elements
+resp_dash_glass = client.get('/dashboard')
+assert resp_dash_glass.status_code == 200
+assert b"floating-glass-panel" in resp_dash_glass.data
+assert b"btn-toggle-inspector" in resp_dash_glass.data
+assert b"btn-expand-inspector" in resp_dash_glass.data
+assert b"expand-btn-pin-label" in resp_dash_glass.data
+print("[PASS] Dashboard UI verified with floating glassmorph inspector section (#btn-toggle-inspector, #btn-expand-inspector)")
+
+print("\nALL 52 VERIFICATION TESTS PASSED SUCCESSFULLY!")
+
 

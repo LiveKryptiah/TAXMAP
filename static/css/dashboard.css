@@ -454,31 +454,127 @@
 }
 
 /* --------------------------------------------------------------------------
-   Right-Side Docked Parcel Inspector (Hairline Card Chrome)
+   Right-Side Floating Glassmorph Section (Parcel Inspector & Workbench)
    -------------------------------------------------------------------------- */
-.parcel-inspector-panel {
-  width: 340px;
-  min-width: 320px;
-  max-width: 350px;
-  height: 100%;
-  background-color: var(--colors-canvas-card);
-  border-left: 1px solid var(--colors-hairline);
+
+/* Floating Expand Trigger Pill (visible when inspector is collapsed) */
+.floating-inspector-expand-btn {
+  position: absolute;
+  top: 14px;
+  right: 14px;
+  z-index: 980;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  background: rgba(14, 16, 20, 0.82);
+  backdrop-filter: blur(18px) saturate(190%);
+  -webkit-backdrop-filter: blur(18px) saturate(190%);
+  border: 1px solid rgba(255, 255, 255, 0.16);
+  border-radius: var(--rounded-pill);
+  padding: 7px 14px;
+  color: var(--colors-ink);
+  font-family: var(--font-body);
+  font-size: 12px;
+  font-weight: 500;
+  cursor: pointer;
+  box-shadow: 
+    0 14px 34px rgba(0, 0, 0, 0.6),
+    0 0 0 1px rgba(255, 255, 255, 0.08),
+    inset 0 1px 0 0 rgba(255, 255, 255, 0.25);
+  transition: all var(--transition-fast);
+}
+
+.floating-inspector-expand-btn:hover {
+  background: rgba(24, 28, 36, 0.92);
+  border-color: rgba(255, 255, 255, 0.32);
+  transform: translateY(-1px);
+  box-shadow: 
+    0 18px 40px rgba(0, 0, 0, 0.7),
+    0 0 0 1px rgba(255, 255, 255, 0.15),
+    inset 0 1px 0 0 rgba(255, 255, 255, 0.35);
+}
+
+.floating-inspector-expand-btn .expand-btn-pin {
+  font-size: 11px;
+  color: #94a3b8;
+  padding-left: 6px;
+  border-left: 1px solid rgba(255, 255, 255, 0.14);
+}
+
+/* Floating Glassmorphic Panels */
+.floating-glass-panel,
+.parcel-inspector-panel,
+.cadastral-workbench-panel {
+  position: absolute;
+  top: 14px;
+  right: 14px;
+  bottom: 14px;
+  width: 350px;
+  max-width: calc(100% - 28px);
+  max-height: calc(100% - 28px);
+  height: auto;
+  z-index: 990;
+  background: rgba(13, 15, 19, 0.75);
+  backdrop-filter: blur(24px) saturate(190%);
+  -webkit-backdrop-filter: blur(24px) saturate(190%);
+  border: 1px solid rgba(255, 255, 255, 0.13);
+  border-radius: 14px;
+  box-shadow: 
+    0 24px 54px -10px rgba(0, 0, 0, 0.8),
+    0 0 0 1px rgba(255, 255, 255, 0.06),
+    inset 0 1px 0 0 rgba(255, 255, 255, 0.22);
   display: flex;
   flex-direction: column;
   overflow: hidden;
-  z-index: 15;
-  flex-shrink: 0;
   box-sizing: border-box;
+  transition: transform 0.3s cubic-bezier(0.16, 1, 0.3, 1), opacity 0.25s ease, box-shadow 0.25s ease;
 }
 
-.inspector-header {
-  padding: 10px 14px;
-  border-bottom: 1px solid var(--colors-hairline);
+.parcel-inspector-panel.collapsed {
+  transform: translateX(calc(100% + 30px));
+  opacity: 0;
+  pointer-events: none;
+}
+
+/* Header with Frosted Glass Top Highlight */
+.inspector-header,
+.workbench-header {
+  padding: 12px 16px;
+  background: rgba(255, 255, 255, 0.035);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
   display: flex;
   flex-direction: column;
-  gap: 2px;
+  gap: 4px;
   flex-shrink: 0;
   min-width: 0;
+}
+
+.inspector-header-top {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  width: 100%;
+}
+
+.inspector-collapse-btn {
+  background: transparent;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: var(--rounded-xs);
+  color: #94a3b8;
+  width: 24px;
+  height: 24px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all var(--transition-fast);
+  padding: 0;
+}
+
+.inspector-collapse-btn:hover {
+  background: rgba(255, 255, 255, 0.12);
+  border-color: rgba(255, 255, 255, 0.28);
+  color: #ffffff;
 }
 
 .inspector-header .eyebrow-mono {
@@ -487,6 +583,9 @@
   letter-spacing: 0.8px;
   color: #94a3b8;
   text-transform: uppercase;
+  display: flex;
+  align-items: center;
+  gap: 6px;
 }
 
 .inspector-title {
@@ -499,27 +598,28 @@
   overflow: hidden;
   text-overflow: ellipsis;
   min-width: 0;
+  text-shadow: 0 2px 8px rgba(0, 0, 0, 0.5);
 }
 
+/* Inspector Body with Translucent Cards */
 .inspector-body {
-  padding: 8px 12px;
+  padding: 10px 14px;
   display: flex;
   flex-direction: column;
-  gap: 4px;
+  gap: 6px;
   flex: 1;
   min-height: 0;
   overflow-y: auto;
   overflow-x: hidden;
-  justify-content: flex-start;
   box-sizing: border-box;
   scrollbar-width: thin;
-  scrollbar-color: #2b2e36 transparent;
+  scrollbar-color: rgba(255, 255, 255, 0.15) transparent;
 }
 
 .prop-data-group {
   display: flex;
   flex-direction: column;
-  gap: 4px;
+  gap: 6px;
   width: 100%;
   min-width: 0;
 }
@@ -527,7 +627,7 @@
 .prop-data-grid-2 {
   display: grid;
   grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
-  gap: 6px 10px;
+  gap: 6px 8px;
   width: 100%;
   min-width: 0;
 }
@@ -535,22 +635,27 @@
 .prop-data-row {
   display: flex;
   flex-direction: column;
-  gap: 1px;
-  padding-bottom: 2px;
-  border-bottom: 1px solid var(--colors-hairline);
+  gap: 2px;
+  padding: 6px 10px;
+  background: rgba(255, 255, 255, 0.028);
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  border-radius: 6px;
   min-width: 0;
   width: 100%;
+  box-sizing: border-box;
+  transition: background 0.15s ease, border-color 0.15s ease;
 }
 
-.prop-data-row:last-child {
-  border-bottom: none;
+.prop-data-row:hover {
+  background: rgba(255, 255, 255, 0.045);
+  border-color: rgba(255, 255, 255, 0.12);
 }
 
 .prop-data-label {
   font-family: var(--font-mono);
-  font-size: 10px;
+  font-size: 9.5px;
   font-weight: 500;
-  letter-spacing: 0.4px;
+  letter-spacing: 0.5px;
   text-transform: uppercase;
   color: #94a3b8;
   line-height: 1.25;
@@ -562,7 +667,7 @@
 
 .prop-data-value {
   font-size: 12.5px;
-  color: var(--colors-ink);
+  color: #ffffff;
   line-height: 16px;
   overflow: hidden;
   text-overflow: ellipsis;
@@ -587,16 +692,30 @@
   font-weight: 500;
 }
 
-/* Compact Horizontal Icon Action Bar */
+/* Translucent Frosted Delinquency Card */
+.delinquency-section {
+  background: rgba(239, 68, 68, 0.12) !important;
+  border: 1px solid rgba(239, 68, 68, 0.35) !important;
+  backdrop-filter: blur(8px) !important;
+  box-shadow: 0 4px 16px rgba(239, 68, 68, 0.15);
+  border-radius: 6px;
+  padding: 8px 10px !important;
+}
+
+/* Docked Glass Action Bar */
 .inspector-actions.icon-actions-bar {
-  padding: 8px 10px;
-  border-top: 1px solid var(--colors-hairline);
+  padding: 10px 12px;
+  border-top: 1px solid rgba(255, 255, 255, 0.08);
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(46px, 1fr));
   gap: 6px;
-  background-color: var(--colors-canvas);
+  background: rgba(10, 12, 16, 0.85);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
   flex-shrink: 0;
   margin-top: auto;
+  border-bottom-left-radius: 14px;
+  border-bottom-right-radius: 14px;
 }
 
 .button-icon-action {
@@ -609,15 +728,21 @@
   height: 44px !important;
   min-height: 44px !important;
   width: 100% !important;
-  border-radius: var(--rounded-sm) !important;
+  border-radius: 6px !important;
   cursor: pointer !important;
   transition: all var(--transition-fast) !important;
   box-sizing: border-box !important;
   text-decoration: none !important;
+  background: rgba(255, 255, 255, 0.04) !important;
+  border: 1px solid rgba(255, 255, 255, 0.10) !important;
+  backdrop-filter: blur(4px) !important;
 }
 
 .button-icon-action:hover {
   transform: translateY(-1px);
+  background: rgba(255, 255, 255, 0.10) !important;
+  border-color: rgba(255, 255, 255, 0.28) !important;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.35);
 }
 
 .button-icon-action svg {
@@ -640,31 +765,32 @@
 }
 
 .button-icon-action.button-primary {
-  background-color: var(--colors-ink) !important;
-  color: var(--colors-canvas) !important;
-  border: 1px solid var(--colors-ink) !important;
+  background: #ffffff !important;
+  color: #0a0a0a !important;
+  border: 1px solid #ffffff !important;
 }
 
 .button-icon-action.button-primary:hover {
-  background-color: #e2e8f0 !important;
+  background: #e2e8f0 !important;
   border-color: #e2e8f0 !important;
+  box-shadow: 0 4px 14px rgba(255, 255, 255, 0.25);
 }
 
 .button-icon-action.button-outline-on-dark {
-  background-color: transparent !important;
-  border: 1px solid var(--colors-hairline) !important;
+  background: rgba(255, 255, 255, 0.04) !important;
+  border: 1px solid rgba(255, 255, 255, 0.12) !important;
   color: var(--colors-ink) !important;
 }
 
 .button-icon-action.button-outline-on-dark:hover {
-  background-color: rgba(255, 255, 255, 0.08) !important;
-  border-color: rgba(255, 255, 255, 0.4) !important;
+  background: rgba(255, 255, 255, 0.10) !important;
+  border-color: rgba(255, 255, 255, 0.35) !important;
 }
 
 .button-icon-action.button-danger,
 .button-icon-action.button-success,
 .button-icon-action.button-danger-outline {
-  background-color: rgba(255, 255, 255, 0.04) !important;
+  background: rgba(255, 255, 255, 0.04) !important;
   border: 1px solid rgba(255, 255, 255, 0.16) !important;
   color: #ffffff !important;
 }
@@ -672,7 +798,7 @@
 .button-icon-action.button-danger:hover,
 .button-icon-action.button-success:hover,
 .button-icon-action.button-danger-outline:hover {
-  background-color: rgba(255, 255, 255, 0.12) !important;
+  background: rgba(255, 255, 255, 0.12) !important;
   border-color: rgba(255, 255, 255, 0.45) !important;
   color: #ffffff !important;
 }
@@ -741,17 +867,14 @@
   gap: 8px;
 }
 
-/* Cadastral Workbench Panel (Right Dock) */
+/* Cadastral Workbench Panel (Right Floating Glassmorph Section) */
 .cadastral-workbench-panel {
   width: 360px;
-  min-width: 360px;
-  height: 100%;
-  background-color: var(--colors-canvas-card);
-  border-left: 1px solid var(--colors-hairline);
-  display: flex;
-  flex-direction: column;
+  min-width: 340px;
+  max-width: calc(100% - 28px);
   overflow-y: auto;
-  z-index: 15;
+  scrollbar-width: thin;
+  scrollbar-color: rgba(255, 255, 255, 0.15) transparent;
 }
 
 .workbench-header {
@@ -829,9 +952,9 @@
 }
 
 .wb-card {
-  background-color: var(--colors-canvas-soft);
-  border: 1px solid var(--colors-hairline);
-  border-radius: var(--rounded-sm);
+  background-color: rgba(255, 255, 255, 0.028);
+  border: 1px solid rgba(255, 255, 255, 0.07);
+  border-radius: 8px;
   padding: 10px 14px;
 }
 

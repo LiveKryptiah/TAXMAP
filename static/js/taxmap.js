@@ -37,6 +37,9 @@ document.addEventListener('DOMContentLoaded', () => {
   const inspAv = document.getElementById('insp-av');
   const inspTax = document.getElementById('insp-tax');
   const inspStatus = document.getElementById('insp-status');
+  const btnToggleInspector = document.getElementById('btn-toggle-inspector');
+  const btnExpandInspector = document.getElementById('btn-expand-inspector');
+  const expandBtnPinLabel = document.getElementById('expand-btn-pin-label');
 
   if (!mapContainer || typeof L === 'undefined') {
     console.error('Leaflet or map container not available');
@@ -55,6 +58,9 @@ document.addEventListener('DOMContentLoaded', () => {
 
   // Position zoom controls in top-left
   map.zoomControl.setPosition('topleft');
+  setTimeout(() => {
+    map.invalidateSize();
+  }, 150);
 
   // 2. Zero-API-Key Base Tile Layers (No API Key Required)
   const darkOsmLayer = L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png', {
@@ -246,8 +252,14 @@ document.addEventListener('DOMContentLoaded', () => {
       polygon.bringToFront();
     }
 
-    // Update Right Docked Inspector
+    // Update Right Floating Glassmorph Inspector
     if (inspPin) inspPin.textContent = data.pin || '—';
+    if (expandBtnPinLabel && data.pin) expandBtnPinLabel.textContent = data.pin;
+    const inspectorEl = document.querySelector('.parcel-inspector-panel');
+    if (inspectorEl && inspectorEl.classList.contains('collapsed')) {
+      inspectorEl.classList.remove('collapsed');
+      if (btnExpandInspector) btnExpandInspector.style.display = 'none';
+    }
     if (inspTd) inspTd.textContent = data.td_no || '—';
     if (inspOwner) inspOwner.textContent = data.owner_name || '—';
     if (inspAddress) inspAddress.textContent = data.owner_address || '—';
@@ -343,6 +355,29 @@ document.addEventListener('DOMContentLoaded', () => {
         inspTotalDelinq.style.color = '#ffffff';
       }
     }
+  }
+
+  // Floating Glass Inspector Collapse / Expand Toggle
+  if (btnToggleInspector) {
+    btnToggleInspector.addEventListener('click', () => {
+      const inspectorEl = document.querySelector('.parcel-inspector-panel');
+      if (inspectorEl) {
+        inspectorEl.classList.add('collapsed');
+      }
+      if (btnExpandInspector) {
+        btnExpandInspector.style.display = 'inline-flex';
+      }
+    });
+  }
+
+  if (btnExpandInspector) {
+    btnExpandInspector.addEventListener('click', () => {
+      const inspectorEl = document.querySelector('.parcel-inspector-panel');
+      if (inspectorEl) {
+        inspectorEl.classList.remove('collapsed');
+      }
+      btnExpandInspector.style.display = 'none';
+    });
   }
 
   // 6. Classification Filter
@@ -1625,7 +1660,11 @@ document.addEventListener('DOMContentLoaded', () => {
 
     if (workbenchPanel) workbenchPanel.style.display = 'none';
     if (workbenchHud) workbenchHud.style.display = 'none';
-    if (inspectorPanel) inspectorPanel.style.display = 'flex';
+    if (inspectorPanel) {
+      inspectorPanel.style.display = 'flex';
+      inspectorPanel.classList.remove('collapsed');
+    }
+    if (btnExpandInspector) btnExpandInspector.style.display = 'none';
   }
 
   function clearCutMarkers() {

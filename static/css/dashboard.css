@@ -195,28 +195,33 @@
   min-width: 0;
   max-width: calc(100vw - 260px);
   height: 100vh;
-  display: flex;
-  flex-direction: column;
+  position: relative;
   overflow: hidden;
   background-color: var(--colors-canvas);
 }
 
-/* Top Utility & Search Strip (Translucent Glassmorphic) */
+/* Top Utility & Search Strip (Translucent Frosted Glass Header) */
 .workspace-header {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
   height: 56px;
   min-height: 56px;
-  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.12);
   display: flex;
   align-items: center;
   justify-content: space-between;
   padding: 0 16px;
   gap: 10px;
-  background: rgba(10, 12, 16, 0.55);
-  backdrop-filter: blur(28px) saturate(200%);
-  -webkit-backdrop-filter: blur(28px) saturate(200%);
-  z-index: 20;
+  background: rgba(10, 12, 16, 0.45);
+  backdrop-filter: blur(30px) saturate(210%);
+  -webkit-backdrop-filter: blur(30px) saturate(210%);
+  z-index: 950;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.5), inset 0 1px 0 0 rgba(255, 255, 255, 0.16);
   max-width: 100%;
-  overflow: hidden;
+  overflow: visible;
+  transition: all var(--transition-fast);
 }
 
 .search-box-container {
@@ -230,19 +235,21 @@
 
 .search-box-input {
   width: 100%;
-  background-color: rgba(255, 255, 255, 0.05);
-  backdrop-filter: blur(14px);
-  -webkit-backdrop-filter: blur(14px);
+  background-color: rgba(255, 255, 255, 0.06);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
   color: var(--colors-ink);
-  border: 1px solid rgba(255, 255, 255, 0.12);
+  border: 1px solid rgba(255, 255, 255, 0.15);
   border-radius: var(--rounded-pill);
   font-size: 12.5px;
   padding: 6px 12px 6px 32px;
   outline: none;
-  transition: border-color var(--transition-fast);
+  box-shadow: inset 0 1px 0 0 rgba(255, 255, 255, 0.10);
+  transition: all var(--transition-fast);
 }
 
 .search-box-input:focus {
+  background-color: rgba(255, 255, 255, 0.10);
   border-color: rgba(255, 255, 255, 0.4);
 }
 
@@ -281,6 +288,35 @@
   white-space: nowrap;
 }
 
+.workspace-header-actions .button-outline-sm {
+  background: rgba(255, 255, 255, 0.06);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  color: var(--colors-ink);
+  border-radius: var(--rounded-pill);
+  box-shadow: inset 0 1px 0 0 rgba(255, 255, 255, 0.12);
+  transition: all var(--transition-fast);
+}
+
+.workspace-header-actions .button-outline-sm:hover {
+  background: rgba(255, 255, 255, 0.14);
+  border-color: rgba(255, 255, 255, 0.35);
+  color: #ffffff;
+  transform: translateY(-1px);
+}
+
+.workspace-header-actions .button-draw-lot {
+  border-radius: var(--rounded-pill);
+  box-shadow: 0 4px 14px rgba(255, 255, 255, 0.22);
+  transition: all var(--transition-fast);
+}
+
+.workspace-header-actions .button-draw-lot:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 6px 18px rgba(255, 255, 255, 0.35);
+}
+
 .filter-pill {
   font-family: var(--font-body);
   font-size: 12px;
@@ -288,38 +324,43 @@
   font-weight: 400;
   padding: 4px 12px;
   border-radius: var(--rounded-pill);
-  border: 1px solid rgba(255, 255, 255, 0.1);
-  background: rgba(255, 255, 255, 0.035);
-  backdrop-filter: blur(10px);
-  -webkit-backdrop-filter: blur(10px);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  background: rgba(255, 255, 255, 0.05);
+  backdrop-filter: blur(14px);
+  -webkit-backdrop-filter: blur(14px);
   color: var(--colors-body-mid);
   cursor: pointer;
   white-space: nowrap;
+  box-shadow: inset 0 1px 0 0 rgba(255, 255, 255, 0.08);
   transition: all var(--transition-fast);
 }
 
 .filter-pill:hover {
-  border-color: var(--colors-pill-border);
-  color: var(--colors-ink);
-  background-color: rgba(255, 255, 255, 0.06);
+  border-color: rgba(255, 255, 255, 0.3);
+  color: #ffffff;
+  background-color: rgba(255, 255, 255, 0.1);
 }
 
 .filter-pill.active {
-  border-color: rgba(255, 255, 255, 0.5);
-  color: var(--colors-ink);
-  background-color: rgba(255, 255, 255, 0.12);
+  border-color: #ffffff;
+  color: #0a0a0a;
+  background-color: #ffffff;
+  font-weight: 600;
+  box-shadow: 0 2px 10px rgba(255, 255, 255, 0.3);
 }
 
-/* Workspace Body: Map + Inspector */
+/* Workspace Body: Map + Inspector (Spans Full Canvas under Floating Header) */
 .workspace-body {
-  flex: 1;
-  min-width: 0;
-  min-height: 0;
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  width: 100%;
+  height: 100%;
   display: flex;
   overflow: hidden;
-  position: relative;
-  max-width: 100%;
-  height: calc(100vh - 56px);
+  z-index: 1;
 }
 
 /* --------------------------------------------------------------------------
@@ -343,7 +384,7 @@
 /* Floating HUD Controls */
 .map-hud-top {
   position: absolute;
-  top: 14px;
+  top: 68px;
   left: 56px;
   z-index: 1000;
   display: flex;
@@ -364,6 +405,11 @@
   background-color: #050505 !important;
   background: #050505 !important;
   font-family: var(--font-body) !important;
+}
+
+/* Position Leaflet controls below floating frosted header */
+.leaflet-top {
+  top: 68px !important;
 }
 
 /* Pure Black & White Only Ultra-Dark Map Tiles (Zero-API-Key) */
@@ -475,7 +521,7 @@
 /* Floating Expand Trigger Pill (visible when inspector is collapsed) */
 .floating-inspector-expand-btn {
   position: absolute;
-  top: 14px;
+  top: 68px;
   right: 14px;
   z-index: 980;
   display: inline-flex;
@@ -521,12 +567,12 @@
 .parcel-inspector-panel,
 .cadastral-workbench-panel {
   position: absolute;
-  top: 14px;
+  top: 68px;
   right: 14px;
   bottom: 14px;
   width: 350px;
   max-width: calc(100% - 28px);
-  max-height: calc(100% - 28px);
+  max-height: calc(100% - 82px);
   height: auto;
   z-index: 990;
   background: rgba(10, 12, 16, 0.50);
@@ -837,7 +883,7 @@
 /* Floating Workbench HUD Banner across map */
 .workbench-hud-banner {
   position: absolute;
-  top: 16px;
+  top: 68px;
   left: 56px;
   right: 16px;
   z-index: 1000;
@@ -2212,7 +2258,7 @@
    ========================================================================== */
 .collection-hud-banner {
   position: absolute;
-  top: 48px;
+  top: 102px;
   left: 56px;
   z-index: 1000;
   display: inline-flex;

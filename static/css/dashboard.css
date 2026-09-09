@@ -243,18 +243,21 @@
   z-index: 1;
 }
 
-/* Top Utility & Search Strip (Translucent Frosted Glass 2-Tier Command Header) */
+/* Top Utility & Search Strip (Translucent Frosted Glass Single-Line Header) */
 .workspace-header {
   position: absolute;
   top: 0;
   left: 260px;
   right: 0;
-  display: grid;
-  grid-template-columns: auto 1fr;
-  grid-template-rows: auto auto;
+  height: 52px;
+  min-height: 52px;
+  max-height: 52px;
+  display: flex;
   align-items: center;
-  padding: 8px 16px;
-  gap: 8px 16px;
+  justify-content: flex-start;
+  flex-wrap: nowrap;
+  padding: 0 16px;
+  gap: 12px;
   background: rgba(10, 12, 16, 0.45);
   backdrop-filter: blur(30px) saturate(210%);
   -webkit-backdrop-filter: blur(30px) saturate(210%);
@@ -268,13 +271,13 @@
 }
 
 .search-box-container {
-  grid-column: 1;
-  grid-row: 1;
   display: flex;
   align-items: center;
   position: relative;
-  width: 240px;
-  min-width: 160px;
+  width: 200px;
+  min-width: 130px;
+  flex: 0 1 200px;
+  flex-shrink: 1;
 }
 
 .search-box-input {
@@ -285,7 +288,7 @@
   color: var(--colors-ink);
   border: 1px solid rgba(255, 255, 255, 0.15);
   border-radius: var(--rounded-pill);
-  font-size: 12.5px;
+  font-size: 12px;
   padding: 6px 12px 6px 32px;
   outline: none;
   box-shadow: inset 0 1px 0 0 rgba(255, 255, 255, 0.10);
@@ -304,14 +307,60 @@
   pointer-events: none;
 }
 
+/* Classification Filter Pills (Single Row - Never Squeezed or Cut Off) */
+.filter-pills-row {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  overflow-x: auto;
+  scrollbar-width: none;
+  flex-shrink: 0;
+}
+
+.filter-pills-row::-webkit-scrollbar {
+  display: none;
+}
+
+.filter-pill {
+  font-family: var(--font-body);
+  font-size: 11.5px;
+  line-height: 15px;
+  font-weight: 400;
+  padding: 4px 10px;
+  border-radius: var(--rounded-pill);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  background: rgba(255, 255, 255, 0.05);
+  backdrop-filter: blur(14px);
+  -webkit-backdrop-filter: blur(14px);
+  color: var(--colors-body-mid);
+  cursor: pointer;
+  white-space: nowrap;
+  box-shadow: inset 0 1px 0 0 rgba(255, 255, 255, 0.08);
+  transition: all var(--transition-fast);
+  flex-shrink: 0;
+}
+
+.filter-pill:hover {
+  border-color: rgba(255, 255, 255, 0.3);
+  color: #ffffff;
+  background-color: rgba(255, 255, 255, 0.1);
+}
+
+.filter-pill.active {
+  border-color: #ffffff;
+  color: #0a0a0a;
+  background-color: #ffffff;
+  font-weight: 600;
+  box-shadow: 0 2px 10px rgba(255, 255, 255, 0.3);
+}
+
 .workspace-header-actions {
-  grid-column: 2;
-  grid-row: 1;
   display: flex;
   gap: 6px;
   align-items: center;
   justify-content: flex-end;
   flex-shrink: 0;
+  margin-left: auto;
 }
 
 .workspace-header-actions .btn {
@@ -338,65 +387,44 @@
   transform: translateY(-1px);
 }
 
+/* Dedicated Icon-Only Buttons for Action Bar (Compact 34x34) */
+.btn-icon-only {
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  width: 34px !important;
+  height: 34px !important;
+  min-width: 34px !important;
+  padding: 0 !important;
+  border-radius: var(--rounded-pill) !important;
+  flex-shrink: 0 !important;
+  cursor: pointer;
+}
+
+.btn-icon-only svg {
+  margin: 0 !important;
+  display: block;
+}
+
+.btn-icon-only.active,
+.btn-icon-only.thematic-active-btn {
+  background: rgba(255, 255, 255, 0.22) !important;
+  border-color: #ffffff !important;
+  color: #ffffff !important;
+  box-shadow: 0 0 12px rgba(255, 255, 255, 0.4), inset 0 1px 0 0 rgba(255, 255, 255, 0.3) !important;
+}
+
 .workspace-header-actions .button-draw-lot {
   border-radius: var(--rounded-pill);
   box-shadow: 0 4px 14px rgba(255, 255, 255, 0.22);
   transition: all var(--transition-fast);
+  padding: 5px 12px;
+  font-size: 11.5px;
 }
 
 .workspace-header-actions .button-draw-lot:hover {
   transform: translateY(-1px);
   box-shadow: 0 6px 18px rgba(255, 255, 255, 0.35);
-}
-
-/* Classification Filter Pills (Dedicated Full-Width Row 2 — Never Squeezed or Cut Off) */
-.filter-pills-row {
-  grid-column: 1 / -1;
-  grid-row: 2;
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  width: 100%;
-  overflow-x: auto;
-  scrollbar-width: none;
-  padding: 2px 0;
-}
-
-.filter-pills-row::-webkit-scrollbar {
-  display: none;
-}
-
-.filter-pill {
-  font-family: var(--font-body);
-  font-size: 12px;
-  line-height: 16px;
-  font-weight: 400;
-  padding: 4px 12px;
-  border-radius: var(--rounded-pill);
-  border: 1px solid rgba(255, 255, 255, 0.12);
-  background: rgba(255, 255, 255, 0.05);
-  backdrop-filter: blur(14px);
-  -webkit-backdrop-filter: blur(14px);
-  color: var(--colors-body-mid);
-  cursor: pointer;
-  white-space: nowrap;
-  box-shadow: inset 0 1px 0 0 rgba(255, 255, 255, 0.08);
-  transition: all var(--transition-fast);
-  flex-shrink: 0;
-}
-
-.filter-pill:hover {
-  border-color: rgba(255, 255, 255, 0.3);
-  color: #ffffff;
-  background-color: rgba(255, 255, 255, 0.1);
-}
-
-.filter-pill.active {
-  border-color: #ffffff;
-  color: #0a0a0a;
-  background-color: #ffffff;
-  font-weight: 600;
-  box-shadow: 0 2px 10px rgba(255, 255, 255, 0.3);
 }
 
 /* Workspace Body: Map + Inspector (Spans Full Canvas under Floating Header) */
@@ -434,7 +462,7 @@
 /* Floating HUD Controls */
 .map-hud-top {
   position: absolute;
-  top: 98px;
+  top: 64px;
   left: 316px;
   z-index: 1000;
   display: flex;
@@ -459,7 +487,7 @@
 
 /* Position Leaflet controls below floating frosted header and right of sidebar */
 .leaflet-top {
-  top: 98px !important;
+  top: 64px !important;
 }
 
 .leaflet-left {
@@ -575,7 +603,7 @@
 /* Floating Expand Trigger Pill (visible when inspector is collapsed) */
 .floating-inspector-expand-btn {
   position: absolute;
-  top: 98px;
+  top: 64px;
   right: 14px;
   z-index: 1050;
   display: inline-flex;
@@ -621,12 +649,12 @@
 .parcel-inspector-panel,
 .cadastral-workbench-panel {
   position: absolute;
-  top: 98px;
+  top: 64px;
   right: 14px;
   bottom: 14px;
   width: 350px;
   max-width: calc(100% - 28px);
-  max-height: calc(100% - 112px);
+  max-height: calc(100% - 78px);
   height: auto;
   z-index: 1050;
   background: rgba(10, 12, 16, 0.50);
@@ -937,7 +965,7 @@
 /* Floating Workbench HUD Banner across map */
 .workbench-hud-banner {
   position: absolute;
-  top: 98px;
+  top: 64px;
   left: 316px;
   right: 16px;
   z-index: 1000;
@@ -2312,7 +2340,7 @@
    ========================================================================== */
 .collection-hud-banner {
   position: absolute;
-  top: 132px;
+  top: 98px;
   left: 316px;
   z-index: 1000;
   display: inline-flex;

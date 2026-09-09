@@ -175,36 +175,45 @@
             </svg>
             <span>+ Pin Boundary</span>
           </button>
-          <button class="btn button-outline-sm" id="btn-toggle-layer" title="Toggle between B&W Cadastre and B&W Satellite (Zero API Key)">
-            Layer: B&W Cadastre
+          <button class="btn button-outline-sm btn-icon-only" id="btn-toggle-layer" title="Toggle Basemap: B&W Cadastre / B&W Satellite (Zero API Key)">
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <polygon points="12 2 2 7 12 12 22 7 12 2"></polygon>
+              <polyline points="2 17 12 22 22 17"></polyline>
+              <polyline points="2 12 12 17 22 12"></polyline>
+            </svg>
           </button>
-          <button class="btn button-outline-sm" id="btn-toggle-thematic" title="Toggle color-coded Delinquency Heatmap (Paid / Delinquent / Exempt)">
-            Thematic: OFF
+          <button class="btn button-outline-sm btn-icon-only" id="btn-toggle-thematic" title="Toggle Delinquency Heatmap (Paid / Delinquent / Exempt)">
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M12 2c1 3 4 5.5 4 9a6 6 0 1 1-12 0c0-3.5 3-6 4-9 1 2 2 3 4 0z"></path>
+            </svg>
           </button>
-          <button class="btn button-outline-sm" id="btn-recenter" title="Re-center on Isabela Capitol">
-            Center
+          <button class="btn button-outline-sm btn-icon-only" id="btn-recenter" title="Re-center on Isabela Capitol (Ilagan City)">
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <circle cx="12" cy="12" r="10"></circle>
+              <line x1="12" y1="2" x2="12" y2="6"></line>
+              <line x1="12" y1="18" x2="12" y2="22"></line>
+              <line x1="2" y1="12" x2="6" y2="12"></line>
+              <line x1="18" y1="12" x2="22" y2="12"></line>
+            </svg>
           </button>
-          <button class="btn button-outline-sm" id="btn-scan-conflicts" title="Scan Cadastre for Boundary Overlaps & Encroachments">
-            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="margin-right: 4px; vertical-align: -1px;">
+          <button class="btn button-outline-sm btn-icon-only" id="btn-scan-conflicts" title="Scan Cadastre for Boundary Overlaps & Encroachments (Topology Health)">
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
               <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path>
             </svg>
-            <span>Topology</span>
           </button>
-          <button class="btn button-outline-sm" id="btn-buffer-tool" title="GIS Spatial Proximity Buffer & Hazard Impact Zone (R.A. 10752 / P.D. 1067)">
-            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="margin-right: 4px; vertical-align: -1px;">
+          <button class="btn button-outline-sm btn-icon-only" id="btn-buffer-tool" title="GIS Spatial Proximity Buffer & Hazard Impact Zone (R.A. 10752 / P.D. 1067)">
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
               <circle cx="12" cy="12" r="9"></circle>
               <circle cx="12" cy="12" r="4"></circle>
             </svg>
-            <span>Buffer / Hazard</span>
           </button>
           <div class="dropdown-container" style="position: relative;">
-            <button class="btn button-outline-sm" id="btn-export-cadastre" title="Export Cadastral Section Data">
-              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <button class="btn button-outline-sm btn-icon-only" id="btn-export-cadastre" title="Export Cadastral Data (GeoJSON / CSV Assessment Roll)">
+              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                 <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
                 <polyline points="7 10 12 15 17 10"></polyline>
                 <line x1="12" y1="15" x2="12" y2="3"></line>
               </svg>
-              <span>Export</span>
             </button>
             <div class="export-dropdown-menu" id="export-dropdown-menu" style="display: none;">
               <a href="#" class="export-dropdown-item" id="btn-export-geojson">

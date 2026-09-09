@@ -524,14 +524,14 @@ document.addEventListener('DOMContentLoaded', () => {
     btnToggleThematic.addEventListener('click', () => {
       thematicMode = !thematicMode;
       if (thematicMode) {
-        btnToggleThematic.textContent = 'Thematic: ON';
+        btnToggleThematic.title = 'Thematic Heatmap: ON (Click to disable)';
         btnToggleThematic.classList.add('thematic-active-btn');
         if (collectionHud) {
           collectionHud.classList.remove('is-collapsed');
         }
         if (hudThematicLegend) hudThematicLegend.style.display = 'inline-flex';
       } else {
-        btnToggleThematic.textContent = 'Thematic: OFF';
+        btnToggleThematic.title = 'Thematic Heatmap: OFF (Click to enable)';
         btnToggleThematic.classList.remove('thematic-active-btn');
         if (hudThematicLegend) hudThematicLegend.style.display = 'none';
       }
@@ -696,13 +696,13 @@ document.addEventListener('DOMContentLoaded', () => {
         map.removeLayer(darkOsmLayer);
         map.addLayer(satelliteLayer);
         currentLayerType = 'satellite';
-        btnToggleLayer.textContent = 'Layer: B&W Satellite';
+        btnToggleLayer.title = 'Current Basemap: B&W Satellite (Click to switch to Cadastre)';
         btnToggleLayer.classList.add('active');
       } else {
         map.removeLayer(satelliteLayer);
         map.addLayer(darkOsmLayer);
         currentLayerType = 'dark';
-        btnToggleLayer.textContent = 'Layer: B&W Cadastre';
+        btnToggleLayer.title = 'Current Basemap: B&W Cadastre (Click to switch to Satellite)';
         btnToggleLayer.classList.remove('active');
       }
     });

@@ -1067,7 +1067,37 @@ assert ".collection-hud-banner.is-collapsed" in css_content
 assert "border-radius: 9999px" in css_content
 print("[PASS] Dashboard UI verified with Modern Glassmorphic Minimal Revenue Telemetry HUD Pill (#btn-minimize-telemetry, #collection-hud)")
 
-print("\nALL 53 VERIFICATION TESTS PASSED SUCCESSFULLY!")
+# 54. Test Camera-Based Hand Gesture Control UI & MediaPipe Integration
+resp_dash_gesture = client.get('/dashboard')
+assert resp_dash_gesture.status_code == 200
+assert b"btn-hand-control" in resp_dash_gesture.data
+assert b"hand-gesture-hud" in resp_dash_gesture.data
+assert b"hand-video" in resp_dash_gesture.data
+assert b"hand-canvas" in resp_dash_gesture.data
+assert b"btn-switch-camera" in resp_dash_gesture.data
+assert b"btn-minimize-hand-hud" in resp_dash_gesture.data
+assert b"btn-close-hand-hud" in resp_dash_gesture.data
+assert b"@mediapipe/hands" in resp_dash_gesture.data
+assert b"@mediapipe/camera_utils" in resp_dash_gesture.data
+assert b"hand_gesture.js" in resp_dash_gesture.data
+
+with open("static/js/taxmap.js", "r", encoding="utf-8") as f:
+    taxmap_js = f.read()
+assert "window.taxMap = map;" in taxmap_js
+assert "zoomSnap: 0.05" in taxmap_js
+
+with open("static/js/hand_gesture.js", "r", encoding="utf-8") as f:
+    hand_js = f.read()
+assert "window.HandGestureConfig" in hand_js
+assert "classifyGesture" in hand_js
+assert "drawLandmarks" in hand_js
+assert "startHandControl" in hand_js
+assert "stopHandControl" in hand_js
+assert "switchCamera" in hand_js
+
+print("[PASS] Dashboard UI and MediaPipe Hand Gesture Control system verified (#btn-hand-control, #hand-gesture-hud, hand_gesture.js)")
+
+print("\nALL 54 VERIFICATION TESTS PASSED SUCCESSFULLY!")
 
 
 

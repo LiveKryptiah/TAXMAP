@@ -52,9 +52,11 @@ document.addEventListener('DOMContentLoaded', () => {
     zoom: DEFAULT_ZOOM,
     minZoom: 8,
     maxZoom: 19,
+    zoomSnap: 0.05,
     zoomControl: true,
     attributionControl: true
   });
+  window.taxMap = map;
 
   // Position zoom controls in top-left
   map.zoomControl.setPosition('topleft');

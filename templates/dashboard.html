@@ -207,6 +207,14 @@
               <circle cx="12" cy="12" r="4"></circle>
             </svg>
           </button>
+          <button class="btn button-outline-sm btn-icon-only" id="btn-hand-control" title="Hand Gesture Control (Camera-based Pan & Pinch Zoom)">
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M18 11V6a2 2 0 0 0-2-2v0a2 2 0 0 0-2 2v0"></path>
+              <path d="M14 10V4a2 2 0 0 0-2-2v0a2 2 0 0 0-2 2v2"></path>
+              <path d="M10 10.5V6a2 2 0 0 0-2-2v0a2 2 0 0 0-2 2v8"></path>
+              <path d="M18 8a2 2 0 1 1 4 0v6a8 8 0 0 1-8 8h-2c-2.8 0-4.5-.86-5.99-2.34l-3.6-3.6a2 2 0 0 1 2.83-2.82L7 15"></path>
+            </svg>
+          </button>
           <div class="dropdown-container" style="position: relative;">
             <button class="btn button-outline-sm btn-icon-only" id="btn-export-cadastre" title="Export Cadastral Data (GeoJSON / CSV Assessment Roll)">
               <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
@@ -368,6 +376,52 @@
               <button type="button" class="btn button-outline-sm" id="btn-exit-buffer-hud" style="font-size: 11px; padding: 4px 10px;">
                 Exit
               </button>
+            </div>
+          </div>
+
+          <!-- Floating Hand Gesture Camera & Tracking HUD (Non-Obstructive Client-Side Overlay) -->
+          <div class="hand-gesture-hud" id="hand-gesture-hud" style="display: none;">
+            <div class="hand-hud-header">
+              <div class="hand-hud-title-wrap">
+                <span class="hand-hud-status-dot indicator-pulse" id="hand-status-dot"></span>
+                <span class="typography-caption-mono-sm hand-hud-title" id="hand-status-text">Hand Control: Active</span>
+              </div>
+              <div class="hand-hud-actions">
+                <button type="button" class="btn-hand-icon" id="btn-switch-camera" title="Switch Camera (Front / Rear)">
+                  <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M23 4v6h-6"></path>
+                    <path d="M1 20v-6h6"></path>
+                    <path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"></path>
+                  </svg>
+                </button>
+                <button type="button" class="btn-hand-icon" id="btn-minimize-hand-hud" title="Minimize / Expand Camera Preview">
+                  <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" id="icon-minimize-hand">
+                    <line x1="5" y1="12" x2="19" y2="12"></line>
+                  </svg>
+                </button>
+                <button type="button" class="btn-hand-icon" id="btn-close-hand-hud" title="Turn Off Hand Control">
+                  <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <line x1="18" y1="6" x2="6" y2="18"></line>
+                    <line x1="6" y1="6" x2="18" y2="18"></line>
+                  </svg>
+                </button>
+              </div>
+            </div>
+
+            <div class="hand-hud-body" id="hand-hud-body">
+              <div class="hand-video-wrap">
+                <video id="hand-video" playsinline muted autoplay></video>
+                <canvas id="hand-canvas"></canvas>
+                <div class="hand-hud-gesture-badge" id="hand-gesture-badge">
+                  <span id="hand-gesture-icon">✋</span>
+                  <span id="hand-gesture-name">Open Hand</span>
+                </div>
+              </div>
+              <div class="hand-hud-tips">
+                <span class="hand-tip-item">✊ <strong>Grab</strong> Pan</span>
+                <span class="hand-tip-item">🤏 <strong>Pinch</strong> Zoom</span>
+                <span class="hand-tip-item">✋ <strong>Open</strong> Idle</span>
+              </div>
             </div>
           </div>
 
@@ -3231,5 +3285,9 @@
   <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
   <!-- Tax Map Leaflet Engine -->
   <script src="/static/js/taxmap.js?v={{ range(100000, 999999) | random }}"></script>
+  <!-- MediaPipe Hands & Camera Utils for Client-Side Hand Gesture Control -->
+  <script src="https://cdn.jsdelivr.net/npm/@mediapipe/camera_utils/camera_utils.js" crossorigin="anonymous"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@mediapipe/hands/hands.js" crossorigin="anonymous"></script>
+  <script src="/static/js/hand_gesture.js?v={{ range(100000, 999999) | random }}"></script>
 </body>
 </html>
